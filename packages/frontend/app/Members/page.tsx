@@ -3,7 +3,7 @@
 import Image from "next/image";
 import React from "react";
 
-const Page = (imageSrc: string, name: string) => {
+const Page = ({imageSrc,name}:{imageSrc:string,name:string}) => {
   const members = [
     {
       Name: "John Doe",
