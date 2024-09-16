@@ -1,0 +1,42 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Lobster&display=swap');
+
+/* Define your color palette */
+:root {
+  --primary-color: #66d9d0;
+  --background-light: #020303;
+  --text-light: #09272a;
+  --button-light: #66d9d0;
+
+  --background-dark: #020303;
+  --text-dark: #09272a;
+  --button-dark: #66d9d0;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background-light: var(--background-dark);
+    --text-light: var(--text-dark);
+    --button-light: var(--button-dark);
+  }
+}
+
+/* Apply these colors globally */
+body {
+  background-color: var(--background-light);
+  color: var(--text-light);
+  font-family: 'Lobster', cursive, sans-serif;
+}
+
+button {
+  background-color: var(--button-light);
+  color: var(--text-light);
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+  background-color: var(--button-light);
+}
