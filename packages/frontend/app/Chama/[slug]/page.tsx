@@ -85,7 +85,7 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
     address: contractAddress,
     abi: contractAbi,
     functionName: "getChama",
-    args: [chama?.id ? [BigInt(Number(chama.id) - 1)] : []],
+    args: [chama?.id ? [BigInt(Number(chama.id) - 3)] : []],
   });
 
   const { data: isMember } = useReadContract({
@@ -93,7 +93,7 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
     abi: contractAbi,
     functionName: "isMember",
     args: [
-      chama?.id ? BigInt(Number(chama.id) - 1) : [],
+      chama?.id ? BigInt(Number(chama.id) - 3) : [],
       address ? address : [],
     ],
   });

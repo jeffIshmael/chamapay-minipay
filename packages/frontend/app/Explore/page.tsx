@@ -45,7 +45,7 @@ const ChamaCard = ({ chama }: { chama: Chama }) => {
     address: contractAddress,
     abi: contractAbi,
     functionName: "getChama",
-    args: [BigInt(Number(chama.id - 1))],
+    args: [BigInt(Number(chama.id - 3))],
   });
 
   useEffect(() => {

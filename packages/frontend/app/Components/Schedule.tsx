@@ -44,14 +44,14 @@ const Schedule = ({ chamaId }: { chamaId: number }) => {
     address: contractAddress,
     abi: contractAbi,
     functionName: "getChama",
-    args: [BigInt(chamaId - 1)], // Example chamaId, replace 0 with actual chamaId when needed
+    args: [BigInt(chamaId - 3)], // Example chamaId, replace 0 with actual chamaId when needed
   });
 
   const { data: chamaBalance } = useReadContract({
     address: contractAddress,
     abi: contractAbi,
     functionName: "getBalance",
-    args: [BigInt(chamaId - 1)], // Example chamaId, replace 0 with actual chamaId when needed
+    args: [BigInt(chamaId - 3)], // Example chamaId, replace 0 with actual chamaId when needed
   });
 
   const startDate = beginDate; // Start date of the chama cycle

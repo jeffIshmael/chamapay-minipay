@@ -45,7 +45,7 @@ const Members = ({
     address: contractAddress,
     abi: contractAbi,
     functionName: "getChama",
-    args: [BigInt(chamaId - 1)],
+    args: [BigInt(chamaId - 3)],
   });
 
   console.log(chamaDetails);
