@@ -1,17 +1,82 @@
-import React from "react";
+"use client";
 
-const Withdrawals = () => {
-  const withdrawals = [
-    { name: "Maina", date: "22nd Sep", amount: 2000, cycle: 1 },
-    { name: "Flinch", date: "25th Sep", amount: 2000, cycle: 1 },
-  ];
+import React, { useEffect, useState } from "react";
+import { useReadContract } from "wagmi";
+import { contractAddress, contractAbi } from "../ChamaPayABI/ChamaPayContract";
+import { getUser } from "../api/chama";
+
+
+interface Withdrawal {
+  id: number;
+  chamaId: number;
+  receiver: string;
+  amount: number;
+  timestamp: number;
+}
+
+interface User {
+  id: number;
+  name: string | null; // Allow name to be nullable
+  address: string | null; // Allow address to be nullable
+}
+
+
+const Withdrawals = ( {cycle}: {cycle:number} ) => {
+  const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
+  const [userNames, setUserNames] = useState<{ [key: string]: string }>({});
+  const { data, isError, isLoading } = useReadContract({
+    address: contractAddress,
+    abi: contractAbi,
+    functionName: "getPayments",
+  });
+
+  useEffect(() => {
+    if (data) {
+      const results = data as Withdrawal[];
+      setWithdrawals(results);
+      console.log(data);
+    }
+
+    const fetchUserNames = async (withdrawals: Withdrawal[]) => {
+      const namesMap: { [key: string]: string } = {};
+
+      // Fetch user names for each deposit asynchronously
+      for (const withdrawal of withdrawals) {
+        const userData: User | null = await getUser(withdrawal.receiver);
+        if (userData) {
+          // Check if name is null, and provide a fallback (e.g., "Unknown User")
+          namesMap[withdrawal.receiver] = userData.name || "Unknown User";
+        }
+      }
+      setUserNames(namesMap);
+    };
+
+    fetchUserNames(withdrawals);
+  }, [data]);
+
+  const formatDate = (timestamp: number) => {
+    const date = new Date(timestamp);
+    return new Date(date).toLocaleDateString("en-GB", {
+      day: "numeric",
+      month: "short",
+    });
+  };
+
+ 
 
   return (
     <div className="p-4 bg-white rounded-lg shadow-md">
       <h2 className="text-xl font-semibold mb-4 text-gray-700">
         Withdrawals History
       </h2>
-      {withdrawals.map((withdrawal, index) => (
+
+      {withdrawals.length === 0 && (
+        <div className="flex items-center">
+          <p>No withdrawals found.</p>
+        </div>
+      )}
+
+      {withdrawals.map((withdrawal : Withdrawal, index) => (
         <div
           key={index}
           className="p-4 mb-4 border border-gray-300 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
@@ -31,12 +96,14 @@ const Withdrawals = () => {
                 />
               </svg>
 
-              <p className="text-lg font-bold text-gray-800">{withdrawal.name}</p>
+              <p className="text-lg font-bold text-gray-800">
+                {userNames[withdrawal.receiver] || "Loading..."}
+              </p>
             </div>
-            <p className="text-sm text-gray-500">{withdrawal.date}</p>
+            <p className="text-sm text-gray-500">{formatDate(Number(withdrawal.timestamp))}</p>
           </div>
           <div className="flex justify-between items-center">
-            <p className="text-md text-gray-600">Cycle {withdrawal.cycle}</p>
+            <p className="text-md text-gray-600">Cycle {cycle}</p>
             <p className="text-md text-downy-500 font-semibold">
               {withdrawal.amount} cKES
             </p>

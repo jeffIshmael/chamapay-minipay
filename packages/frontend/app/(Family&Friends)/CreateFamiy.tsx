@@ -1,17 +1,76 @@
 "use client";
 
 import React, { useState } from "react";
-import BottomNavbar from "../Components/BottomNavbar";
+import { createChama } from "../api/chama";
+import { useAccount, useWriteContract } from "wagmi";
+import { toast } from "sonner";
+import { contractAddress, contractAbi } from "../ChamaPayABI/ChamaPayContract";
+import { useRouter } from "next/navigation";
 
 const CreateFamily = () => {
   const [groupName, setGroupName] = useState("");
   const [amount, setAmount] = useState("");
   const [duration, setDuration] = useState("");
   const [startDate, setStartDate] = useState("");
+  const { writeContractAsync, isPending } = useWriteContract();
+  const { isConnected, address } = useAccount();
+  const router = useRouter();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log({ groupName, amount, duration, startDate });
+    if (!isConnected) {
+      toast.error("Please connect wallet");
+      return;
+    }
+    const formData = new FormData(e.target as HTMLFormElement);
+    const data = Object.fromEntries(formData.entries());
+    const amount = parseFloat(data.amount as string);
+    console.log(amount);
+
+    if (isNaN(amount) || amount <= 0) {
+      toast.error("Invalid amount");
+      return;
+    }
+    const amountInWei = Number(amount * 10 ** 18);
+
+    if (address && isConnected) {
+      try {
+        const dateObject = new Date(data.startDate as string);
+        const dateInMilliseconds = dateObject.getTime();
+
+        const hash = await writeContractAsync({
+          address: contractAddress,
+          abi: contractAbi,
+          functionName: "registerChama",
+          args: [
+            BigInt(Number(amountInWei)),
+            BigInt(Number(data.cycleTime)),
+            BigInt(dateInMilliseconds),
+          ],
+        });
+
+        if (hash) {
+          try {
+            await createChama(formData, "Private", address);
+            console.log("done");
+            toast.success(`${data.name} created successfully.`);
+            router.push("/MyChamas");
+          } catch (error) {
+            console.log(error);
+            toast.error("Unable, Try using another group name");
+          }
+        } else {
+          toast.error("unable to create, please try again");
+        }
+      } catch (error) {
+        console.log(error);
+        toast.error("A problem occured. Ensure wallet is connected.");
+      }
+    } else {
+      toast.error("Please connect wallet.");
+    }
+
+    // console.log({ groupName, amount, duration, startDate });
   };
 
   return (
@@ -22,6 +81,7 @@ const CreateFamily = () => {
       {/* <div className="absolute w-0 h-0 border-b-[16px] border-b-white border-l-[24px]  border-l-white border-t-[1px] border-t-transparent left-1/2 transform -translate-x-1/2 -translate-y-[55%]"></div> */}
 
       <form
+        // action={createChama("Private")}
         onSubmit={handleSubmit}
         className="space-y-4 bg-white p-6 rounded-3xl shadow-md w-full mt-3 transform origin-top animate-fadeIn"
       >
@@ -43,6 +103,7 @@ const CreateFamily = () => {
           <input
             type="text"
             id="groupName"
+            name="name"
             value={groupName}
             onChange={(e) => setGroupName(e.target.value)}
             required
@@ -55,11 +116,12 @@ const CreateFamily = () => {
             htmlFor="amount"
             className="block text-sm font-medium text-gray-700"
           >
-           Amount(in cKes)
+            Amount(in cKes)
           </label>
           <input
-            type="number"
+            type="text"
             id="amount"
+            name="amount"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             placeholder="Enter Contribution Amount"
@@ -75,8 +137,9 @@ const CreateFamily = () => {
             Start Date
           </label>
           <input
-            type="date"
+            type="datetime-local"
             id="startDate"
+            name="startDate"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
             required
@@ -93,6 +156,7 @@ const CreateFamily = () => {
           <input
             type="number"
             id="duration"
+            name="cycleTime"
             value={duration}
             onChange={(e) => setDuration(e.target.value)}
             placeholder="Enter Cycle Time"
@@ -103,9 +167,14 @@ const CreateFamily = () => {
         <div className="flex justify-end">
           <button
             type="submit"
-            className="bg-downy-500 hover:bg-downy-600 text-white font-semibold py-2 px-4 rounded-md"
+            disabled={isPending}
+            className={`  font-semibold py-2 px-4 rounded-md ${
+              isPending
+                ? "bg-gray-300 text-gray-400 hover:bg-gray-300 cursor-not-allowed"
+                : "bg-downy-500  hover:bg-downy-600 text-white"
+            }`}
           >
-            Create Chama
+            {isPending ? "Creating..." : "Create Chama"}
           </button>
         </div>
       </form>

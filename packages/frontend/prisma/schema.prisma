@@ -1,0 +1,90 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url = env("POSTGRES_PRISMA_URL") // uses connection pooling
+  directUrl = env("POSTGRES_URL_NON_POOLING") // uses a direct connection
+}
+
+model User {
+  id             Int           @id @default(autoincrement())
+  address        String        @unique
+  name           String?
+  role           String
+  chamas         ChamaMember[] // The chamas the user is a member of
+  createdChamas  Chama[]       @relation("AdminChamas") // Chamas created by the user (as admin)
+  payments       Payment[]     // Payments made by the user
+  notifications  Notification[] // Notifications received by the user
+  joinRequests   ChamaRequest[] // Join requests made by the user
+}
+
+model Chama {
+  id        Int          @id @default(autoincrement())
+  name      String
+  slug      String       @unique
+  type      String
+  startDate DateTime
+  payDate   DateTime
+  cycleTime Int
+  started   Boolean      @default(false)
+  amount    Int
+  maxNo     Int
+  members   ChamaMember[] // A list of members in this chama
+  payments  Payment[]     // Payments made to this chama
+  notifications Notification[]  // One-to-many relation with Notification
+  admin     User          @relation("AdminChamas", fields: [adminId], references: [id])
+  adminId   Int
+  requests  ChamaRequest[] // Requests to join this chama
+  createdAt DateTime      @default(now())
+}
+
+model ChamaMember {
+  id      Int     @id @default(autoincrement())
+  user    User    @relation(fields: [userId], references: [id])
+  userId  Int
+  
+  chama   Chama   @relation(fields: [chamaId], references: [id])
+  chamaId Int
+}
+
+model Payment {
+  id      Int      @id @default(autoincrement())
+  amount  Int
+  doneAt  DateTime @default(now())
+  txHash  String
+
+  user    User     @relation(fields: [userId], references: [id])
+  userId  Int
+
+  chama   Chama    @relation(fields: [chamaId], references: [id])
+  chamaId Int
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  message   String
+  senderId  Int      // Add senderId field here
+  requestId Int
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int
+  chama     Chama?   @relation(fields: [chamaId], references: [id]) // Optional relation to Chama
+  chamaId   Int?     // Foreign key field for the relation
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+
+
+model ChamaRequest {
+  id        Int      @id @default(autoincrement())
+  status    String   @default("pending") // 'pending', 'approved', 'rejected'
+  createdAt DateTime @default(now())
+
+  // Relationships
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int
+  chama     Chama    @relation(fields: [chamaId], references: [id])
+  chamaId   Int
+}

@@ -11,10 +11,6 @@ const Page = () => {
   const [activeSection, setActiveSection] = useState("Create");
  
 
-  // const handleClick = (section : string) => {
-  //   setActive(section);  
-  // };
-
   return (
     <div>
       <div className="min-h-screen bg-downy-100 p-4 rounded-md relative">

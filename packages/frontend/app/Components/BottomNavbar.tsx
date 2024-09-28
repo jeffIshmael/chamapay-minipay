@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import React from "react";
+import React, { useEffect, useState } from "react";
 
 export default function BottomNavbar({
   activeSection,
@@ -13,8 +13,37 @@ export default function BottomNavbar({
   const handleClick = (section: string) => {
     setActiveSection(section); // Update parent state
   };
+
+  const [isVisible, setIsVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
+
+  const controlNavbar = () => {
+    if (typeof window !== 'undefined') {
+      if (window.scrollY > lastScrollY) {
+        // Scroll Down
+        setIsVisible(false);
+      } else {
+        // Scroll Up
+        setIsVisible(true);
+      }
+      setLastScrollY(window.scrollY);
+    }
+  };
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.addEventListener('scroll', controlNavbar);
+
+      return () => {
+        window.removeEventListener('scroll', controlNavbar);
+      };
+    }
+  }, [lastScrollY]);
+
+
   return (
-    <nav className="fixed bottom-0 w-full max-w-sm bg-white rounded-xl shadow-md py-1">
+    <nav className={`fixed bottom-0 w-full max-w-sm bg-white rounded-xl shadow-md py-1  ${ isVisible ? 'block' : 'hidden'}
+      `}>
       <div className="flex justify-around w-full items-center">
         <Link
           href="/Start"

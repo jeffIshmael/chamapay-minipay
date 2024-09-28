@@ -1,4 +1,9 @@
 import React, { useState } from "react";
+import { createChama } from "../api/chama";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { useAccount, useWriteContract } from "wagmi";
+import { contractAbi, contractAddress } from "../ChamaPayABI/ChamaPayContract";
 
 const CreatePublic = () => {
   const [groupName, setGroupName] = useState("");
@@ -6,10 +11,61 @@ const CreatePublic = () => {
   const [duration, setDuration] = useState("");
   const [startDate, setStartDate] = useState("");
   const [maxPeople, setMaxPeople] = useState("");
+  const router = useRouter();
+  const { isConnected, address } = useAccount();
+  const { writeContractAsync, isPending } = useWriteContract();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log({ groupName, amount, duration, startDate });
+    if (!isConnected) {
+      toast.error("Please connect wallet");
+      return;
+    }
+    const formData = new FormData(e.target as HTMLFormElement);
+    const data = Object.fromEntries(formData.entries());
+    const amount = parseFloat(data.amount as string);
+    console.log(amount);
+
+    if (isNaN(amount) || amount <= 0) {
+      toast.error("Invalid amount");
+      return;
+    }
+    const amountInWei = Number(amount * 10 ** 18);
+    if (address && isConnected) {
+      try {
+        const dateObject = new Date(data.startDate as string);
+        const dateInMilliseconds = dateObject.getTime();
+
+        const hash = await writeContractAsync({
+          address: contractAddress,
+          abi: contractAbi,
+          functionName: "registerChama",
+          args: [
+            BigInt(amountInWei),
+            BigInt(Number(data.cycleTime)),
+            BigInt(dateInMilliseconds),
+          ],
+        });
+
+        if (hash) {
+          try {
+            await createChama(formData, "Public", address);
+            console.log("done");
+            toast.success(`${data.name} created successfully.`);
+            router.push("/MyChamas");
+          } catch (error) {
+            console.log(error);
+            toast.error("Unable, Try using another group name");
+          }
+        } else {
+          toast.error("unable to create, please try again");
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    } else {
+      toast.error("Please connect wallet.");
+    }
   };
 
   return (
@@ -40,6 +96,7 @@ const CreatePublic = () => {
           <input
             type="text"
             id="groupName"
+            name="name"
             value={groupName}
             onChange={(e) => setGroupName(e.target.value)}
             required
@@ -58,6 +115,7 @@ const CreatePublic = () => {
           <input
             type="number"
             id="maxPeople"
+            name="maxNumber"
             value={maxPeople}
             onChange={(e) => setMaxPeople(e.target.value)}
             required
@@ -75,6 +133,7 @@ const CreatePublic = () => {
           <input
             type="number"
             id="amount"
+            name="amount"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             required
@@ -91,8 +150,9 @@ const CreatePublic = () => {
             Start Date
           </label>
           <input
-            type="date"
+            type="datetime-local"
             id="startDate"
+            name="startDate"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
             required
@@ -104,11 +164,12 @@ const CreatePublic = () => {
             htmlFor="duration"
             className="block text-sm font-medium text-gray-700"
           >
-           Cycle Time (in days)
+            Cycle Time (in days)
           </label>
           <input
             type="number"
             id="duration"
+            name="cycleTime"
             value={duration}
             onChange={(e) => setDuration(e.target.value)}
             required
@@ -119,9 +180,14 @@ const CreatePublic = () => {
         <div className="flex justify-end">
           <button
             type="submit"
-            className="bg-downy-500 hover:bg-downy-600 text-white font-semibold py-2 px-4 rounded-md"
+            disabled={isPending}
+            className={`  font-semibold py-2 px-4 rounded-md ${
+              isPending
+                ? "bg-gray-300 text-gray-400 hover:bg-gray-300 cursor-not-allowed"
+                : "bg-downy-500  hover:bg-downy-600 text-white"
+            }`}
           >
-            Create Chama
+            {isPending ? "Creating..." : "Create Chama"}
           </button>
         </div>
       </form>
