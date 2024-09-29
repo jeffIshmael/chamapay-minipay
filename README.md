@@ -1,197 +1,108 @@
-<!-- TITLE -->
-<p align="center"> 
-  <img width="100px" src="https://github.com/celo-org/celo-composer/blob/main/images/readme/celo_isotype.svg" align="center" alt="Celo" />
- <h2 align="center">Celo Composer</h2>
- <p align="center">Build, deploy, and iterate quickly on decentralized applications using Celo.</p>
-</p>
-  <p align="center">
-    <a href="https://github.com/celo-org/celo-composer/graphs/stars">
-      <img alt="GitHub Contributors" src="https://img.shields.io/github/stars/celo-org/celo-composer?color=FCFF52" />
-    </a>
-    <a href="https://github.com/celo-org/celo-composer/graphs/contributors">
-      <img alt="GitHub Contributors" src="https://img.shields.io/github/contributors/celo-org/celo-composer?color=E7E3D4" />
-    </a>
-    <a href="https://github.com/celo-org/celo-composer/issues">
-      <img alt="Issues" src="https://img.shields.io/github/issues/celo-org/celo-composer?color=E7E3D4" />
-    </a>
-    <a href="https://github.com/celo-org/celo-composer/pulls">
-      <img alt="GitHub pull requests" src="https://img.shields.io/github/issues-pr/celo-org/celo-composer?color=E7E3D4" />
-    </a>
-    <a href="https://opensource.org/license/mit/">
-      <img alt="MIT License" src="https://img.shields.io/badge/License-MIT-yellow.svg" />
-    </a>
-  </p>
-</p>
+# ChamaPay
 
-<!-- TABLE OF CONTENTS -->
+![ChamaPay Logo](logo-no-background.png)
 
-<details>
-  <summary>Table of Contents</summary>
-  <ol>
-    <li>
-      <a href="#about-the-project">About The Project</a>
-      <ul>
-        <li><a href="#built-with">Built With</a></li>
-      </ul>
-    </li>
-    <li>
-      <ul>
-        <li><a href="#prerequisites">Prerequisites</a></li>
-        <li><a href="#installation">Installation</a></li>
-      </ul>
-    </li>
-    <li><a href="#usage">Usage</a></li>
-    <li><a href="#roadmap">Roadmap</a></li>
-    <li><a href="#contributing">Contributing</a></li>
-    <li><a href="#license">License</a></li>
-    <li><a href="#contact">Contact</a></li>
-    <li><a href="#acknowledgments">Acknowledgments</a></li>
-  </ol>
-</details>
+ChamaPay is a decentralized platform that leverages the **cKES stablecoin** to facilitate the traditional *chama* system of rotary giving. Users can create and manage public or private chamas where members contribute funds that are distributed to participants in rotating turns. By integrating blockchain technology, ChamaPay ensures transparent, secure, and efficient fund management for these savings groups.
 
-<!-- ABOUT THE PROJECT -->
+---
 
-## About The Project
+## Overview
 
-Celo Composer allows you to quickly build, deploy, and iterate on decentralized applications using Celo. It provides a number of frameworks, examples, and Celo specific functionality to help you get started with your next dApp.
+ChamaPay aims to bring the traditional *chama* model into the digital world using the power of blockchain. It allows users to form groups where members take turns receiving funds from a shared pool. By leveraging the cKES stablecoin, ChamaPay ensures the stability of funds, and smart contracts manage the contribution and disbursement process, eliminating the need for intermediaries.
 
-<p align="right">(<a href="#top">back to top</a>)</p>
+---
 
-## Built With
+## Features
 
-Celo Composer is built on Celo to make it simple to build dApps using a variety of front-end frameworks, and libraries.
+- **Create Public and Private Chamas:**  
+  Users can create two types of chamas: public (open to anyone) and private (by invitation only).
+  
+- **Rotary Fund Disbursement:**  
+  Funds are contributed and distributed to chama members in turns, managed by smart contracts.
 
-- [Celo](https://celo.org/)
-- [Solidity](https://docs.soliditylang.org/en/v0.8.19/)
-- [Next.js](https://nextjs.org/)
-- [React.js](https://reactjs.org/)
-- [Material UI](https://mui.com/)
-- [React Native](https://reactnative.dev/)
-- [Flutter](https://docs.flutter.dev/)
-- [React-celo](https://github.com/celo-org/react-celo/)
-- [Rainbowkit-celo](https://github.com/celo-org/rainbowkit-celo)
+- **Hybrid Payment Options:**  
+  Supports payments with cKES stablecoin and integration with mobile money systems like M-Pesa (future plans).
 
-<p align="right">(<a href="#top">back to top</a>)</p>
+- **Smart Contract-based Transparency:**  
+  All transactions and fund rotations are handled transparently on the blockchain.
 
-<!-- GETTING STARTED -->
+- **Secure and Private:**  
+  User data is protected, and blockchain ensures that funds are safe and disbursed according to pre-set rules.
 
-## Prerequisites
+---
 
-- Node
-- Git (v2.38 or higher)
+## Screenshots
 
-## How to use Celo Composer
+Here’s a preview of the ChamaPay platform:
 
-The easiest way to start with Celo Composer is using `@celo/celo-composer`. This CLI tool lets you quickly start building dApps on Celo for multiple frameworks, including React (with either react-celo or rainbowkit-celo), React Native (w/o Expo), Flutter, and Angular. To get started, just run the following command, and follow the steps:
+### Home Page
+![Home Page](<Screenshot from 2024-09-29 12-44-40.png>)
 
-```bash
-npx @celo/celo-composer@latest create
-```
+### Landing Page
+![Landing Page](<Screenshot from 2024-09-29 12-45-28.png>)
 
-### Front-end framework
+### Chama Creation Page
+![Create Chama](<Screenshot from 2024-09-29 12-48-09.png>)
 
-![Celo Composer select framework](https://github.com/celo-org/celo-composer/blob/main/images/readme/cc_step_1.png?raw=true)
+### View Chamas
+![View Chamas](<Screenshot from 2024-09-29 12-48-27.png>)
 
-### Web3 library (for react-app)
+### Chama Details
+![Chama Details](<Screenshot from 2024-09-29 12-48-50.png>)
 
-![Celo Composer select framework](https://github.com/celo-org/celo-composer/blob/main/images/readme/cc_step_2.png?raw=true)
+### Chama Chat
+![Chama Chat](<Screenshot from 2024-09-29 12-49-17.png>)
 
-### Smart contract framework
+### Chama Schedule
+![Chama Schedule](<Screenshot from 2024-09-29 12-50-05.png>)
 
-![Celo Composer tool selection](https://github.com/celo-org/celo-composer/blob/main/images/readme/cc_step_3.png?raw=true)
+### Wallet
+![Wallet](<Screenshot from 2024-09-29 12-47-55.png>)
 
-### Subgraph
+---
 
-![Celo Composer subgraph support](https://github.com/celo-org/celo-composer/blob/main/images/readme/cc_step_4.png?raw=true)
+## Inspiration
 
-### Name your dApp
+ChamaPay was inspired by the need to digitize communal saving systems like *chamas*, which have been used for generations to build financial security within communities. By using blockchain, we aim to bring more transparency, security, and efficiency to the process while ensuring that anyone can participate without geographical restrictions.
 
-![Celo Composer dApp name](https://github.com/celo-org/celo-composer/blob/main/images/readme/cc_step_5.png?raw=true)
+---
 
-**_🔥Voila, you have a dApp ready to go. Voila, you have a dApp ready to go. Start building your dApp on Celo._**
+## Tech Stack
 
-### Getting started
+- **Blockchain:** Celo  
+- **Smart Contracts:** Solidity  
+- **Stablecoin:** cKES  
+- **Frontend:** Next.js, Tailwind CSS  
+- **Web3 Integration:** wagmi  
+- **Notifications:** Custom backend for real-time updates  
+- **Mobile Money Integration:** cKES ,M-Pesa (future plans)
 
-Once your custom dApp has been created, just install dependencies, either with `yarn` or `npm i`, and run the respective script from the `package.json` file.
-## Supported Frameworks
+---
 
-### React
+## How It Works
 
-- Support for Website and Progressive Web Application.
-- Works with all major crypto wallets.
+1. **Create a Chama:**  
+   Users can create a chama by defining parameters like group type (public or private), number of members, contribution amount, and rotation schedule.
+   
+2. **Invite Members:**  
+   In private chamas, the group creator can invite specific people, while public chamas are open for anyone to join.
 
-Check [package readme](https://github.com/celo-org/celo-composer/blob/main/packages/react-app/README.md) to learn more about.
+3. **Contribute Funds:**  
+   Members contribute a fixed amount of funds in **cKES**, which are pooled together.
 
-### React Native
+4. **Rotary Disbursement:**  
+   Funds are distributed to each member in turns.
 
-- Out of the box config, just focus on buidl.
-- Support for Android and IOS.
-- Works with and without [Expo](https://expo.dev/).
-- Working example app included.
+5. **Withdrawal:**  
+   Members can claim their funds when it’s their turn, and the smart contract ensures they receive the correct amount.
 
-Check [package readme](https://github.com/celo-org/celo-composer/blob/main/packages/react-native-app/README.md) to learn more about.
 
-### Flutter
 
-- One command to get started - Type `flutter run` to start development in your mobile phone.
-- Works with all major mobile crypto wallets.
-- Support for Android, IOS (Web, Windows, and Linux coming soon).
-- Working example app included.
+### Getting Started
 
-Check [package readme](https://github.com/celo-org/celo-composer/blob/main/packages/flutter-app/README.md) to learn more about.
+- Watch our video demo [Live Demo](https://youtu.be/z1XXxHw6LDM)
+- Try out our platform in our [live link](https://chama-pay.vercel.app/)
 
-### Angular
 
-- Support for Website and Progressive Web Application.
-- Works with all major crypto wallets.
-
-Check [package readme](https://github.com/celo-org/celo-composer/blob/main/packages/angular-app/README.md) to learn more about.
-
-<!-- USAGE EXAMPLES -->
-
-## 🔭 Learning Solidity
-
-📕 Read the docs: <https://docs.soliditylang.org>
-
-- [Primitive Data Types](https://solidity-by-example.org/primitives/)
-- [Mappings](https://solidity-by-example.org/mapping/)
-- [Structs](https://solidity-by-example.org/structs/)
-- [Modifiers](https://solidity-by-example.org/function-modifier/)
-- [Events](https://solidity-by-example.org/events/)
-- [Inheritance](https://solidity-by-example.org/inheritance/)
-- [Payable](https://solidity-by-example.org/payable/)
-- [Fallback](https://solidity-by-example.org/fallback/)
-
-📧 Learn the [Solidity globals and units](https://solidity.readthedocs.io/en/v0.8.19/units-and-global-variables.html)
-
-## Support
-
-Join the Celo Discord server at <https://chat.celo.org>. Reach out on the dedicated repo channel [here](https://discord.com/channels/600834479145353243/941003424298856448).
-
-<!-- ROADMAP -->
-
-## Roadmap
-
-See the [open issues](https://github.com/celo-org/celo-composer/issues) for a full list of proposed features (and known issues).
-
-<p align="right">(<a href="#top">back to top</a>)</p>
-
-<!-- CONTRIBUTING -->
-
-## Contributing
-
-We welcome contributions from the community.
-
-<p align="right">(<a href="#top">back to top</a>)</p>
-
-## License
-
-Distributed under the MIT License. See `LICENSE.txt` for more information.
-
-<!-- CONTACT -->
 ## Contact
-
-- [@CeloDevs](https://twitter.com/CeloDevs)
-- [Discord](https://discord.com/invite/celo)
-
-<p align="right">(<a href="#top">back to top</a>)</p>
+- [@ChamapayDevs] jeffianmuchiri@gmail.com
