@@ -105,12 +105,12 @@ const Schedule = ({ chamaId }: { chamaId: number }) => {
   useEffect(() => {
     // Add your logic here to get the balance for the current user
 
-    if (isConnected && address) {
-      const result = Number(chamaBalance)/10**18;
+    if (chamaBalance) {
+      const result = Number(chamaBalance) / 10 ** 18;
       console.log(result);
       setBalance(result);
     }
-  }, [chamaBalance, address]);
+  }, [chamaBalance]);
 
   // Helper to calculate each member's position and payout date
   const calculateMemberPosition = (index: number) => {
@@ -133,9 +133,9 @@ const Schedule = ({ chamaId }: { chamaId: number }) => {
   return (
     <div className="min-h-screen bg-gray-200 flex flex-col items-center p-4">
       {/* Top right balance display */}
-      <div className="absolute top-4 right-4 bg-white shadow-md p-4 rounded-md">
-        <h3 className="text-lg font-bold">My chama Bal</h3>
-        <p className="text-2xl font-semibold">{balance} cKES</p>
+      <div className="flex  right-2 sm:top-2 sm:right-0 bg-white shadow-md justify-end p-2 sm:p-2 rounded-md z-50">
+        <p className="text-sm sm:text-2xl font-normal">My chama Bal:</p>
+        <p className="text-xl sm:text-2xl font-normal">{balance} cKES</p>
       </div>
 
       {/* Cycle progress container */}
