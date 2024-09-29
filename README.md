@@ -91,4 +91,4 @@ ChamaPay was inspired by the need to digitize communal saving systems like _cham
 
 ## Contact
 
-- [@ChamapayDevs] (jeffianmuchiri@gmail.com)
+<a href="jeffianmuchiri24@gmai.com">@ChamaPay devs </a>
