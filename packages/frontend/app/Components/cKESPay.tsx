@@ -65,7 +65,7 @@ const CKESPay = ({ id , name }: { id: number , name:string}) => {
               address: contractAddress,
               abi: contractAbi,
               functionName: "depositCash",
-              args: [id-1, (amount * 10**18)],
+              args: [id-3, (amount * 10**18)],
             });
 
             if (hash) {
