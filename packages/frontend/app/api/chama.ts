@@ -28,7 +28,6 @@ export async function getChamaById(chamaId: number) {
   });
   return chama;
 }
-
 export async function createUser(userName: string | null, address: string) {
   // Check if the address already exists
   let user = await prisma.user.findUnique({
@@ -52,6 +51,33 @@ export async function createUser(userName: string | null, address: string) {
   return user;
 }
 
+//get a member's chamas
+export async function getChamasByUser(userId: number) {
+  const chamaIds = await prisma.chamaMember.findMany({
+    where: {
+      userId: userId,
+    },
+    select: {
+      chamaId: true,
+    },
+  });
+
+  const chamas = [];
+
+  for(const chamaIdItem of chamaIds) {
+    const chama = await prisma.chama.findUnique({
+      where: {
+        id: chamaIdItem.chamaId
+      }
+    });
+
+    if (chama) {
+      chamas.push(chama);
+    }
+  }
+
+  return chamas;
+}
 
 //create a chama
 export async function createChama(
@@ -59,13 +85,14 @@ export async function createChama(
   chamaType: string,
   adminAddress: `0x${string}`
 ) {
-  await prisma.chama.create({
+  // First, create the Chama
+  const chama = await prisma.chama.create({
     data: {
       name: formData.get("name") as string,
       type: chamaType,
       amount: Number(formData.get("amount")),
       cycleTime: Number(formData.get("cycleTime")),
-      maxNo: Number(formData.get("maxNo")) || 0,
+      maxNo: Number(formData.get("maxNumber")) || 0,
       slug: (formData.get("name") as string).replace(/\s+/g, "-").toLowerCase(),
       startDate: new Date(formData.get("startDate") as string),
       payDate: new Date(
@@ -74,20 +101,40 @@ export async function createChama(
       ),
       admin: {
         connectOrCreate: {
-          where: {
-            address: adminAddress,
-          },
+          where: { address: adminAddress },
           create: {
             address: adminAddress,
-            name: "glen",
-            role: "nonr",
+            name: "glen",  // Or retrieve from form data
+            role: "admin", // Add role here as it's required
           },
         },
       },
     },
   });
+
+  // Then, create the ChamaMember for the admin
+  await prisma.chamaMember.create({
+    data: {
+      user: {
+        connectOrCreate: {
+          where: { address: adminAddress },
+          create: {
+            address: adminAddress,
+            name: "glen", // Or retrieve from form data
+            role: "admin", // Add role here as it's required for the User model
+          },
+        },
+      },
+      chama: {
+        connect: { id: chama.id },
+      },
+    },
+  });
+
+  // Revalidate the path if necessary
   revalidatePath("/MyChamas");
 }
+
 
 //function to get user specifically
 export async function getUser(userAddress: string) {
@@ -345,7 +392,6 @@ export async function getPendingRequests(adminId: number) {
 
   return pendingRequests;
 }
-
 //get request by ID
 export async function getRequestById(requestId: number) {
   const request = await prisma.chamaRequest.findUnique({
@@ -359,6 +405,15 @@ export async function getRequestById(requestId: number) {
 export async function getUserNotifications(userId: number) {
   const notifications = await prisma.notification.findMany({
     where: { userId },
+    orderBy: { createdAt: "desc" }, // Sort by newest first
+  });
+  return notifications;
+}
+
+//get usernotifications from request id
+export async function getNotificationsByRequestId(requestId: number) {
+  const notifications = await prisma.notification.findMany({
+    where: { requestId },
     orderBy: { createdAt: "desc" }, // Sort by newest first
   });
   return notifications;

@@ -4,7 +4,8 @@ import React, { useEffect, useState } from "react";
 import BottomNavbar from "../Components/BottomNavbar";
 import Image from "next/image";
 import Link from "next/link";
-import { handler } from "../api/chama";
+import { useAccount } from "wagmi";
+import { handler, getChamasByUser, getUser } from "../api/chama";
 
 interface Chama {
   adminId: number;
@@ -21,13 +22,23 @@ interface Chama {
   type: string;
 }
 
+interface User {
+  id: number;
+  address: string;
+  role: string;
+  name: string;
+}
+
 const Page = () => {
   const [activeSection, setActiveSection] = useState("Chamas");
   const [chamas, setChamas] = useState<Chama[]>([]);
+  const [myChamas, setMyChamas] = useState<Chama[]>([]);
+  const { isConnected, address } = useAccount();
+  const [user, setUser] = useState(0);
 
   const friendsChama = chamas.filter((chama) => chama.type === "Private");
   const publicChama = chamas.filter((chama) => chama.type === "Public");
-  console.log(friendsChama);
+  // console.log(friendsChama);
 
   const duration = (cycleTime: number) => {
     const daysInYear = 365;
@@ -59,16 +70,40 @@ const Page = () => {
     return result;
   };
 
+  // useEffect(() => {
+  //   const fetchChamas = async () => {
+  //     const data = await handler();
+  //     // console.log(data);
+  //     setChamas(data);
+  //   };
+
+  //   fetchChamas();
+  // }, []);
 
   useEffect(() => {
-    const fetchChamas = async () => {
-      const data = await handler();
-      console.log(data);
-      setChamas(data);
+    const fetchMyChamas = async () => {
+      try {
+        const userData = await getUser(address as string);
+
+        if (userData) {
+          const data = await getChamasByUser(userData.id);
+          console.log(data); // Check what is being returned
+
+          if (data && Array.isArray(data)) {
+            // Ensure data is an array
+            setChamas(data as Chama[]); // Set Chamas with the fetched data
+          } else {
+            setChamas([]); // Set an empty array if data is not an array
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching my chamas:", error);
+        setChamas([]); // Handle errors and set an empty array
+      }
     };
 
-    fetchChamas();
-  }, []);
+    fetchMyChamas();
+  }, [address]); // Ensure the useEffect triggers on address change
 
   console.log(chamas);
 
@@ -158,8 +193,13 @@ const Page = () => {
           <h3 className="text-gray-500 text-sm">Public</h3>
           <div className="bg-white p-4 border border-gray-300 rounded-lg shadow-lg mt-2 space-y-2 divide-y divide-gray-400">
             {publicChama.length === 0 && (
-              <div>
+              <div className="items-center mt-2 mb-2">
                 <h2>You have no public chama.</h2>
+                <Link href="/Explore">
+                  <button className=" p-2 rounded-md mt-2 items-center bg-downy-400 text-gray-700 hover:bg-downy-600 hover:text-white">
+                    Explore Available
+                  </button>
+                </Link>
               </div>
             )}
 

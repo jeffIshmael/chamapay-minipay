@@ -65,7 +65,7 @@ const ChamaCard = ({ chama }: { chama: Chama }) => {
 
   return (
     <Link href={`/Chama/${chama.slug}`} className="block">
-      <div className="border p-4  rounded-lg shadow-md hover:shadow-xl transition-shadow bg-white flex flex-col justify-between ">
+      <div className="border p-4 rounded-lg shadow-md hover:shadow-xl transition-shadow bg-white flex flex-col justify-between min-h-[300px] h-full ">
         {/* Status and Arrow */}
         <div className="flex justify-end items-center mb-4">
           <p
@@ -84,7 +84,7 @@ const ChamaCard = ({ chama }: { chama: Chama }) => {
             alt="Chama Profile"
             width={50}
             height={50}
-            className="rounded-full object-cover"
+            className="rounded-full "
             priority={false}
             loading="lazy"
           />

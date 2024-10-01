@@ -55,7 +55,7 @@ const Schedule = ({ chamaId }: { chamaId: number }) => {
   });
 
   const startDate = beginDate; // Start date of the chama cycle
-  const endDate = beginDate + duration * members.length; // End date of the chama cycle (calculated based on members)
+  const endDate = beginDate + (duration * members.length); // End date of the chama cycle (calculated based on members)
   const totalDays = dayjs(endDate).diff(dayjs(startDate), "day");
 
   useEffect(() => {
@@ -69,6 +69,7 @@ const Schedule = ({ chamaId }: { chamaId: number }) => {
   useEffect(() => {
     if (chamaDetails) {
       const results = chamaDetails as ChamaDetailsTuple | undefined;
+      console.log(results);
       if (results && Array.isArray(results[7])) {
         setMembers(results[7]); // Set members based on addresses from the contract
         setDuration(Number(results[3])); // Set duration from contract data

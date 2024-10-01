@@ -113,7 +113,7 @@ const Wallet = () => {
         const chamaData: Chama | null = await getChamaById(payment.chamaId);
         if (chamaData) {
           // Check if name is null, and provide a fallback (e.g., "Unknown User")
-          namesMap[payment.userId] = chamaData.name || "Unknown User";
+          namesMap[payment.userId] = chamaData.name || "loading...";
         }
       }
       setChamaNames(namesMap);
@@ -288,7 +288,7 @@ const Wallet = () => {
                 </div>
                 <div>
                   <h4 className="text-gray-800 text-sm font-semibold">
-                    Payment to {chamaNames[payment.chamaId] || "Unknown Chama"}
+                    Payment to {chamaNames[payment.chamaId] || "loading..."}
                   </h4>
                   <p className="text-gray-600 text-xs">
                     {payment.doneAt.toLocaleString()}
