@@ -48,6 +48,7 @@ const Page = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [pendingRequests, setPendingRequests] = useState<Request[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+  const [fetching, setFetching] = useState<boolean>(false);
   const { writeContractAsync } = useWriteContract();
   const { isConnected, address } = useAccount();
   const [senderDetails, setSenderDetails] = useState<User | null>(null);
@@ -55,6 +56,7 @@ const Page = () => {
   // Fetch user details
   useEffect(() => {
     if (isConnected && address) {
+      setFetching(true);
       const fetchUser = async () => {
         const user = await getUser(address);
         if (user) setUserId(user.id);
@@ -67,6 +69,7 @@ const Page = () => {
   useEffect(() => {
     const fetchData = async () => {
       if (userId) {
+        setFetching(true);
         try {
           // Fetch pending requests
           const pending = await getPendingRequests(userId);
@@ -78,6 +81,8 @@ const Page = () => {
         } catch (error) {
           console.error("Error fetching data:", error);
           toast.error("Failed to fetch notifications or requests.");
+        } finally {
+          setFetching(false);
         }
       }
     };
@@ -150,7 +155,12 @@ const Page = () => {
     <div>
       <div className="bg-downy-100 min-h-screen p-4 rounded-md">
         <h1 className="text-black text-xl font-medium mt-4">Notifications</h1>
-        {notifications.length === 0 ? (
+
+        {fetching ? (
+          <div className="text-center mt-4">
+            <p className="text-gray-900">Fetching...</p>
+          </div>
+        ) : notifications.length === 0 ? (
           <div className="text-center mt-4">
             <p className="text-gray-900">No notifications</p>
           </div>
@@ -220,6 +230,77 @@ const Page = () => {
             );
           })
         )}
+
+        {/* {notifications.length === 0 ? (
+          <div className="text-center mt-4">
+            <p className="text-gray-900">No notifications</p>
+          </div>
+        ) : (
+          notifications.map((notification) => {
+            const isPending =
+              notification.requestId !== null &&
+              pendingRequestIds.has(notification.requestId);
+
+            return (
+              <div
+                key={notification.id}
+                className="bg-white p-4 border border-gray-300 rounded-lg shadow-lg mt-2 space-y-2"
+              >
+                <p className="text-gray-900">{notification.message}</p>
+                <div className="flex justify-between items-center">
+                  <small className="text-gray-500 text-sm">
+                    {new Date(notification.createdAt).toLocaleDateString(
+                      "en-US",
+                      {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                      }
+                    )}
+                  </small>
+                  {isPending && (
+                    <div className="flex space-x-4">
+                      <button
+                        onClick={() =>
+                          handleJoin(
+                            notification.id,
+                            "approve",
+                            notification.chamaId ?? 0,
+                            notification.senderId,
+                            notification.requestId ?? 0
+                          )
+                        }
+                        className={`flex items-center px-3 py-1 bg-downy-500 text-white rounded-md hover:bg-downy-600 ${
+                          loading ? "opacity-50 cursor-not-allowed" : ""
+                        }`}
+                        disabled={loading}
+                      >
+                        Approve
+                      </button>
+                      <button
+                        onClick={() =>
+                          handleJoin(
+                            notification.id,
+                            "reject",
+                            notification.chamaId ?? 0,
+                            notification.senderId,
+                            notification.requestId ?? 0
+                          )
+                        }
+                        className={`flex items-center px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600 ${
+                          loading ? "opacity-50 cursor-not-allowed" : ""
+                        }`}
+                        disabled={loading}
+                      >
+                        Reject
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })
+        )} */}
       </div>
       <BottomNavbar
         activeSection={activeSection}

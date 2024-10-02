@@ -32,7 +32,8 @@ interface User {
 const Page = () => {
   const [activeSection, setActiveSection] = useState("Chamas");
   const [chamas, setChamas] = useState<Chama[]>([]);
-  const [myChamas, setMyChamas] = useState<Chama[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+
   const { isConnected, address } = useAccount();
   const [user, setUser] = useState(0);
 
@@ -70,18 +71,10 @@ const Page = () => {
     return result;
   };
 
-  // useEffect(() => {
-  //   const fetchChamas = async () => {
-  //     const data = await handler();
-  //     // console.log(data);
-  //     setChamas(data);
-  //   };
-
-  //   fetchChamas();
-  // }, []);
-
   useEffect(() => {
     const fetchMyChamas = async () => {
+      if (!address) return; // Ensure address is available
+      setLoading(true); // Start loading
       try {
         const userData = await getUser(address as string);
 
@@ -99,6 +92,8 @@ const Page = () => {
       } catch (error) {
         console.error("Error fetching my chamas:", error);
         setChamas([]); // Handle errors and set an empty array
+      } finally {
+        setLoading(false); // Stop loading
       }
     };
 
@@ -122,146 +117,157 @@ const Page = () => {
           <h3 className="text-gray-500 text-sm">Family & Friends</h3>
 
           <div className="bg-white p-4 border border-gray-300 rounded-lg shadow-lg mt-2 space-y-2 divide-y divide-gray-200">
-            {friendsChama.length === 0 && (
-              <div>
-                <h2>You have no friends chama.</h2>
+            {loading ? (
+              <div className="text-center mt-4">
+                <p className="text-gray-500">Loading chamas...</p>
               </div>
-            )}
-            {friendsChama.map((chama, index) => (
-              <Link href={`/Chama/${chama.slug}`} key={index}>
-                <div className="flex items-center justify-between mt-2 mb-2">
-                  <div className="flex items-center space-x-4">
-                    <Image
-                      src={`https://ipfs.io/ipfs/Qmd1VFua3zc65LT93Sv81VVu6BGa2QEuAakAFJexmRDGtX/${Number(
-                        chama.id
-                      ).toString()}.jpg`}
-                      alt="profile pic"
-                      width={50}
-                      height={50}
-                      className="rounded-lg"
-                    />
-                    <div>
-                      <h4 className="text-gray-900 font-medium">
-                        {chama.name}
-                      </h4>
-                      <p className="text-gray-500 text-sm">
-                        {chama.started == true
-                          ? `PayDate: ${chama.payDate.toLocaleString("en-GB", {
-                              day: "numeric",
-                              month: "short",
-                              year: "numeric",
-                              hour12: false,
-                              hour: "numeric",
-                              minute: "numeric",
-                            })}`
-                          : `StartDate:${chama.startDate.toLocaleString(
-                              "en-GB",
-                              {
+            ) : friendsChama.length === 0 ? (
+              <div className="text-center mt-4">
+                <h2 className="text-gray-700">You have no friends chama.</h2>
+              </div>
+            ) : (
+              friendsChama.map((chama) => (
+                <Link href={`/Chama/${chama.slug}`} key={chama.id}>
+                  <div className="flex items-center justify-between mt-2 mb-2">
+                    <div className="flex items-center space-x-4">
+                      <Image
+                        src={`https://ipfs.io/ipfs/Qmd1VFua3zc65LT93Sv81VVu6BGa2QEuAakAFJexmRDGtX/${chama.id}.jpg`}
+                        alt="profile pic"
+                        width={50}
+                        height={50}
+                        className="rounded-lg object-cover"
+                        priority={false}
+                        loading="lazy"
+                      />
+                      <div>
+                        <h4 className="text-gray-900 font-medium">
+                          {chama.name}
+                        </h4>
+                        <p className="text-gray-500 text-sm">
+                          {chama.started
+                            ? `PayDate: ${new Date(
+                                chama.payDate
+                              ).toLocaleString("en-GB", {
                                 day: "numeric",
                                 month: "short",
                                 year: "numeric",
                                 hour12: false,
                                 hour: "numeric",
                                 minute: "numeric",
-                              }
-                            )}`}
-                      </p>
+                              })}`
+                            : `StartDate: ${new Date(
+                                chama.startDate
+                              ).toLocaleString("en-GB", {
+                                day: "numeric",
+                                month: "short",
+                                year: "numeric",
+                                hour12: false,
+                                hour: "numeric",
+                                minute: "numeric",
+                              })}`}
+                        </p>
+                      </div>
                     </div>
+                    <h4 className="text-gray-900 font-normal">
+                      {chama.amount} cKES/{duration(chama.cycleTime)}
+                    </h4>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      className="size-6"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M16.28 11.47a.75.75 0 0 1 0 1.06l-7.5 7.5a.75.75 0 0 1-1.06-1.06L14.69 12 7.72 5.03a.75.75 0 0 1 1.06-1.06l7.5 7.5Z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
                   </div>
-                  <h4 className="text-gray-900 font-normal">
-                    {chama.amount} cKES/{duration(chama.cycleTime)}
-                  </h4>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                    className="size-6"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M16.28 11.47a.75.75 0 0 1 0 1.06l-7.5 7.5a.75.75 0 0 1-1.06-1.06L14.69 12 7.72 5.03a.75.75 0 0 1 1.06-1.06l7.5 7.5Z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </div>
-              </Link>
-            ))}
+                </Link>
+              ))
+            )}
           </div>
         </div>
 
         <div className="mt-6">
           <h3 className="text-gray-500 text-sm">Public</h3>
           <div className="bg-white p-4 border border-gray-300 rounded-lg shadow-lg mt-2 space-y-2 divide-y divide-gray-400">
-            {publicChama.length === 0 && (
-              <div className="items-center mt-2 mb-2">
-                <h2>You have no public chama.</h2>
+            {loading ? (
+              <div className="text-center mt-4">
+                <p className="text-gray-500">Loading chamas...</p>
+              </div>
+            ) : publicChama.length === 0 ? (
+              <div className="text-center mt-4">
+                <h2 className="text-gray-700">You have no public chama.</h2>
                 <Link href="/Explore">
-                  <button className=" p-2 rounded-md mt-2 items-center bg-downy-400 text-gray-700 hover:bg-downy-600 hover:text-white">
+                  <button className="p-2 rounded-md mt-2 items-center bg-downy-400 text-gray-700 hover:bg-downy-600 hover:text-white">
                     Explore Available
                   </button>
                 </Link>
               </div>
-            )}
-
-            {publicChama.map((chama, index) => (
-              <Link href={`/Chama/${chama.slug}`} key={index}>
-                <div className="flex items-center justify-between mt-2 mb-2">
-                  <div className="flex items-center space-x-4">
-                    <Image
-                      src={`https://ipfs.io/ipfs/Qmd1VFua3zc65LT93Sv81VVu6BGa2QEuAakAFJexmRDGtX/${Number(
-                        chama.id
-                      ).toString()}.jpg`}
-                      alt="profile pic"
-                      width={50}
-                      height={50}
-                      className="rounded-lg"
-                    />
-                    <div>
-                      <h4 className="text-gray-900 font-medium">
-                        {chama.name}
-                      </h4>
-                      <p className="text-gray-500 text-sm">
-                        {chama.started == true
-                          ? `PayDate: ${chama.payDate.toLocaleString("en-GB", {
-                              day: "numeric",
-                              month: "short",
-                              year: "numeric",
-                              hour12: false,
-                              hour: "numeric",
-                              minute: "numeric",
-                            })}`
-                          : `StartDate:${chama.startDate.toLocaleString(
-                              "en-GB",
-                              {
+            ) : (
+              publicChama.map((chama) => (
+                <Link href={`/Chama/${chama.slug}`} key={chama.id}>
+                  <div className="flex items-center justify-between mt-2 mb-2">
+                    <div className="flex items-center space-x-4">
+                      <Image
+                        src={`https://ipfs.io/ipfs/Qmd1VFua3zc65LT93Sv81VVu6BGa2QEuAakAFJexmRDGtX/${chama.id}.jpg`}
+                        alt="profile pic"
+                        width={50}
+                        height={50}
+                        className="rounded-lg object-cover"
+                        priority={false}
+                        loading="lazy"
+                      />
+                      <div>
+                        <h4 className="text-gray-900 font-medium">
+                          {chama.name}
+                        </h4>
+                        <p className="text-gray-500 text-sm">
+                          {chama.started
+                            ? `PayDate: ${new Date(
+                                chama.payDate
+                              ).toLocaleString("en-GB", {
                                 day: "numeric",
                                 month: "short",
                                 year: "numeric",
                                 hour12: false,
                                 hour: "numeric",
                                 minute: "numeric",
-                              }
-                            )}`}
-                      </p>
+                              })}`
+                            : `StartDate: ${new Date(
+                                chama.startDate
+                              ).toLocaleString("en-GB", {
+                                day: "numeric",
+                                month: "short",
+                                year: "numeric",
+                                hour12: false,
+                                hour: "numeric",
+                                minute: "numeric",
+                              })}`}
+                        </p>
+                      </div>
                     </div>
+                    <h4 className="text-gray-900 font-normal">
+                      {chama.amount} cKES/{duration(chama.cycleTime)}{" "}
+                    </h4>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      className="size-6"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M16.28 11.47a.75.75 0 0 1 0 1.06l-7.5 7.5a.75.75 0 0 1-1.06-1.06L14.69 12 7.72 5.03a.75.75 0 0 1 1.06-1.06l7.5 7.5Z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
                   </div>
-                  <h4 className="text-gray-900 font-normal">
-                    {chama.amount} cKES/{duration(chama.cycleTime)}{" "}
-                  </h4>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                    className="size-6"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M16.28 11.47a.75.75 0 0 1 0 1.06l-7.5 7.5a.75.75 0 0 1-1.06-1.06L14.69 12 7.72 5.03a.75.75 0 0 1 1.06-1.06l7.5 7.5Z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </div>
-              </Link>
-            ))}
+                </Link>
+              ))
+            )}
           </div>
         </div>
       </div>
