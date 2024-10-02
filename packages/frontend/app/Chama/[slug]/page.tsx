@@ -23,7 +23,7 @@ import {
   contractAddress,
 } from "@/app/ChamaPayABI/ChamaPayContract";
 import { injected } from "wagmi/connectors";
-
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { toast } from "sonner";
 
 interface Chama {
@@ -183,9 +183,11 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
   if (!chama || (chama === null && !isFetching)) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-downy-100">
-        <h1 className="text-lg font-semibold text-gray-800">
-          Loading ...
-        </h1>
+        <DotLottieReact
+          src="https://lottie.host/d054c6be-ba43-476e-a709-0b8c5a6eacce/9H9nV28mOT.json"
+          loop
+          autoplay
+        />
       </div>
     );
   }
@@ -295,14 +297,14 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
           ).toString()}.jpg`}
           name={chama.name}
           slug={chama.slug}
-          chamaId = {chama.id}
+          chamaId={chama.id}
         />
       )}
       {activeSection === "Chats" && (
         <Chat
-        imageSrc={`https://ipfs.io/ipfs/Qmd1VFua3zc65LT93Sv81VVu6BGa2QEuAakAFJexmRDGtX/${Number(
-          chama.id
-        ).toString()}.jpg`}
+          imageSrc={`https://ipfs.io/ipfs/Qmd1VFua3zc65LT93Sv81VVu6BGa2QEuAakAFJexmRDGtX/${Number(
+            chama.id
+          ).toString()}.jpg`}
           name={chama.name}
           members={results ? results[7].length : 0}
         />
