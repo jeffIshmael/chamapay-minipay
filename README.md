@@ -63,6 +63,7 @@ ChamaPay was inspired by the need to digitize communal saving systems like _cham
 - **Stablecoin:** cKES
 - **Frontend:** Next.js, Tailwind CSS
 - **Web3 Integration:** wagmi
+- **Prisma:** Prisma is utilized as the ORM (Object-Relational Mapping) tool to manage database interactions. 
 - **Notifications:** Custom backend for real-time updates
 - **Mobile Money Integration:** cKES ,M-Pesa (future plans)
 
@@ -83,6 +84,10 @@ ChamaPay was inspired by the need to digitize communal saving systems like _cham
 
 5. **Withdrawal:**  
    Members can claim their funds when it’s their turn, and the smart contract ensures they receive the correct amount.
+
+## Security Measures
+1. Only admins can add members to the chama.
+2. If the deadline(PayDate) reaches and a member has not contributed his/her money, then the money will be refunded to the members who sent.
 
 ### Getting Started
 

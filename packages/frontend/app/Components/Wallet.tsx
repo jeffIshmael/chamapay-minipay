@@ -6,6 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { toast } from "sonner";
 import { injected } from "wagmi/connectors";
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { getChamaById, getPaymentsByUser, getUser } from "@/app/api/chama";
 
 interface Payment {
@@ -35,10 +36,12 @@ interface Chama {
 const Wallet = () => {
   const { isConnected, address } = useAccount();
   const [myFullAddress, setMyFullAddress] = useState("");
+  const [loadingPayments, setLoadingPayments] = useState<boolean>(false);
+  const [loadingUser, setLoadingUser] = useState<boolean>(false);
   const [visible, setVisible] = useState(true);
-  const { connect } = useConnect();
+  const { connect, connectAsync } = useConnect();
   const { disconnect } = useDisconnect();
-  const [userId, setUserId] = useState(0);
+  const [userId, setUserId] = useState<number | null>(null);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [chamaNames, setChamaNames] = useState<{ [key: number]: string }>({}); // store userId => name mapping
 
@@ -58,7 +61,6 @@ const Wallet = () => {
   }, []);
 
   const copyToClipboard = async () => {
-    // const inviteLink = `${window.location.origin}/Chama/${slug}`; // Dynamically generate link
     await navigator.clipboard.writeText(myFullAddress);
     toast.success("copied to clipboard!");
   };
@@ -69,60 +71,89 @@ const Wallet = () => {
 
   const handleConnect = async () => {
     try {
-      await connect({ connector: injected({ target: "metaMask" }) });
+      const connected = await connectAsync({
+        connector: injected({ target: "metaMask" }),
+      });
+      if (connected) toast.success("Connected!");
     } catch (error) {
       console.log(error);
       toast.error("Unable to connect.");
     }
   };
 
+  // Fetch user ID based on address
   useEffect(() => {
     const fetchUserId = async () => {
       if (!address) {
         console.error("Address is undefined. Cannot fetch user.");
-        return; // Exit early if no address is found
+        return;
       }
-  
+      setLoadingUser(true);
       try {
-        const userData = await getUser(address as string);
+        const userData = await getUser(address);
         if (userData) {
           setUserId(userData.id);
+        } else {
+          setUserId(null);
+          toast.error("User not found.");
         }
       } catch (error) {
         console.error("Error fetching user data:", error);
+        setUserId(null);
+        toast.error("Failed to fetch user data.");
+      } finally {
+        setLoadingUser(false);
       }
     };
-    fetchUserId();
-  }, [address]);
-  
+    if (isConnected && address) {
+      fetchUserId();
+    } else {
+      setUserId(null);
+      setPayments([]);
+      setChamaNames({});
+    }
+  }, [address, isConnected]);
 
+  // Fetch payments based on user ID
   useEffect(() => {
     const fetchPayments = async () => {
-      const results: Payment[] = await getPaymentsByUser(userId);
-      if (results) {
+      if (userId === null) return;
+      setLoadingPayments(true);
+      try {
+        const results: Payment[] = await getPaymentsByUser(userId);
         setPayments(results);
-        fetchChamaNames(results);
+        await fetchChamaNames(results);
+      } catch (error) {
+        console.error("Error fetching payments:", error);
+        setPayments([]);
+        setChamaNames({});
+        toast.error("Failed to fetch payments.");
+      } finally {
+        setLoadingPayments(false);
       }
     };
 
     const fetchChamaNames = async (payments: Payment[]) => {
       const namesMap: { [key: number]: string } = {};
 
-      // Fetch user names for each deposit asynchronously
-      for (const payment of payments) {
-        const chamaData: Chama | null = await getChamaById(payment.chamaId);
-        if (chamaData) {
-          // Check if name is null, and provide a fallback (e.g., "Unknown User")
-          namesMap[payment.userId] = chamaData.name || "loading...";
-        }
+      try {
+        await Promise.all(
+          payments.map(async (payment) => {
+            const chamaData = await getChamaById(payment.chamaId);
+            namesMap[payment.chamaId] = chamaData ? chamaData.name : "Unknown";
+          })
+        );
+      } catch (error) {
+        console.error("Error fetching chama names:", error);
+        toast.error("Failed to fetch chama names.");
       }
+
       setChamaNames(namesMap);
     };
 
     fetchPayments();
-  }, [userId]); // Make sure to add the dependency here
+  }, [userId]);
 
- 
   const myAddress = address?.slice(0, 6) + "..." + address?.slice(-4);
 
   return (
@@ -131,6 +162,7 @@ const Wallet = () => {
         <div
           onClick={() => {
             disconnect();
+            toast.info("Disconnected!");
           }}
           className="flex justify-end"
         >
@@ -263,54 +295,74 @@ const Wallet = () => {
       <div className="flex-1 p-4">
         <h1 className="text-gray-700 text-lg font-semibold">Payment History</h1>
 
-        {payments.length === 0 && (
-          <div className="mt-4 ">
+        {/* Loading State */}
+        {(loadingUser || loadingPayments) && (
+          <div className="mt-4 items-center">
+            <DotLottieReact src="https://lottie.host/965b1986-c9d6-4db5-a74d-375f05d98f59/M8KKZyk0j4.json" loop autoplay />
+          </div>
+        )}
+
+        {/* No Payments */}
+        {!loadingUser && !loadingPayments && payments.length === 0 && (
+          <div className="mt-4">
             <p>No payments have been made yet.</p>
           </div>
         )}
 
-        <ul className="mt-4 space-y-2">
-          {payments.map((payment: Payment, index: number) => (
-            <li
-              key={index}
-              className="border border-downy-300 p-3 rounded-lg flex justify-between items-center shadow-md"
-            >
-              <div className="flex items-center space-x-1">
-                <div className="bg-downy-500 rounded-full p-2">
+        {/* Payments List */}
+        {!loadingUser && !loadingPayments && payments.length > 0 && (
+          <ul className="mt-4 space-y-2">
+            {payments.map((payment: Payment) => (
+              <li
+                key={payment.id} // Use unique identifier instead of index
+                className="border border-downy-300 p-3 rounded-lg flex justify-between items-center shadow-md"
+              >
+                {/* Payment Details */}
+                <div className="flex items-center space-x-1">
+                  <div className="bg-downy-500 rounded-full p-2">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      className="w-6 h-6 text-white"
+                    >
+                      <path d="M10.5 6a.75.75 0 0 1 .75-.75h6.75a.75.75 0 0 1 0 1.5h-6.75A.75.75 0 0 1 10.5 6ZM7.5 12a.75.75 0 0 1 .75-.75h9.75a.75.75 0 0 1 0 1.5H8.25A.75.75 0 0 1 7.5 12Zm-.75 5.25c0-.414.336-.75.75-.75h9.75a.75.75 0 0 1 0 1.5H8.25a.75.75 0 0 1-.75-.75Z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h4 className="text-gray-800 text-sm font-semibold">
+                      Payment to {chamaNames[payment.chamaId] || "Loading..."}
+                    </h4>
+                    <p className="text-gray-600 text-xs">
+                      {new Date(payment.doneAt).toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Payment Amount */}
+                <div className="text-downy-600 font-semibold">
+                  {payment.amount} cKES
+                </div>
+
+                {/* Transaction Link */}
+                <Link
+                  href={`https://celoscan.io/tx/${payment.txHash}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 24 24"
                     fill="currentColor"
-                    className="w-6 h-6 text-white"
+                    className="w-6 h-6 text-downy-600"
                   >
-                    <path d="M10.5 6a.75.75 0 0 1 .75-.75h6.75a.75.75 0 0 1 0 1.5h-6.75A.75.75 0 0 1 10.5 6ZM7.5 12a.75.75 0 0 1 .75-.75h9.75a.75.75 0 0 1 0 1.5H8.25A.75.75 0 0 1 7.5 12Zm-.75 5.25c0-.414.336-.75.75-.75h9.75a.75.75 0 0 1 0 1.5H8.25a.75.75 0 0 1-.75-.75Z" />
+                    <path d="M12.75 3a.75.75 0 0 0-1.5 0v9a.75.75 0 0 0 1.5 0V3Zm.89 10.031a.75.75 0 0 0-1.06 1.06l2.22 2.22H6.75a.75.75 0 1 0 0 1.5h7.98l-2.22 2.22a.75.75 0 1 0 1.06 1.06l3.53-3.53a.75.75 0 0 0 0-1.06l-3.53-3.53Z" />
                   </svg>
-                </div>
-                <div>
-                  <h4 className="text-gray-800 text-sm font-semibold">
-                    Payment to {chamaNames[payment.chamaId] || "loading..."}
-                  </h4>
-                  <p className="text-gray-600 text-xs">
-                    {payment.doneAt.toLocaleString()}
-                  </p>
-                </div>
-              </div>
-              <div className="text-downy-600 font-semibold">
-                {payment.amount} cKES
-              </div>
-              <Link href={`https://celoscan.io/tx/${payment.txHash}`} target="_blank">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                  className="w-6 h-6 text-downy-600"
-                >
-                  <path d="M12.75 3a.75.75 0 0 0-1.5 0v9a.75.75 0 0 0 1.5 0V3Zm.89 10.031a.75.75 0 0 0-1.06 1.06l2.22 2.22H6.75a.75.75 0 1 0 0 1.5h7.98l-2.22 2.22a.75.75 0 1 0 1.06 1.06l3.53-3.53a.75.75 0 0 0 0-1.06l-3.53-3.53Z" />
-                </svg>
-              </Link>
-            </li>
-          ))}
-        </ul>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </div>
   );

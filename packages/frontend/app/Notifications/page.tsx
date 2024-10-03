@@ -14,6 +14,7 @@ import {
 import { useAccount, useWriteContract } from "wagmi";
 import { toast } from "sonner";
 import { contractAbi, contractAddress } from "../ChamaPayABI/ChamaPayContract";
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 
 interface Notification {
   id: number;
@@ -158,7 +159,7 @@ const Page = () => {
 
         {fetching ? (
           <div className="text-center mt-4">
-            <p className="text-gray-900">Fetching...</p>
+             <DotLottieReact src="https://lottie.host/85203845-23a0-4155-8c2e-223c2ffd9a97/BkZA5Rah2j.json" loop autoplay />
           </div>
         ) : notifications.length === 0 ? (
           <div className="text-center mt-4">
@@ -231,76 +232,7 @@ const Page = () => {
           })
         )}
 
-        {/* {notifications.length === 0 ? (
-          <div className="text-center mt-4">
-            <p className="text-gray-900">No notifications</p>
-          </div>
-        ) : (
-          notifications.map((notification) => {
-            const isPending =
-              notification.requestId !== null &&
-              pendingRequestIds.has(notification.requestId);
 
-            return (
-              <div
-                key={notification.id}
-                className="bg-white p-4 border border-gray-300 rounded-lg shadow-lg mt-2 space-y-2"
-              >
-                <p className="text-gray-900">{notification.message}</p>
-                <div className="flex justify-between items-center">
-                  <small className="text-gray-500 text-sm">
-                    {new Date(notification.createdAt).toLocaleDateString(
-                      "en-US",
-                      {
-                        year: "numeric",
-                        month: "short",
-                        day: "numeric",
-                      }
-                    )}
-                  </small>
-                  {isPending && (
-                    <div className="flex space-x-4">
-                      <button
-                        onClick={() =>
-                          handleJoin(
-                            notification.id,
-                            "approve",
-                            notification.chamaId ?? 0,
-                            notification.senderId,
-                            notification.requestId ?? 0
-                          )
-                        }
-                        className={`flex items-center px-3 py-1 bg-downy-500 text-white rounded-md hover:bg-downy-600 ${
-                          loading ? "opacity-50 cursor-not-allowed" : ""
-                        }`}
-                        disabled={loading}
-                      >
-                        Approve
-                      </button>
-                      <button
-                        onClick={() =>
-                          handleJoin(
-                            notification.id,
-                            "reject",
-                            notification.chamaId ?? 0,
-                            notification.senderId,
-                            notification.requestId ?? 0
-                          )
-                        }
-                        className={`flex items-center px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600 ${
-                          loading ? "opacity-50 cursor-not-allowed" : ""
-                        }`}
-                        disabled={loading}
-                      >
-                        Reject
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            );
-          })
-        )} */}
       </div>
       <BottomNavbar
         activeSection={activeSection}

@@ -55,8 +55,11 @@ const Schedule = ({ chamaId }: { chamaId: number }) => {
   });
 
   const startDate = beginDate; // Start date of the chama cycle
-  const endDate = beginDate + (duration * members.length); // End date of the chama cycle (calculated based on members)
+  //at this time, the cycle starts from first payout
+  const firstPayoutDate = beginDate + duration * 24 * 60 * 60 * 1000;
+  const endDate = beginDate + duration * 24 * 60 * 60 * 1000 * members.length; // End date of the chama cycle (calculated based on members)
   const totalDays = dayjs(endDate).diff(dayjs(startDate), "day");
+ 
 
   useEffect(() => {
     // Calculate the progress percentage based on today's date
@@ -122,7 +125,7 @@ const Schedule = ({ chamaId }: { chamaId: number }) => {
 
   const calculatePayoutDate = (index: number) => {
     // Calculate the payout date for each member based on the startDate and duration
-    return dayjs(startDate)
+    return dayjs(firstPayoutDate)
       .add(index * duration, "day")
       .format("DD MMM");
   };
