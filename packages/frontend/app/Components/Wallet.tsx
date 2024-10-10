@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useEffect, useState } from "react";
 import { useReadContract, useAccount, useConnect, useDisconnect } from "wagmi";
 import { celo } from "viem/chains";
@@ -7,7 +9,7 @@ import Link from "next/link";
 import { toast } from "sonner";
 import { injected } from "wagmi/connectors";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
-import { getChamaById, getPaymentsByUser, getUser } from "@/app/api/chama";
+import { getChamaById, getPaymentsByUser, getUser } from "@/lib/chama";
 
 interface Payment {
   amount: number;
@@ -162,7 +164,7 @@ const Wallet = () => {
         <div
           onClick={() => {
             disconnect();
-            toast.info("Disconnected!");
+            toast("Disconnected!");
           }}
           className="flex justify-end"
         >
@@ -183,7 +185,7 @@ const Wallet = () => {
 
         <div className="flex items-center space-x-4 mt-2">
           <h1 className="text-white text-4xl font-bold">
-            {visible ? `${isConnected ? Number(data) / 10 ** 18 : "--"}` : "**"}{" "}
+            {visible ? `${isConnected ? (Number(data) / 10 ** 18).toFixed(2) : "--"}` : "**"}{" "}
             cKES
           </h1>
           <div onClick={toggleVisible} className="mt-1">
@@ -298,16 +300,23 @@ const Wallet = () => {
         {/* Loading State */}
         {(loadingUser || loadingPayments) && (
           <div className="mt-4 items-center">
-            <DotLottieReact src="https://lottie.host/965b1986-c9d6-4db5-a74d-375f05d98f59/M8KKZyk0j4.json" loop autoplay />
+            <DotLottieReact
+              src="https://lottie.host/965b1986-c9d6-4db5-a74d-375f05d98f59/M8KKZyk0j4.json"
+              loop
+              autoplay
+            />
           </div>
         )}
 
         {/* No Payments */}
-        {!loadingUser && !loadingPayments && payments.length === 0 && (
-          <div className="mt-4">
-            <p>No payments have been made yet.</p>
-          </div>
-        )}
+        {!loadingUser &&
+          !loadingPayments &&
+          payments.length === 0 &&
+          isConnected && (
+            <div className="mt-4">
+              <p>No payments have been made yet.</p>
+            </div>
+          )}
 
         {/* Payments List */}
         {!loadingUser && !loadingPayments && payments.length > 0 && (
@@ -362,6 +371,12 @@ const Wallet = () => {
               </li>
             ))}
           </ul>
+        )}
+
+        {!isConnected && (
+          <div className="mt-4">
+            <p>Please connect wallet.</p>
+          </div>
         )}
       </div>
     </div>

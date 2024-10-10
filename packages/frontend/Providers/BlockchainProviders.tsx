@@ -18,7 +18,7 @@ const connectors = connectorsForWallets(
   ],
   {
     appName: "ChamaPay",
-    projectId: "129e5aeae37261ac93704e81b50d5606",
+    projectId: "96d07018513129235d7af00f1cc9fcdb",
   },
 );
 

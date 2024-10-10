@@ -6,7 +6,7 @@ import Deposits from "./Deposits";
 import dayjs from "dayjs";
 import { useAccount, useReadContract } from "wagmi";
 import { contractAbi, contractAddress } from "../ChamaPayABI/ChamaPayContract";
-import { getUser } from "../api/chama";
+import { getUser } from "../../lib/chama";
 import { Suspense } from "react";
 
 type Member = {
@@ -25,7 +25,7 @@ type ChamaDetailsTuple = [
   string[]
 ];
 
-const Schedule = ({ chamaId }: { chamaId: number }) => {
+const Schedule = ({ chamaId, type }: { chamaId: number; type: string }) => {
   const [showDeposit, setShowDeposit] = useState(false);
   const [progressPercentage, setProgressPercentage] = useState(0);
   const [members, setMembers] = useState<string[]>([]);
@@ -51,7 +51,7 @@ const Schedule = ({ chamaId }: { chamaId: number }) => {
     address: contractAddress,
     abi: contractAbi,
     functionName: "getBalance",
-    args: [BigInt(chamaId - 3)], // Example chamaId, replace 0 with actual chamaId when needed
+    args: [BigInt(chamaId - 3), address], // Example chamaId, replace 0 with actual chamaId when needed
   });
 
   const startDate = beginDate; // Start date of the chama cycle
@@ -59,7 +59,6 @@ const Schedule = ({ chamaId }: { chamaId: number }) => {
   const firstPayoutDate = beginDate + duration * 24 * 60 * 60 * 1000;
   const endDate = beginDate + duration * 24 * 60 * 60 * 1000 * members.length; // End date of the chama cycle (calculated based on members)
   const totalDays = dayjs(endDate).diff(dayjs(startDate), "day");
- 
 
   useEffect(() => {
     // Calculate the progress percentage based on today's date
@@ -137,13 +136,41 @@ const Schedule = ({ chamaId }: { chamaId: number }) => {
   return (
     <div className="min-h-screen bg-gray-200 flex flex-col items-center p-4">
       {/* Top right balance display */}
-      <div className="flex  right-2 sm:top-2 sm:right-0 bg-white shadow-md justify-end p-2 sm:p-2 rounded-md z-50">
-        <p className="text-sm sm:text-2xl font-normal">My chama Bal:</p>
-        <p className="text-xl sm:text-2xl font-normal">{balance} cKES</p>
-      </div>
+      {type === "Public" ? (
+        <div className="flex items-center bg-downy-50 w-fit px-4 py-2 border shadow-md rounded-full border-downy-300">
+          <div className="flex flex-col">
+            <h1 className="text-center">Chama Balance</h1>
+            <div className="flex items-center justify-between ">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                className="w-4 h-4 text-downy-500 mr-1"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M12 1.5a5.25 5.25 0 0 0-5.25 5.25v3a3 3 0 0 0-3 3v6.75a3 3 0 0 0 3 3h10.5a3 3 0 0 0 3-3v-6.75a3 3 0 0 0-3-3v-3c0-2.9-2.35-5.25-5.25-5.25Zm3.75 8.25v-3a3.75 3.75 0 1 0-7.5 0v3h7.5Z"
+                  clipRule="evenodd"
+                />
+              </svg>
+              <span className="text-gray-600">0 cKES</span>
+              <div className="w-[1px] h-6 bg-gray-400 mx-4"></div>{" "}
+              {/* Vertical Divider */}
+              <span className="text-gray-700">{balance} cKES</span>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="flex  right-2 sm:top-2 sm:right-0 bg-downy-50 border border-downy-300 shadow-md justify-end p-2 sm:p-2 rounded-md z-50">
+          <div className="flex flex-col items-center">
+            <p className="font-normal text-gray-800">Chama Balance</p>
+            <p className="font-normal text-gray-600">{balance} cKES</p>
+          </div>
+        </div>
+      )}
 
       {/* Cycle progress container */}
-      <div className="relative mt-14">
+      <div className="relative mt-12">
         <Suspense fallback={<div className="items-center">Loading...</div>}>
           <div
             className="relative w-[250px] h-[250px] rounded-full bg-white flex justify-center items-center"

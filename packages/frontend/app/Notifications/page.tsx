@@ -10,7 +10,7 @@ import {
   getRequestById,
   getPendingRequests,
   getNotificationsByRequestId,
-} from "../api/chama";
+} from "../../lib/chama";
 import { useAccount, useWriteContract } from "wagmi";
 import { toast } from "sonner";
 import { contractAbi, contractAddress } from "../ChamaPayABI/ChamaPayContract";
@@ -159,9 +159,13 @@ const Page = () => {
 
         {fetching ? (
           <div className="text-center mt-4">
-             <DotLottieReact src="https://lottie.host/85203845-23a0-4155-8c2e-223c2ffd9a97/BkZA5Rah2j.json" loop autoplay />
+            <DotLottieReact
+              src="https://lottie.host/85203845-23a0-4155-8c2e-223c2ffd9a97/BkZA5Rah2j.json"
+              loop
+              autoplay
+            />
           </div>
-        ) : notifications.length === 0 ? (
+        ) : notifications.length === 0 && isConnected ? (
           <div className="text-center mt-4">
             <p className="text-gray-900">No notifications</p>
           </div>
@@ -232,7 +236,11 @@ const Page = () => {
           })
         )}
 
-
+        {!isConnected && (
+          <div className="text-center mt-4">
+            <p className="text-gray-900">Please connect wallet!</p>
+          </div>
+        )}
       </div>
       <BottomNavbar
         activeSection={activeSection}

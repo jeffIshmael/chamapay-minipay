@@ -18,26 +18,28 @@ model User {
   joinRequests  ChamaRequest[]
   notifications Notification[]
   payments      Payment[]
+  messages      Message[]      // Added relation to Message
 }
 
 model Chama {
-  id            Int            @id @default(autoincrement())
+  id            Int           @id @default(autoincrement())
   name          String
-  slug          String         @unique
+  slug          String        @unique
   type          String
   startDate     DateTime
   payDate       DateTime
   cycleTime     Int
-  started       Boolean        @default(false)
+  started       Boolean       @default(false)
   amount        Int
   maxNo         Int
   adminId       Int
-  createdAt     DateTime       @default(now())
-  admin         User           @relation("AdminChamas", fields: [adminId], references: [id])
+  createdAt     DateTime      @default(now())
+  admin         User          @relation("AdminChamas", fields: [adminId], references: [id])
   members       ChamaMember[]
   requests      ChamaRequest[]
   notifications Notification[]
   payments      Payment[]
+  messages      Message[]     // Added relation to Message
 }
 
 model ChamaMember {
@@ -80,4 +82,14 @@ model ChamaRequest {
   chamaId   Int
   chama     Chama    @relation(fields: [chamaId], references: [id])
   user      User     @relation(fields: [userId], references: [id])
+}
+
+model Message {
+  id        Int      @id @default(autoincrement())
+  chama     Chama    @relation(fields: [chamaId], references: [id])
+  chamaId   Int
+  sender    User     @relation(fields: [senderId], references: [id])
+  senderId  Int
+  text      String
+  timestamp DateTime @default(now())
 }

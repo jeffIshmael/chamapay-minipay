@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { createChama } from "../api/chama";
+import { createChama } from "../../lib/chama";
 import { useAccount, useWriteContract } from "wagmi";
 import { toast } from "sonner";
 import { contractAddress, contractAbi } from "../ChamaPayABI/ChamaPayContract";

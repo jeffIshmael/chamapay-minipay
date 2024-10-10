@@ -5,12 +5,12 @@ import { celo } from "viem/chains";
 import erc20Abi from "@/app/ChamaPayABI/ERC20.json";
 import { processCheckout } from "../Blockchain/TokenTransfer";
 import { contractAddress, contractAbi } from "../ChamaPayABI/ChamaPayContract";
-import { makePayment } from "../api/chama";
+import { makePayment } from "../../lib/chama";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
-const CKESPay = ({ id , name }: { id: number , name:string}) => {
+const CKESPay = ({ id, name }: { id: number; name: string }) => {
   const { isConnected, address } = useAccount();
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -57,7 +57,7 @@ const CKESPay = ({ id , name }: { id: number , name:string}) => {
         console.log(paid);
 
         if (paid) {
-          await makePayment(amount, paid,  id, address);
+          await makePayment(amount, paid, id, address);
           console.log("done");
           console.log(id);
           try {
@@ -65,7 +65,7 @@ const CKESPay = ({ id , name }: { id: number , name:string}) => {
               address: contractAddress,
               abi: contractAbi,
               functionName: "depositCash",
-              args: [id-3, (amount * 10**18)],
+              args: [id - 3, amount * 10 ** 18],
             });
 
             if (hash) {
@@ -117,15 +117,20 @@ const CKESPay = ({ id , name }: { id: number , name:string}) => {
               id="amount"
               name="amount"
               placeholder="Input amount"
-              className="mt-1 p-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-200"
+              className="mt-1 p-2 border border-gray-300 rounded-md focus:ring focus:ring-downy-200"
+              required
             />
           </div>
           <p className="text-right text-sm text-gray-500">
-            Available balance:{Number(data) / 10 ** 18} cKES
+            Available balance:{(Number(data) / 10 ** 18).toFixed(2)} cKES
           </p>
           <button
             type="submit"
-            className="w-full py-2 bg-blue-500 text-white font-semibold rounded-md hover:bg-blue-600 transition duration-300"
+            className={`w-full py-2 font-semibold rounded-md  transition duration-300 ${
+              loading
+                ? "text-downy-400 bg-downy-100 cursor-not-allowed hover:bg-downy-100"
+                : " bg-downy-500 text-white hover:bg-downy-600"
+            }`}
             disabled={loading}
           >
             {loading ? "Processing..." : "Pay"}

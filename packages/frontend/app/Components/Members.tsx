@@ -4,7 +4,7 @@ import Image from "next/image";
 import React, { useEffect, useState } from "react";
 import { useAccount, useReadContract } from "wagmi";
 import { contractAbi, contractAddress } from "../ChamaPayABI/ChamaPayContract";
-import { getUser } from "@/app/api/chama";
+import { getUser } from "@/lib/chama";
 import { useRouter } from "next/router"; // Import Next.js router
 import { toast } from "sonner";
 
@@ -35,7 +35,7 @@ const Members = ({
   const [loading, setLoading] = useState(true);
   const [groupLink, setGroupLink] = useState("");
   const [admin, setAdmin] = useState("");
-  const {isConnected, address} = useAccount();
+  const { isConnected, address } = useAccount();
 
   const {
     data: chamaDetails,
@@ -101,7 +101,11 @@ const Members = ({
   }
 
   if (isLoading || loading) {
-    return <div className="bg-downy-100 min-h-screen flex flex-col items-center py-8 px-4" >Loading...</div>;
+    return (
+      <div className="bg-downy-100 min-h-screen flex flex-col items-center py-8 px-4">
+        Loading...
+      </div>
+    );
   }
 
   return (

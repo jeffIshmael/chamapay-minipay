@@ -1,17 +1,19 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
-import {updateChamaStatus} from "./api/chama";
+import { updateChamaStatus } from "../lib/chama";
 import { useEffect } from "react";
-
-
+import useSocket from "@/Hooks/useSocket";
 
 export default function Home() {
+  useSocket();
 
   useEffect(() => {
     updateChamaStatus();
+    fetch("/api/socket").catch((err) =>
+      console.error("Socket initialization error:", err)
+    );
   }, []);
-
 
   return (
     <main className="bg-downy-50  min-h-screen rounded-md">

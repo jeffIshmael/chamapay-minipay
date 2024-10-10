@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { getPaymentsById, getUserById } from "../api/chama"; // assuming both APIs are imported correctly
+import { getPaymentsById, getUserById } from "../../lib/chama"; // assuming both APIs are imported correctly
 
 interface Deposit {
   amount: number;

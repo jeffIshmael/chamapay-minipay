@@ -3,8 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useReadContract } from "wagmi";
 import { contractAddress, contractAbi } from "../ChamaPayABI/ChamaPayContract";
-import { getUser } from "../api/chama";
-
+import { getUser } from "../../lib/chama";
 
 interface Withdrawal {
   id: number;
@@ -20,8 +19,7 @@ interface User {
   address: string | null; // Allow address to be nullable
 }
 
-
-const Withdrawals = ( {cycle}: {cycle:number} ) => {
+const Withdrawals = ({ cycle }: { cycle: number }) => {
   const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
   const [userNames, setUserNames] = useState<{ [key: string]: string }>({});
   const { data, isError, isLoading } = useReadContract({
@@ -62,8 +60,6 @@ const Withdrawals = ( {cycle}: {cycle:number} ) => {
     });
   };
 
- 
-
   return (
     <div className="p-4 bg-white rounded-lg shadow-md">
       <h2 className="text-xl font-semibold mb-4 text-gray-700">
@@ -76,7 +72,7 @@ const Withdrawals = ( {cycle}: {cycle:number} ) => {
         </div>
       )}
 
-      {withdrawals.map((withdrawal : Withdrawal, index) => (
+      {withdrawals.map((withdrawal: Withdrawal, index) => (
         <div
           key={index}
           className="p-4 mb-4 border border-gray-300 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
@@ -100,7 +96,9 @@ const Withdrawals = ( {cycle}: {cycle:number} ) => {
                 {userNames[withdrawal.receiver] || "Loading..."}
               </p>
             </div>
-            <p className="text-sm text-gray-500">{formatDate(Number(withdrawal.timestamp))}</p>
+            <p className="text-sm text-gray-500">
+              {formatDate(Number(withdrawal.timestamp))}
+            </p>
           </div>
           <div className="flex justify-between items-center">
             <p className="text-md text-gray-600">Cycle {cycle}</p>

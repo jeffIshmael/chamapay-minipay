@@ -275,8 +275,6 @@ export async function createNotification(
     },
   });
 }
-
-
 export async function requestToJoinChama(
   userId: number,
   userName: string,
@@ -319,7 +317,6 @@ export async function requestToJoinChama(
 
   return request;
 }
-
 export async function handleJoinRequest(
   requestId: number,
   action: "approve" | "reject",
@@ -418,3 +415,68 @@ export async function getNotificationsByRequestId(requestId: number) {
   });
   return notifications;
 }
+
+//create notification to users once the deadline is a day closer
+export async function notifyDeadline() {
+  try {
+    // Get the current time
+    const now = new Date();
+
+    // Fetch all chamas that haven't paid out yet
+    const chamas = await prisma.chama.findMany({
+      where: {
+        started: true, // Chama must have started
+        // payDate: true, // Payment hasn't been done yet
+      },
+      include: {
+        members: true, // Include chama members for sending notifications
+      },
+    });
+
+    // Iterate through each chama to check their payout date
+    for (const chama of chamas) {
+      const payoutDate = new Date(chama.payDate);
+      const oneDayBefore = new Date(payoutDate.getTime() - 24 * 60 * 60 * 1000); // 1 day before payout
+      const twelveHoursBefore = new Date(payoutDate.getTime() - 12 * 60 * 60 * 1000); // 12 hours before payout
+      const twoHoursBefore = new Date(payoutDate.getTime() - 2 * 60 * 60 * 1000); // 2 hours before payout
+
+      // Check if we are 1 day, 12 hours, or 2 hours before payout
+      if (now >= oneDayBefore && now < twelveHoursBefore) {
+        // Send notifications to all members for 1 day before payout
+        for (const member of chama.members) {
+          await createNotification(
+            member.id,
+            `Reminder: The payout for your chama '${chama.name}' is in 1 day.`,
+            chama.adminId,
+            chama.id
+          );
+        }
+      } else if (now >= twelveHoursBefore && now < twoHoursBefore) {
+        // Send notifications to all members for 12 hours before payout
+        for (const member of chama.members) {
+          await createNotification(
+            member.id,
+            `Reminder: The payout for your chama '${chama.name}' is in 12 hours.`,
+            chama.adminId,
+            chama.id
+          );
+        }
+      } else if (now >= twoHoursBefore && now < payoutDate) {
+        // Send notifications to all members for 2 hours before payout
+        for (const member of chama.members) {
+          await createNotification(
+            member.id,
+            `Reminder: The payout for your chama '${chama.name}' is in 2 hours.`,
+            chama.adminId,
+            chama.id
+          );
+        }
+      }
+    }
+  } catch (error) {
+    console.error("Error notifying deadlines:", error);
+  }
+
+  cron.schedule("0 * * * *", notifyDeadline);
+}
+

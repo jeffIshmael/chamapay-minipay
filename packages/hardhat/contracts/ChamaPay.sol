@@ -101,6 +101,7 @@ contract ChamaPay {
         if(block.timestamp > chama.startDate){
             chama.payoutOrder.push(_address);
         }
+        checkPayDate(_chamaId);
         emit MemberAdded(_chamaId, _address);
     }
 

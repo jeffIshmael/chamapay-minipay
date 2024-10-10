@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { handler } from "../api/chama";
+import { handler } from "../../lib/chama";
 import Link from "next/link";
 import Image from "next/image";
 import { useReadContract } from "wagmi";

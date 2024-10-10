@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { createChama } from "../api/chama";
+import { createChama } from "../../lib/chama";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useAccount, useWriteContract } from "wagmi";
@@ -156,7 +156,7 @@ const CreatePublic = () => {
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
             required
-            className="mt-1 block w-full rounded-md border-downy-200 shadow-sm focus:border-downy-500 focus:ring-downy-500 sm:text-sm"
+            className="mt-1 block w-full text-gray-500 rounded-md border-downy-200 shadow-sm focus:border-downy-500 focus:ring-downy-500 sm:text-sm"
           />
         </div>
         <div>

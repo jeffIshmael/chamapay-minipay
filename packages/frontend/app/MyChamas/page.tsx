@@ -5,7 +5,7 @@ import BottomNavbar from "../Components/BottomNavbar";
 import Image from "next/image";
 import Link from "next/link";
 import { useAccount } from "wagmi";
-import { handler, getChamasByUser, getUser } from "../api/chama";
+import { handler, getChamasByUser, getUser } from "../../lib/chama";
 
 interface Chama {
   adminId: number;
