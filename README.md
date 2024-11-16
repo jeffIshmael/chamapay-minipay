@@ -42,7 +42,7 @@ Here’s a preview of the ChamaPay platform:
   <img src="public.png" alt="Create public Chama" width="22%" />
 
   <img src="Screenshot from 2024-09-29 12-48-27.png" alt="View Chamas" width="22%" />
-  <img src="Exploring.png" alt="Explore Chamas" width="22%" />  
+  <img src="exploring.png" alt="Explore Chamas" width="22%" />  
   <img src="Screenshot from 2024-09-29 12-48-50.png" alt="Chama Details" width="22%" />
   <img src="join.png" alt="Joining public chama" width="22%" />
 
