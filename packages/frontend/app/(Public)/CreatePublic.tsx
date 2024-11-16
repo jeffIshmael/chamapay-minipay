@@ -1,9 +1,18 @@
 import React, { useState } from "react";
-import { createChama } from "../../lib/chama";
+import { checkChama, createChama } from "../../lib/chama";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useAccount, useWriteContract } from "wagmi";
 import { contractAbi, contractAddress } from "../ChamaPayABI/ChamaPayContract";
+import { processCheckout } from "../Blockchain/TokenTransfer";
+
+interface Form {
+  amount: string;
+  cycleTime: string;
+  maxNumber: string;
+  name: string;
+  startDate: string;
+}
 
 const CreatePublic = () => {
   const [groupName, setGroupName] = useState("");
@@ -11,9 +20,48 @@ const CreatePublic = () => {
   const [duration, setDuration] = useState("");
   const [startDate, setStartDate] = useState("");
   const [maxPeople, setMaxPeople] = useState("");
+  const [showModal, setShowModal] = useState(false);
+  const [processing, setProcessing] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [openingModal, setOpeningModal] = useState(false);
   const router = useRouter();
   const { isConnected, address } = useAccount();
   const { writeContractAsync, isPending } = useWriteContract();
+  const [filledData, setFilledData] = useState<Form>({
+    amount: "",
+    cycleTime: "",
+    maxNumber: "",
+    name: "",
+    startDate: "",
+  });
+
+  const openModal = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const formData = new FormData(e.target as HTMLFormElement);
+    const data = Object.fromEntries(formData.entries());
+    console.log(data);
+
+    // Set the form data and open the modal directly
+    if (data) {
+      try {
+        setOpeningModal(true);
+        const exists = await checkChama(data.name as string);
+        if (exists) {
+          toast.error("Choose another name.");
+          return;
+        } else {
+          setFilledData(data as unknown as Form); // Save form data
+          setShowModal(true); // Open modal
+        }
+      } catch (error) {
+        console.log(error);
+      } finally {
+        setOpeningModal(false);
+      }
+    } else {
+      console.log("unable");
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,9 +69,9 @@ const CreatePublic = () => {
       toast.error("Please connect wallet");
       return;
     }
-    const formData = new FormData(e.target as HTMLFormElement);
-    const data = Object.fromEntries(formData.entries());
-    const amount = parseFloat(data.amount as string);
+
+    console.log(filledData);
+    const amount = parseFloat(filledData.amount as string);
     console.log(amount);
 
     if (isNaN(amount) || amount <= 0) {
@@ -31,37 +79,73 @@ const CreatePublic = () => {
       return;
     }
     const amountInWei = Number(amount * 10 ** 18);
+
     if (address && isConnected) {
+      //function to send the lock amount
       try {
-        const dateObject = new Date(data.startDate as string);
-        const dateInMilliseconds = dateObject.getTime();
-
-        const hash = await writeContractAsync({
-          address: contractAddress,
-          abi: contractAbi,
-          functionName: "registerChama",
-          args: [
-            BigInt(amountInWei),
-            BigInt(Number(data.cycleTime)),
-            BigInt(dateInMilliseconds),
-          ],
-        });
-
-        if (hash) {
+        setProcessing(true);
+        const paid = await processCheckout(amountInWei);
+        if (paid) {
           try {
-            await createChama(formData, "Public", address);
-            console.log("done");
-            toast.success(`${data.name} created successfully.`);
-            router.push("/MyChamas");
+            setProcessing(false);
+            setLoading(true);
+            const dateObject = new Date(filledData.startDate as string);
+            const dateInMilliseconds = dateObject.getTime();
+
+            const hash = await writeContractAsync({
+              address: contractAddress,
+              abi: contractAbi,
+              functionName: "registerChama",
+              args: [
+                BigInt(amountInWei),
+                BigInt(Number(filledData.cycleTime)),
+                BigInt(dateInMilliseconds),
+                BigInt(Number(filledData.maxNumber)),
+                true,
+              ],
+            });
+
+            if (hash) {
+              try {
+                const formData = new FormData();
+                formData.append("name", filledData.name);
+                formData.append("amount", filledData.amount);
+                formData.append("cycleTime", filledData.cycleTime);
+                formData.append("maxNumber", filledData.maxNumber);
+                formData.append("startDate", filledData.startDate);
+
+                await createChama(formData, "Public", address);
+
+                console.log("done");
+                toast.success(`${filledData.name} created successfully.`);
+                setLoading(false);
+                router.push("/MyChamas");
+              } catch (error) {
+                console.log(error);
+                toast.error("Unable, Try using another group name");
+                setLoading(false);
+              } finally {
+                setProcessing(false);
+                setLoading(false);
+              }
+            } else {
+              toast.error("unable to create, please try again");
+            }
           } catch (error) {
             console.log(error);
-            toast.error("Unable, Try using another group name");
+          } finally {
+            setLoading(false);
+            setProcessing(false);
           }
         } else {
-          toast.error("unable to create, please try again");
+          toast.error(`make sure you have ${amount} cKES in your wallet.`);
         }
       } catch (error) {
+        toast.error("Oops!!something happened.");
         console.log(error);
+      } finally {
+        setProcessing(false);
+        setLoading(false);
       }
     } else {
       toast.error("Please connect wallet.");
@@ -71,11 +155,52 @@ const CreatePublic = () => {
   return (
     <div className="relative w-full mx-auto">
       {/* Adjusted "drop" effect for Public */}
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60">
+          <div className="bg-white p-6 rounded-xl shadow-lg w-96">
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">
+              Lock Amount
+            </h2>
+            <p className="text-gray-600 mb-6">
+              You need to lock the required amount before proceeding to create
+              the public chama.
+            </p>
+            <div className="flex justify-end space-x-4">
+              <button
+                onClick={
+                  loading || processing ? undefined : () => setShowModal(false)
+                }
+                disabled={loading || processing}
+                className={`px-4 py-2 bg-gray-300 text-gray-700 rounded-md  ${
+                  loading || processing ? "hover:cursor-not-allowed":"hover:bg-gray-400"}`}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSubmit}
+                disabled={loading || processing}
+                className={`px-4 py-2  text-white rounded-md  ${
+                  processing || loading
+                    ? "opacity-50 cursor-not-allowed"
+                    : "bg-downy-500 hover:bg-downy-600"
+                }`}
+              >
+                {loading
+                  ? "creating..."
+                  : processing
+                  ? "Processing..."
+                  : "Proceed"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* <div className="absolute w-0 h-0 border-b-[16px] border-b-transparent  border-r-[2px] border-r-white border-t-[16px] border-t-transparent left-[75%] transform -translate-x-1/2 -translate-y-[65%]"></div> */}
       <div className="absolute w-0 h-0 border-b-[16px] border-b-transparent  border-r-[34px] border-r-white border-t-[20px] border-t-transparent left-[74%] transform -translate-x-1/2 -translate-y-[45%]"></div>
 
       <form
-        onSubmit={handleSubmit}
+        onSubmit={openModal}
         className="space-y-4 bg-white p-6 rounded-3xl shadow-md w-full mt-3 transform origin-top animate-fadeIn"
       >
         <div className=" flex flex-column-2 space-x-2">
@@ -180,14 +305,41 @@ const CreatePublic = () => {
         <div className="flex justify-end">
           <button
             type="submit"
-            disabled={isPending}
-            className={`  font-semibold py-2 px-4 rounded-md ${
-              isPending
+            disabled={openingModal}
+            className={`flex items-center justify-center font-semibold py-2 px-4 rounded-md ${
+              openingModal
                 ? "bg-gray-300 text-gray-400 hover:bg-gray-300 cursor-not-allowed"
-                : "bg-downy-500  hover:bg-downy-600 text-white"
+                : "bg-downy-500 hover:bg-downy-600 text-white"
             }`}
           >
-            {isPending ? "Creating..." : "Create Chama"}
+            {openingModal ? (
+              <>
+                <svg
+                  className="animate-spin h-5 w-5 mr-2 text-gray-400"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C6.477 0 2 4.477 2 10h2zm2 5.292A7.962 7.962 0 014 12H2c0 2.042.784 3.897 2.05 5.292l1.95-1.95z"
+                  ></path>
+                </svg>
+                ...
+              </>
+              
+            ) : (
+              "Create Chama"
+            )}
           </button>
         </div>
       </form>

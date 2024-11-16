@@ -121,7 +121,7 @@ const Page = () => {
             address: contractAddress,
             abi: contractAbi,
             functionName: "addMember",
-            args: [userData.address, BigInt(chamaId - 3)],
+            args: [userData.address, BigInt(chamaId - 1)],
           });
 
           if (txHash) {

@@ -1,4 +1,4 @@
-export const contractAddress = "0x2a6705a9bBa71f752643893b159072ae44D52Ed4";
+export const contractAddress = "0x27486749451017BA586289f442da449A4F896F09";
 
 export const contractAbi = [
   {
@@ -68,8 +68,20 @@ export const contractAbi = [
       {
         "indexed": false,
         "internalType": "uint256",
+        "name": "maxMembers",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
         "name": "startDate",
         "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "_isPublic",
+        "type": "bool"
       },
       {
         "indexed": false,
@@ -283,6 +295,19 @@ export const contractAbi = [
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_chamaId",
+        "type": "uint256"
+      }
+    ],
+    "name": "addPublicMember",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "cKESToken",
     "outputs": [
@@ -332,6 +357,11 @@ export const contractAbi = [
       },
       {
         "internalType": "uint256",
+        "name": "maxMembers",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
         "name": "cycle",
         "type": "uint256"
       },
@@ -344,6 +374,11 @@ export const contractAbi = [
         "internalType": "address",
         "name": "admin",
         "type": "address"
+      },
+      {
+        "internalType": "bool",
+        "name": "isPublic",
+        "type": "bool"
       }
     ],
     "stateMutability": "view",
@@ -352,9 +387,9 @@ export const contractAbi = [
   {
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "_chamaId",
-        "type": "uint256"
+        "internalType": "uint256[]",
+        "name": "chamaIds",
+        "type": "uint256[]"
       }
     ],
     "name": "checkPayDate",
@@ -427,9 +462,9 @@ export const contractAbi = [
     "name": "getBalance",
     "outputs": [
       {
-        "internalType": "uint256",
+        "internalType": "uint256[]",
         "name": "",
-        "type": "uint256"
+        "type": "uint256[]"
       }
     ],
     "stateMutability": "view",
@@ -484,6 +519,11 @@ export const contractAbi = [
         "internalType": "address[]",
         "name": "",
         "type": "address[]"
+      },
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
       }
     ],
     "stateMutability": "view",
@@ -654,6 +694,16 @@ export const contractAbi = [
         "internalType": "uint256",
         "name": "_startDate",
         "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_maxMembers",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "_isPublic",
+        "type": "bool"
       }
     ],
     "name": "registerChama",

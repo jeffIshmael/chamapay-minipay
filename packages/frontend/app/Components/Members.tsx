@@ -3,91 +3,43 @@
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
 import { useAccount, useReadContract } from "wagmi";
-import { contractAbi, contractAddress } from "../ChamaPayABI/ChamaPayContract";
-import { getUser } from "@/lib/chama";
-import { useRouter } from "next/router"; // Import Next.js router
 import { toast } from "sonner";
 
-type ChamaDetailsTuple = [
-  bigint,
-  bigint,
-  bigint,
-  bigint,
-  bigint,
-  bigint,
-  string,
-  string[]
-];
+
+
+interface User {
+  chamaId: number;
+  id: number;
+  payDate: Date;
+  user: {
+    id: number;
+    address: string;
+    name: string | null;
+    role: string;
+  };
+  userId: number;
+}
 
 const Members = ({
   imageSrc,
   name,
   slug,
-  chamaId,
+  members,
 }: {
   imageSrc: string;
   name: string;
   slug: string;
-  chamaId: number;
+  members: User[];
 }) => {
-  const [members, setMembers] = useState<string[]>([]);
-  const [userDetails, setUserDetails] = useState<{ [key: string]: any }>({});
   const [loading, setLoading] = useState(true);
   const [groupLink, setGroupLink] = useState("");
-  const [admin, setAdmin] = useState("");
   const { isConnected, address } = useAccount();
-
-  const {
-    data: chamaDetails,
-    isError,
-    isLoading,
-  } = useReadContract({
-    address: contractAddress,
-    abi: contractAbi,
-    functionName: "getChama",
-    args: [BigInt(chamaId - 3)],
-  });
-
-  console.log(chamaDetails);
-
-  // const router = useRouter(); // Initialize the router to generate the dynamic link
-
-  useEffect(() => {
-    if (chamaDetails) {
-      const results = chamaDetails as ChamaDetailsTuple | undefined;
-      if (results && Array.isArray(results[7])) {
-        setMembers(results[7]);
-        setAdmin(results[6]);
-      }
-      setLoading(false);
-    }
-  }, [chamaDetails]);
 
   // Fetch user details for all members
   useEffect(() => {
-    const fetchUserDetails = async () => {
-      if (members.length > 0) {
-        const details = await Promise.all(
-          members.map(async (address) => {
-            const userData = await getUser(address); // Fetch user details
-            return { address, userData }; // Return address and userData pair
-          })
-        );
-
-        const userDetailsMap = details.reduce(
-          (acc, { address, userData }) => ({
-            ...acc,
-            [address]: userData, // Store user data keyed by address
-          }),
-          {}
-        );
-        setUserDetails(userDetailsMap);
-        const inviteLink = `${window.location.origin}/Chama/${slug}`; // Dynamically generate link
-        setGroupLink(inviteLink);
-      }
-    };
-
-    fetchUserDetails();
+    const inviteLink = `${window.location.origin}/Chama/${slug}`; // Dynamically generate link
+    setGroupLink(inviteLink);
+    console.log(members);
   }, [members]);
 
   // Copy invite link to clipboard
@@ -95,18 +47,6 @@ const Members = ({
     await navigator.clipboard.writeText(groupLink);
     toast.success("Invite link copied to clipboard!");
   };
-
-  if (isError) {
-    return <div>Error loading Chama details. Please try again later.</div>;
-  }
-
-  if (isLoading || loading) {
-    return (
-      <div className="bg-downy-100 min-h-screen flex flex-col items-center py-8 px-4">
-        Loading...
-      </div>
-    );
-  }
 
   return (
     <div className="bg-downy-100 min-h-screen flex flex-col items-center py-8 px-4">
@@ -169,27 +109,39 @@ const Members = ({
                   </svg>
                 </div>
                 <div>
-                  {userDetails[member]?.address !== address ? (
+                  {isConnected ? (
+                    (member.user.address as `0x${string}`) !== address ? (
+                      <div>
+                        <h2 className="text-lg font-medium text-gray-800">
+                          {member.user?.name || "Loading..."}
+                        </h2>
+                        <p className="text-sm text-gray-400">
+                          {`${member.user.address.slice(
+                            0,
+                            6
+                          )}...${member.user.address.slice(-4)}`}
+                        </p>
+                      </div>
+                    ) : (
+                      <h2 className="text-lg font-medium text-gray-800">You</h2>
+                    )
+                  ) : (
                     <div>
                       <h2 className="text-lg font-medium text-gray-800">
-                        {userDetails[member]?.name || "Loading..."}
+                        {member.user.name || "Loading..."}
                       </h2>
                       <p className="text-sm text-gray-400">
-                        {userDetails[member]?.address
-                          ? `${userDetails[member].address.slice(
-                              0,
-                              6
-                            )}...${userDetails[member].address.slice(-4)}`
-                          : "Loading..."}
+                        {`${member.user.address.slice(
+                          0,
+                          6
+                        )}...${member.user.address.slice(-4)}`}
                       </p>
                     </div>
-                  ) : (
-                    <h2 className="text-lg font-medium text-gray-800">You</h2>
                   )}
                 </div>
                 <div className="flex justify-end mr-0">
                   <h4 className="text-gray-500">
-                    {member === admin && "admin"}
+                    {member.user.role === "admin" && "admin"}
                   </h4>
                 </div>
               </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { createChama } from "../../lib/chama";
+import { createChama, checkChama } from "../../lib/chama";
 import { useAccount, useWriteContract } from "wagmi";
 import { toast } from "sonner";
 import { contractAddress, contractAbi } from "../ChamaPayABI/ChamaPayContract";
@@ -33,44 +33,55 @@ const CreateFamily = () => {
     }
     const amountInWei = Number(amount * 10 ** 18);
 
-    if (address && isConnected) {
-      try {
-        const dateObject = new Date(data.startDate as string);
-        const dateInMilliseconds = dateObject.getTime();
-
-        const hash = await writeContractAsync({
-          address: contractAddress,
-          abi: contractAbi,
-          functionName: "registerChama",
-          args: [
-            BigInt(Number(amountInWei)),
-            BigInt(Number(data.cycleTime)),
-            BigInt(dateInMilliseconds),
-          ],
-        });
-
-        if (hash) {
+    try {
+      const exists = await checkChama(data.name as string);
+      if (exists) {
+        toast.error("Choose another name.");
+        return;
+      } else {
+        if (address && isConnected) {
           try {
-            await createChama(formData, "Private", address);
-            console.log("done");
-            toast.success(`${data.name} created successfully.`);
-            router.push("/MyChamas");
+            const dateObject = new Date(data.startDate as string);
+            const dateInMilliseconds = dateObject.getTime();
+
+            const hash = await writeContractAsync({
+              address: contractAddress,
+              abi: contractAbi,
+              functionName: "registerChama",
+              args: [
+                BigInt(Number(amountInWei)),
+                BigInt(Number(data.cycleTime)),
+                BigInt(dateInMilliseconds),
+                BigInt(Number(0)), //no max members
+                false
+              ],
+            });
+
+            if (hash) {
+              try {
+                await createChama(formData, "Private", address);
+                console.log("done");
+                toast.success(`${data.name} created successfully.`);
+                router.push("/MyChamas");
+              } catch (error) {
+                console.log(error);
+                toast.error("Unable, Try using another group name");
+              }
+            } else {
+              toast.error("unable to create, please try again");
+            }
           } catch (error) {
             console.log(error);
-            toast.error("Unable, Try using another group name");
+            toast.error("A problem occured. Ensure wallet is connected.");
           }
         } else {
-          toast.error("unable to create, please try again");
+          toast.error("Please connect wallet.");
         }
-      } catch (error) {
-        console.log(error);
-        toast.error("A problem occured. Ensure wallet is connected.");
       }
-    } else {
-      toast.error("Please connect wallet.");
+    } catch (error) {
+      toast.error("A problem occured, try again.");
+      console.log(error);
     }
-
-    // console.log({ groupName, amount, duration, startDate });
   };
 
   return (

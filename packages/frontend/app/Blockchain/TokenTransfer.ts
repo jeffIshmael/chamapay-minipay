@@ -26,7 +26,7 @@ export const processCheckout = async ( amount: number ) => {
       try {
         const checkoutTxnHash = await privateClient.writeContract({
           account: address,
-          address: "0x456a3d042c0dbd3db53d5489e98dfb038553b0d0",
+          address: "0x456a3D042C0DbD3db53D5489e98dFb038553B0d0",
           abi: ERC20Abi,
           functionName: "transfer",
           args: [contractAddress, BigInt(amount)],

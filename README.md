@@ -39,11 +39,16 @@ Here’s a preview of the ChamaPay platform:
   <img src="Screenshot from 2024-09-29 12-44-40.png" alt="Home Page" width="22%" />
   <img src="Screenshot from 2024-09-29 12-45-28.png" alt="Landing Page" width="22%" />
   <img src="Screenshot from 2024-09-29 12-48-09.png" alt="Create Chama" width="22%" />
+  <img src="public.png" alt="Create public Chama" width="22%" />
+
   <img src="Screenshot from 2024-09-29 12-48-27.png" alt="View Chamas" width="22%" />
-  
+  <img src="Exploring.png" alt="Explore Chamas" width="22%" />  
   <img src="Screenshot from 2024-09-29 12-48-50.png" alt="Chama Details" width="22%" />
+  <img src="join.png" alt="Joining public chama" width="22%" />
+
   <img src="Screenshot from 2024-09-29 12-49-17.png" alt="Chama Chat" width="22%" />
-  <img src="Screenshot from 2024-09-29 12-50-05.png" alt="Chama Schedule" width="22%" />
+  <img src="pubschedule.png" alt="public schedule" width="22%" />
+  <img src="private.png" alt="private Schedule" width="22%" />
   <img src="Screenshot from 2024-09-29 12-47-55.png" alt="Wallet" width="22%" />
 
 </div>
@@ -86,8 +91,9 @@ ChamaPay was inspired by the need to digitize communal saving systems like _cham
    Members can claim their funds when it’s their turn, and the smart contract ensures they receive the correct amount.
 
 ## Security Measures
-1. Only admins can add members to the chama.
-2. If the deadline(PayDate) reaches and a member has not contributed his/her money, then the money will be refunded to the members who sent.
+ - **Public Chama Safeguard:** In public chamas, each member is required to lock an amount equal to the chama’s contribution amount. This locked amount can be used to cover the member’s share in case they default on a payment, ensuring that the chama’s payout structure remains secure.
+ - **Private Chama Access Control:** For private chamas, users need a direct link and admin approval to join, maintaining privacy and group integrity by allowing only selected participants.
+- **Non-Contribution on Payout Date:** If, on the payout date, any member has not contributed their required amount, all contributing members are automatically refunded to their wallets. This measure protects contributors and maintains fairness in payout timing.
 
 ### Getting Started
 

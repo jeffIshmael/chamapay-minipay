@@ -1,3 +1,4 @@
+"use client"
 import React, { useEffect, useState } from "react";
 import { getPaymentsById, getUserById } from "../../lib/chama"; // assuming both APIs are imported correctly
 

@@ -1,7 +1,7 @@
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
 import { useReadContract, useAccount, useWriteContract } from "wagmi";
-import { celo } from "viem/chains";
+import { celo, celoAlfajores } from "viem/chains";
 import erc20Abi from "@/app/ChamaPayABI/ERC20.json";
 import { processCheckout } from "../Blockchain/TokenTransfer";
 import { contractAddress, contractAbi } from "../ChamaPayABI/ChamaPayContract";
@@ -18,7 +18,7 @@ const CKESPay = ({ id, name }: { id: number; name: string }) => {
 
   const { data } = useReadContract({
     chainId: celo.id,
-    address: "0x456a3d042c0dbd3db53d5489e98dfb038553b0d0",
+    address: "0x456a3D042C0DbD3db53D5489e98dFb038553B0d0",
     functionName: "balanceOf",
     abi: erc20Abi,
     args: [address],
@@ -65,7 +65,7 @@ const CKESPay = ({ id, name }: { id: number; name: string }) => {
               address: contractAddress,
               abi: contractAbi,
               functionName: "depositCash",
-              args: [id - 3, amount * 10 ** 18],
+              args: [id - 1, amount * 10 ** 18],
             });
 
             if (hash) {

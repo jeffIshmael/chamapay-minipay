@@ -8,11 +8,43 @@ import { useAccount, useReadContract } from "wagmi";
 import { contractAbi, contractAddress } from "../ChamaPayABI/ChamaPayContract";
 import { getUser } from "../../lib/chama";
 import { Suspense } from "react";
+import { AccountStateConflictError } from "viem";
 
 type Member = {
   name: string;
   date: string;
 };
+
+interface User {
+  chamaId: number;
+  id: number;
+  payDate: Date;
+  user: {
+    id: number;
+    address: string;
+    name: string | null;
+    role: string;
+  };
+  userId: number;
+}
+
+interface Chama {
+  adminId: number;
+  amount: number;
+  createdAt: Date;
+  cycleTime: number;
+  id: number;
+  maxNo: number;
+  members: User[];
+  name: string;
+  payDate: Date;
+  slug: string;
+  startDate: Date;
+  started: boolean;
+  type: string;
+}
+
+type Account = [bigint, bigint];
 
 type ChamaDetailsTuple = [
   bigint,
@@ -25,15 +57,15 @@ type ChamaDetailsTuple = [
   string[]
 ];
 
-const Schedule = ({ chamaId, type }: { chamaId: number; type: string }) => {
+const Schedule = ({ chama, type }: { chama: Chama; type: string }) => {
   const [showDeposit, setShowDeposit] = useState(false);
   const [progressPercentage, setProgressPercentage] = useState(0);
-  const [members, setMembers] = useState<string[]>([]);
+  const [members, setMembers] = useState<User[]>([]);
   const [round, setRound] = useState(0);
   const [duration, setDuration] = useState(0);
   const [beginDate, setBeginDate] = useState(0);
   const [userDetails, setUserDetails] = useState<{ [key: string]: any }>({});
-  const [balance, setBalance] = useState(0); // New state for balance
+  const [balance, setBalance] = useState<Account | []>([]); // New state for balance
   const { isConnected, address } = useAccount();
 
   const {
@@ -44,15 +76,17 @@ const Schedule = ({ chamaId, type }: { chamaId: number; type: string }) => {
     address: contractAddress,
     abi: contractAbi,
     functionName: "getChama",
-    args: [BigInt(chamaId - 3)], // Example chamaId, replace 0 with actual chamaId when needed
+    args: [BigInt(chama.id-1)],
   });
 
-  const { data: chamaBalance } = useReadContract({
+  const { data } = useReadContract({
     address: contractAddress,
     abi: contractAbi,
     functionName: "getBalance",
-    args: [BigInt(chamaId - 3), address], // Example chamaId, replace 0 with actual chamaId when needed
+    args: [BigInt(chama.id-1), address],
   });
+
+  const chamaBalance = (data as Account) || [];
 
   const startDate = beginDate; // Start date of the chama cycle
   //at this time, the cycle starts from first payout
@@ -73,45 +107,20 @@ const Schedule = ({ chamaId, type }: { chamaId: number; type: string }) => {
       const results = chamaDetails as ChamaDetailsTuple | undefined;
       console.log(results);
       if (results && Array.isArray(results[7])) {
-        setMembers(results[7]); // Set members based on addresses from the contract
-        setDuration(Number(results[3])); // Set duration from contract data
+        setMembers(chama.members); // Set members based on addresses from the contract
+        setDuration(chama.cycleTime); // Set duration from contract data
         setRound(Number(results[4])); // Set the current round from contract data
         setBeginDate(Number(results[2])); // Set the start date of the chama
       }
     }
   }, [chamaDetails]);
 
-  useEffect(() => {
-    const fetchUserDetails = async () => {
-      if (members.length > 0) {
-        const details = await Promise.all(
-          members.map(async (address) => {
-            const userData = await getUser(address); // Fetch user details from your API
-            return { address, userData }; // Return address and userData pair
-          })
-        );
-
-        const userDetailsMap = details.reduce(
-          (acc, { address, userData }) => ({
-            ...acc,
-            [address]: userData, // Store user data keyed by address
-          }),
-          {}
-        );
-        setUserDetails(userDetailsMap); // Store the user details
-      }
-    };
-
-    fetchUserDetails(); // Call the function
-  }, [members]);
 
   useEffect(() => {
     // Add your logic here to get the balance for the current user
 
     if (chamaBalance) {
-      const result = Number(chamaBalance) / 10 ** 18;
-      console.log(result);
-      setBalance(result);
+      setBalance(chamaBalance);
     }
   }, [chamaBalance]);
 
@@ -153,10 +162,14 @@ const Schedule = ({ chamaId, type }: { chamaId: number; type: string }) => {
                   clipRule="evenodd"
                 />
               </svg>
-              <span className="text-gray-600">0 cKES</span>
+              <span className="text-gray-600">
+                {Number(balance[1]) / 10 ** 18} cKES
+              </span>
               <div className="w-[1px] h-6 bg-gray-400 mx-4"></div>{" "}
               {/* Vertical Divider */}
-              <span className="text-gray-700">{balance} cKES</span>
+              <span className="text-gray-700">
+                {Number(balance[0]) / 10 ** 18} cKES
+              </span>
             </div>
           </div>
         </div>
@@ -164,7 +177,9 @@ const Schedule = ({ chamaId, type }: { chamaId: number; type: string }) => {
         <div className="flex  right-2 sm:top-2 sm:right-0 bg-downy-50 border border-downy-300 shadow-md justify-end p-2 sm:p-2 rounded-md z-50">
           <div className="flex flex-col items-center">
             <p className="font-normal text-gray-800">Chama Balance</p>
-            <p className="font-normal text-gray-600">{balance} cKES</p>
+            <p className="font-normal text-gray-600">
+              {Number(balance[0]) / 10 ** 18} cKES
+            </p>
           </div>
         </div>
       )}
@@ -187,16 +202,16 @@ const Schedule = ({ chamaId, type }: { chamaId: number; type: string }) => {
             </div>
 
             {/* Member clouds */}
-            {members.map((address, index) => (
+            {members.map((member, index) => (
               <div
-                key={address}
+                key={member.id} // Use the id property as the key
                 className="absolute flex flex-col items-center justify-center w-[100px] h-[60px] rounded-full bg-downy-400 shadow-lg p-2"
                 style={{
                   transform: calculateMemberPosition(index),
                 }}
               >
                 <p className="text-sm font-bold">
-                  {userDetails[address]?.name || "Unknown"}
+                  {member.user.name || "Unknown"}
                 </p>
                 <p className="text-xs">{calculatePayoutDate(index)}</p>
               </div>
@@ -232,7 +247,7 @@ const Schedule = ({ chamaId, type }: { chamaId: number; type: string }) => {
           {!showDeposit ? (
             <Withdrawals cycle={round} />
           ) : (
-            <Deposits chamaId={chamaId} />
+            <Deposits chamaId={chama.id} />
           )}
         </div>
       </div>

@@ -40,3 +40,10 @@ button {
 button:hover {
   background-color: var(--button-light);
 }
+
+@font-face {
+  font-family: 'Playwrite US Trad';
+  src: url('/fonts/PlaywriteUSTrad-VariableFont_wght.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}

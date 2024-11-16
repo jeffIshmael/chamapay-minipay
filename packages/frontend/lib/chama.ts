@@ -1,11 +1,20 @@
 "use server";
 import prisma from "@/lib/db";
 import { revalidatePath } from "next/cache";
+import { assignPayDates } from "./paydate";
 const cron = require("node-cron");
 
 //get all chamas
 export async function handler() {
-  const chama = await prisma.chama.findMany();
+  const chama = await prisma.chama.findMany({
+    include: {
+      members: {
+        include: {
+          user: true,
+        },
+      },
+    },
+  });
   return chama;
 }
 
@@ -15,6 +24,13 @@ export async function getChama(chamaSlug: string) {
     where: {
       slug: chamaSlug,
     },
+    include: {
+      members:{
+        include: {
+          user: true,
+        }
+      }
+    }
   });
   return chama;
 }
@@ -64,11 +80,11 @@ export async function getChamasByUser(userId: number) {
 
   const chamas = [];
 
-  for(const chamaIdItem of chamaIds) {
+  for (const chamaIdItem of chamaIds) {
     const chama = await prisma.chama.findUnique({
       where: {
-        id: chamaIdItem.chamaId
-      }
+        id: chamaIdItem.chamaId,
+      },
     });
 
     if (chama) {
@@ -104,7 +120,7 @@ export async function createChama(
           where: { address: adminAddress },
           create: {
             address: adminAddress,
-            name: "glen",  // Or retrieve from form data
+            name: "admin", // Or retrieve from form data
             role: "admin", // Add role here as it's required
           },
         },
@@ -120,7 +136,7 @@ export async function createChama(
           where: { address: adminAddress },
           create: {
             address: adminAddress,
-            name: "glen", // Or retrieve from form data
+            name: "admin", // Or retrieve from form data
             role: "admin", // Add role here as it's required for the User model
           },
         },
@@ -128,11 +144,46 @@ export async function createChama(
       chama: {
         connect: { id: chama.id },
       },
+      payDate: new Date(),
     },
   });
 
   // Revalidate the path if necessary
   revalidatePath("/MyChamas");
+}
+
+//To check whether a chama exists
+export async function checkChama(chamaName: string) {
+  const chama = await prisma.chama.findUnique({
+    where: {
+      slug: chamaName.replace(/\s+/g, "-").toLowerCase(),
+    },
+  });
+
+  if (chama) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+//function to add member to public chama
+export async function addMemberToPublicChama(userId: number, chamaId: number) {
+  await prisma.chamaMember.create({
+    data: {
+      user: {
+        connect: {
+          id: userId,
+        },
+      },
+      chama: {
+        connect: {
+          id: chamaId,
+        },
+      },
+      payDate: new Date(),
+    },
+  });
 }
 
 
@@ -236,6 +287,9 @@ export async function updateChamaStatus() {
         where: { id: chama.id },
         data: { started: true },
       });
+
+      //update the paydates
+      await assignPayDates(chama.id);
     }
 
     console.log(`Updated ${chamas.length} chamas.`);
@@ -304,11 +358,11 @@ export async function requestToJoinChama(
   });
 
   // Send notification to the admin
-   // Send notification to the admin
-   if (chama) {
+  // Send notification to the admin
+  if (chama) {
     await createNotification(
       chama.admin.id,
-      `${userName || 'A user'} has requested to join your chama ${chama.name}.`,
+      `${userName || "A user"} has requested to join your chama ${chama.name}.`,
       userId,
       request.id,
       chamaId
@@ -339,6 +393,7 @@ export async function handleJoinRequest(
       data: {
         user: { connect: { id: request.userId } },
         chama: { connect: { id: request.chamaId } },
+        payDate: new Date(),
       },
     });
 
@@ -437,8 +492,12 @@ export async function notifyDeadline() {
     for (const chama of chamas) {
       const payoutDate = new Date(chama.payDate);
       const oneDayBefore = new Date(payoutDate.getTime() - 24 * 60 * 60 * 1000); // 1 day before payout
-      const twelveHoursBefore = new Date(payoutDate.getTime() - 12 * 60 * 60 * 1000); // 12 hours before payout
-      const twoHoursBefore = new Date(payoutDate.getTime() - 2 * 60 * 60 * 1000); // 2 hours before payout
+      const twelveHoursBefore = new Date(
+        payoutDate.getTime() - 12 * 60 * 60 * 1000
+      ); // 12 hours before payout
+      const twoHoursBefore = new Date(
+        payoutDate.getTime() - 2 * 60 * 60 * 1000
+      ); // 2 hours before payout
 
       // Check if we are 1 day, 12 hours, or 2 hours before payout
       if (now >= oneDayBefore && now < twelveHoursBefore) {
@@ -479,4 +538,3 @@ export async function notifyDeadline() {
 
   cron.schedule("0 * * * *", notifyDeadline);
 }
-

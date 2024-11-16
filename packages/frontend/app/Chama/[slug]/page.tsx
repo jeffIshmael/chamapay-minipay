@@ -7,10 +7,22 @@ import Members from "@/app/Components/Members";
 import Chat from "@/app/Components/Chat";
 import Schedule from "@/app/Components/Schedule";
 import Wallet from "@/app/Components/Wallet";
-import { getChama, requestToJoinChama, getUser, createUser } from "@/lib/chama";
+import {
+  getChama,
+  requestToJoinChama,
+  getUser,
+  createUser,
+  addMemberToPublicChama,
+  makePayment,
+} from "@/lib/chama";
 import { duration } from "@/utils/duration";
 import Pay from "@/app/Components/Pay";
-import { useReadContract, useAccount, useConnect } from "wagmi";
+import {
+  useReadContract,
+  useAccount,
+  useConnect,
+  useWriteContract,
+} from "wagmi";
 import { celo } from "viem/chains";
 import erc20Abi from "@/app/ChamaPayABI/ERC20.json";
 import {
@@ -20,6 +32,21 @@ import {
 import { injected } from "wagmi/connectors";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { toast } from "sonner";
+import { processCheckout } from "@/app/Blockchain/TokenTransfer";
+import { useRouter } from "next/navigation";
+
+interface User {
+  chamaId: number;
+  id: number;
+  payDate: Date;
+  user: {
+    id: number;
+    address: string;
+    name: string | null;
+    role: string;
+  };
+  userId: number;
+}
 
 interface Chama {
   adminId: number;
@@ -28,6 +55,7 @@ interface Chama {
   cycleTime: number;
   id: number;
   maxNo: number;
+  members: User[];
   name: string;
   payDate: Date;
   slug: string;
@@ -49,7 +77,7 @@ type ChamaDetailsTuple = [
 
 const ChamaDetails = ({ params }: { params: { slug: string } }) => {
   const [activeSection, setActiveSection] = useState("Details");
-  const [chama, setChama] = useState<Chama | null>();
+  const [chama, setChama] = useState<Chama | null>(null);
   const [cycle, setCycle] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("");
@@ -59,19 +87,16 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
   const [userName, setUserName] = useState("");
   const [chamaType, setChamaType] = useState("");
   const [included, setIncluded] = useState(false);
+  const [showModal, setShowModal] = useState(false);
   const { connect } = useConnect();
+  const { writeContractAsync } = useWriteContract();
+  const [loading, setLoading] = useState(false);
+  const [processing, setProcessing] = useState(false);
+  const router = useRouter();
 
   const togglePayModal = () => {
     setIsOpen(!isOpen);
   };
-
-  const { data } = useReadContract({
-    chainId: celo.id,
-    address: "0x456a3d042c0dbd3db53d5489e98dfb038553b0d0",
-    functionName: "balanceOf",
-    abi: erc20Abi,
-    args: [address],
-  });
 
   const {
     data: chamaDetails,
@@ -81,7 +106,7 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
     address: contractAddress,
     abi: contractAbi,
     functionName: "getChama",
-    args: [chama?.id ? [BigInt(Number(chama.id) - 3)] : []],
+    args: [chama?.id ? [BigInt(Number(chama.id - 1))] : []],
   });
 
   const { data: isMember } = useReadContract({
@@ -89,7 +114,7 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
     abi: contractAbi,
     functionName: "isMember",
     args: [
-      chama?.id ? BigInt(Number(chama.id) - 3) : [],
+      chama?.id ? BigInt(Number(chama.id - 1)) : [],
       address ? address : [],
     ],
   });
@@ -140,7 +165,7 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
 
       // If user does not exist, create a new user
       if (!userData) {
-        userData = await createUser("Jeff", address as string);
+        userData = await createUser("User 1", address as string);
       }
 
       if (userData && chama) {
@@ -164,6 +189,82 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
       } else {
         toast.error("An error occurred while sending the join request.");
       }
+    }
+  };
+
+  const joinPublicChama = async () => {
+    if (!isConnected) {
+      toast.error("Please connect your wallet");
+      return;
+    }
+
+    try {
+      setProcessing(true);
+      const paid = await processCheckout(Number(chama?.amount) * 10 ** 18);
+      if (paid) {
+             
+        if (address && isConnected) {
+          await makePayment(chama?.amount ?? 0, paid, chama?.id ?? 0, address);
+          console.log("done");
+          try {
+            setProcessing(false);
+            setLoading(true);
+            const hash = await writeContractAsync({
+              address: contractAddress,
+              abi: contractAbi,
+              functionName: "addPublicMember",
+              args: [chama?.id ? [BigInt(Number(chama.id - 1))] : []],
+            });
+
+            if (hash) {
+              try {
+                // Attempt to fetch existing user
+                let userData = await getUser(address as string);
+
+                // If user does not exist, create a new user
+                if (!userData) {
+                  userData = await createUser("User 2", address as string);
+                }
+
+                if (userData && chama) {
+                  setUserId(userData.id);
+                  setUserName(userData.name ?? "");
+
+                  const request = await addMemberToPublicChama(
+                    userData.id,
+                    chama.id
+                  );
+                  console.log(request);
+                  toast.success(`successfully joined ${chama.name}`);
+                  setLoading(false);
+                  router.push("/MyChamas");
+                }
+              } catch (error: any) {
+                console.log(error);
+              } finally {
+                setLoading(false);
+              }
+            } else {
+              toast.error("Something happened, please try again");
+            }
+          } catch (error) {
+            console.log(error);
+            toast.error("A problem occured. Ensure wallet is connected.");
+          } finally {
+            setLoading(false);
+            setProcessing(false);
+          }
+        } else {
+          toast.error("Please connect wallet.");
+        }
+      } else {
+        toast.error("Payment failed");
+      }
+    } catch (error) {
+      console.log("error", error);
+      toast.error("Ensure you have enough funds in your wallet");
+    } finally {
+      setProcessing(false);
     }
   };
 
@@ -194,6 +295,51 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
       {activeSection === "Details" && (
         <div className="bg-downy-100 min-h-screen flex flex-col items-center py-1">
           {/* Main Content */}
+          {showModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+              <div className="bg-white p-6 rounded-xl shadow-lg w-96">
+                <h2 className="text-xl font-semibold text-gray-800 mb-4">
+                  Lock Amount
+                </h2>
+                <p className="text-gray-600 mb-6">
+                  You need to lock the required amount before joining the public
+                  chama.
+                </p>
+                <div className="flex justify-end space-x-4">
+                  <button
+                    onClick={
+                      loading || processing
+                        ? undefined
+                        : () => setShowModal(false)
+                    }
+                    disabled={loading || processing}
+                    className={`px-4 py-2 bg-gray-300 text-gray-700 rounded-md  ${
+                      loading || processing
+                        ? "hover:cursor-not-allowed hover:bg-current"
+                        : "hover:bg-gray-400"
+                    }`}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={joinPublicChama}
+                    disabled={loading || processing}
+                    className={`px-4 py-2  text-white rounded-md  ${
+                      processing || loading
+                        ? "opacity-50 cursor-not-allowed"
+                        : "bg-downy-500 hover:bg-downy-600"
+                    }`}
+                  >
+                    {loading
+                      ? "adding..."
+                      : processing
+                      ? "Processing..."
+                      : "Proceed"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
           <div className="flex justify-end">
             {chama.started == true ? (
               <div className="flex items-center">
@@ -228,8 +374,10 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
               {chama.amount} cKES/{cycle}
             </h2>
             <h3 className="text-lg text-gray-500 text-center mb-2">
-              {results ? results[7].length : "Loading..."} Member
-              <span>{results && results[7].length > 1 ? "s" : ""}</span>
+              {chama.members ? chama.members.length : "Loading..."} Member
+              <span>
+                {chama.members && chama.members.length > 1 ? "s" : ""}
+              </span>
               {/* {chamaDetails[5]} */}
             </h3>
             <h3 className="text-lg text-gray-500 text-center mb-2">
@@ -255,7 +403,11 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
             <div className="flex justify-center mb-4">
               {!included ? (
                 <button
-                  onClick={joinChama}
+                  onClick={
+                    chama.type === "Public"
+                      ? () => setShowModal(true)
+                      : joinChama
+                  }
                   className="bg-downy-500 px-16 rounded-md py-2 text-white font-semibold text-center hover:bg-downy-700 transition-all"
                 >
                   Join
@@ -299,7 +451,7 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
           ).toString()}.jpg`}
           name={chama.name}
           slug={chama.slug}
-          chamaId={chama.id}
+          members={chama.members}
         />
       )}
       {activeSection === "Chats" && (
@@ -334,8 +486,8 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
             <div className="ml-3">
               <h2 className="text-xl font-bold text-downy-600">{chama.name}</h2>
               <p className="text-gray-500">
-                {results ? results[7].length : "Loading..."} Member
-                <span>{results && results[7].length > 1 ? "s" : ""}</span>
+                {chama.members.length} Member
+                <span>{chama.members.length > 1 ? "s" : ""}</span>
               </p>
             </div>
           </div>
@@ -344,7 +496,7 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
       )}
 
       {activeSection === "Schedule" && (
-        <Schedule chamaId={Number(chama.id)} type={chamaType} />
+        <Schedule chama={chama} type={chamaType} />
       )}
 
       {activeSection !== "Chats" && (
@@ -356,10 +508,11 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
       )}
       {activeSection === "Wallet" && <Wallet />}
       {isOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex justify-center items-end transition duration-300 ease-in-out"
-          onClick={togglePayModal}
-        >
+        <>
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex justify-center items-end transition duration-300 ease-in-out"
+            onClick={togglePayModal}
+          ></div>
           <div
             onClick={(e) => {
               e.stopPropagation();
@@ -372,7 +525,7 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
               chamaName={chama.name}
             />
           </div>
-        </div>
+        </>
       )}
     </div>
   );

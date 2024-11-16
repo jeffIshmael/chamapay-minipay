@@ -9,6 +9,19 @@ import { contractAbi, contractAddress } from "../ChamaPayABI/ChamaPayContract";
 import { duration as getDuration } from "@/utils/duration";
 import BottomNavbar from "../Components/BottomNavbar";
 
+interface User {
+  chamaId: number;
+  id: number;
+  payDate: Date;
+  user: {
+    id: number;
+    address: string;
+    name: string | null;
+    role: string;
+  };
+  userId: number;
+}
+
 interface Chama {
   adminId: number;
   amount: number;
@@ -16,6 +29,7 @@ interface Chama {
   cycleTime: number;
   id: number;
   maxNo: number;
+  members: User[];
   name: string;
   payDate: Date;
   slug: string;
@@ -24,40 +38,18 @@ interface Chama {
   type: string;
 }
 
-type ChamaDetailsTuple = [
-  bigint,
-  bigint,
-  bigint,
-  bigint,
-  bigint,
-  bigint,
-  string,
-  string[]
-];
 
 const ChamaCard = ({ chama }: { chama: Chama }) => {
-  const [chamaDetails, setChamaDetails] = useState<ChamaDetailsTuple | null>(
-    null
-  );
+
   const [chamaDuration, setChamaDuration] = useState<string | null>(null);
 
-  const { data: chamaData, isError } = useReadContract({
-    address: contractAddress,
-    abi: contractAbi,
-    functionName: "getChama",
-    args: [BigInt(Number(chama.id - 3))],
-  });
 
-  useEffect(() => {
-    if (chamaData) {
-      setChamaDetails(chamaData as ChamaDetailsTuple);
-    }
-  }, [chamaData]);
 
   useEffect(() => {
     const fetchDuration = async () => {
       const durationValue = await getDuration(chama.cycleTime);
       setChamaDuration(durationValue);
+      console.log(chama);
     };
 
     fetchDuration();
@@ -96,7 +88,7 @@ const ChamaCard = ({ chama }: { chama: Chama }) => {
         {/* Chama Details */}
         <div className="mb-4">
           <h2 className="text-gray-700">
-            Members: {chamaDetails ? chamaDetails[7].length : ""} /{" "}
+            Members: {chama.members.length} /{" "}
             {chama.maxNo}
           </h2>
           <h3 className="text-gray-700 mt-1">
@@ -107,8 +99,6 @@ const ChamaCard = ({ chama }: { chama: Chama }) => {
               ? `Next Pay: ${new Date(chama.payDate).toLocaleDateString()}`
               : `Start Date: ${new Date(chama.startDate).toLocaleDateString()}`}
           </h3>
-
-          {isError && <p className="text-red-500">Failed to load details.</p>}
         </div>
 
         {/* Arrow Icon at the Bottom */}
@@ -133,14 +123,19 @@ const ChamaCard = ({ chama }: { chama: Chama }) => {
 
 const Page = () => {
   const [chamas, setChamas] = useState<Chama[]>([]);
+  const [loading, setLoading] = useState<boolean>(true); // New loading state
 
   useEffect(() => {
     const fetchChamas = async () => {
       try {
+        setLoading(true); // Start loading
         const data = await handler();
         setChamas(data);
+        console.log(data);
       } catch (error) {
         console.error("Error fetching chamas:", error);
+      } finally {
+        setLoading(false); // Stop loading
       }
     };
 
@@ -156,18 +151,18 @@ const Page = () => {
           <h1 className="text-3xl font-bold mb-6 text-center">
             Explore Public Chamas
           </h1>
-          {publicChamas.length === 0 ? (
+          {loading ? ( // Display loading indicator
+            <p className="text-center text-gray-500">Loading chamas...</p>
+          ) : publicChamas.length === 0 ? ( // Show message if no chamas exist
             <p className="text-center text-gray-500">
               No public chamas available.
             </p>
           ) : (
-            <>
-              <div className="grid grid-cols-2  gap-2">
-                {publicChamas.map((chama) => (
-                  <ChamaCard key={chama.id} chama={chama} />
-                ))}
-              </div>
-            </>
+            <div className="grid grid-cols-2 gap-2">
+              {publicChamas.map((chama) => (
+                <ChamaCard key={chama.id} chama={chama} />
+              ))}
+            </div>
           )}
         </div>
       </div>
@@ -177,3 +172,4 @@ const Page = () => {
 };
 
 export default Page;
+
