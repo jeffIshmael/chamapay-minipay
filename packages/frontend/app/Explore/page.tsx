@@ -48,7 +48,6 @@ const ChamaCard = ({ chama }: { chama: Chama }) => {
     const fetchDuration = async () => {
       const durationValue = await getDuration(chama.cycleTime);
       setChamaDuration(durationValue);
-      console.log(chama);
     };
 
     fetchDuration();

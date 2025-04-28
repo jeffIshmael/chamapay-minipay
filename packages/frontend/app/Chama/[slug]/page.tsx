@@ -87,7 +87,7 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
     if (!isConnected) {
       connect({ connector: injected({ target: "metaMask" }) });
     }
-  }, [isConnected]);
+  }, [isConnected, connect]);
 
   useEffect(() => {
     const fetchChama = async () => {
@@ -101,7 +101,7 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
       }
     };
     fetchChama();
-  }, [address]);
+  }, [address, params.slug]);
 
   // sending request to join private chama
   const joinChama = async () => {

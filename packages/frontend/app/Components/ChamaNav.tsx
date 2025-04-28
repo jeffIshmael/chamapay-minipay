@@ -40,7 +40,7 @@ export default function ChamaNavbar({
         window.removeEventListener("scroll", controlNavbar);
       };
     }
-  }, [lastScrollY]);
+  }, [lastScrollY, controlNavbar]);
 
   return (
     <nav

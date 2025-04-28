@@ -35,11 +35,10 @@ export default function BottomNavbar({
       window.addEventListener('scroll', controlNavbar);
 
       return () => {
-        window.removeEventListener('scroll', controlNavbar);
+        window.removeEventListener("scroll", controlNavbar);
       };
     }
-  }, [lastScrollY]);
-
+  }, [lastScrollY, controlNavbar]);
 
   return (
     <nav className={`fixed bottom-0 w-full max-w-sm bg-white rounded-xl shadow-md py-1 z-50  ${ isVisible ? 'block' : 'hidden'}
