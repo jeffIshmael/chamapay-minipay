@@ -5,6 +5,9 @@ import { toast } from "sonner";
 import { useAccount, useWriteContract } from "wagmi";
 import { contractAbi, contractAddress } from "../ChamaPayABI/ChamaPayContract";
 import { processCheckout } from "../Blockchain/TokenTransfer";
+import { FiAlertTriangle, FiGlobe } from "react-icons/fi";
+import { parseEther } from "viem";
+import { getLatestChamaId } from "@/lib/readFunctions";
 
 interface Form {
   amount: string;
@@ -24,9 +27,10 @@ const CreatePublic = () => {
   const [processing, setProcessing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [openingModal, setOpeningModal] = useState(false);
+  const [errorText, setErrorText] = useState("");
   const router = useRouter();
   const { isConnected, address } = useAccount();
-  const { writeContractAsync, isPending } = useWriteContract();
+  const { writeContractAsync } = useWriteContract();
   const [filledData, setFilledData] = useState<Form>({
     amount: "",
     cycleTime: "",
@@ -37,35 +41,48 @@ const CreatePublic = () => {
 
   const openModal = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorText("");
     const formData = new FormData(e.target as HTMLFormElement);
     const data = Object.fromEntries(formData.entries());
     console.log(data);
 
-    // Set the form data and open the modal directly
-    if (data) {
-      try {
-        setOpeningModal(true);
-        const exists = await checkChama(data.name as string);
-        if (exists) {
-          toast.error("Choose another name.");
-          return;
-        } else {
-          setFilledData(data as unknown as Form); // Save form data
-          setShowModal(true); // Open modal
-        }
-      } catch (error) {
-        console.log(error);
-      } finally {
-        setOpeningModal(false);
+    if (isNaN(Number(data.amount)) || Number(data.amount) <= 0) {
+      setErrorText("Amount must be greater than 0");
+      return;
+    }
+    if (isNaN(Number(data.maxNumber)) || Number(data.maxNumber) <= 1) {
+      setErrorText("Max number must be greater than 1");
+      return;
+    }
+    if (isNaN(Number(data.cycleTime)) || Number(data.cycleTime) <= 0) {
+      setErrorText("Cycle time must be greater than 0");
+      return;
+    }
+    if (!data.name || (data.name as string).length < 3 || data.name === "") {
+      setErrorText("Name must be at least 3 characters long");
+      return;
+    }
+
+    try {
+      setOpeningModal(true);
+      const exists = await checkChama(data.name as string);
+      if (exists) {
+        setErrorText("chama with the name already exists");
+        return;
       }
-    } else {
-      console.log("unable");
+      setFilledData(data as unknown as Form); // Save form data
+      setShowModal(true); // Open modal
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setOpeningModal(false);
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isConnected) {
+    setErrorText("");
+    if (!isConnected || !address) {
       toast.error("Please connect wallet");
       return;
     }
@@ -73,83 +90,64 @@ const CreatePublic = () => {
     console.log(filledData);
     const amount = parseFloat(filledData.amount as string);
     console.log(amount);
+    const amountInWei = parseEther(amount.toString());
+    const blockchainId = await getLatestChamaId();
+    console.log(`blockchainId: ${blockchainId}`);
 
-    if (isNaN(amount) || amount <= 0) {
-      toast.error("Invalid amount");
-      return;
-    }
-    const amountInWei = Number(amount * 10 ** 18);
-
-    if (address && isConnected) {
+ 
       //function to send the lock amount
       try {
         setProcessing(true);
-        const paid = await processCheckout(amountInWei);
+        const paid = await processCheckout(contractAddress as `0x${string}`, amountInWei);
         if (paid) {
-          try {
-            setProcessing(false);
-            setLoading(true);
-            const dateObject = new Date(filledData.startDate as string);
-            const dateInMilliseconds = dateObject.getTime();
+          setProcessing(false);
+          setLoading(true);
+          const dateObject = new Date(filledData.startDate as string);
+          const dateInMilliseconds = dateObject.getTime();
 
-            const hash = await writeContractAsync({
-              address: contractAddress,
-              abi: contractAbi,
-              functionName: "registerChama",
-              args: [
-                BigInt(amountInWei),
-                BigInt(Number(filledData.cycleTime)),
-                BigInt(dateInMilliseconds),
-                BigInt(Number(filledData.maxNumber)),
-                true,
-              ],
-            });
+          const hash = await writeContractAsync({
+            address: contractAddress,
+            abi: contractAbi,
+            functionName: "registerChama",
+            args: [
+              amountInWei,
+              BigInt(Number(filledData.cycleTime)),
+              BigInt(dateInMilliseconds),
+              BigInt(Number(filledData.maxNumber)),
+              true,
+            ],
+          });
 
-            if (hash) {
-              try {
-                const formData = new FormData();
-                formData.append("name", filledData.name);
-                formData.append("amount", filledData.amount);
-                formData.append("cycleTime", filledData.cycleTime);
-                formData.append("maxNumber", filledData.maxNumber);
-                formData.append("startDate", filledData.startDate);
+          if (hash) {
+            const formData = new FormData();
+            formData.append("name", filledData.name);
+            formData.append("amount", filledData.amount);
+            formData.append("cycleTime", filledData.cycleTime);
+            formData.append("maxNumber", filledData.maxNumber);
+            formData.append("startDate", filledData.startDate);
 
-                await createChama(formData, "Public", address);
+            await createChama(formData, "Public", address, blockchainId, paid);
 
-                console.log("done");
-                toast.success(`${filledData.name} created successfully.`);
-                setLoading(false);
-                router.push("/MyChamas");
-              } catch (error) {
-                console.log(error);
-                toast.error("Unable, Try using another group name");
-                setLoading(false);
-              } finally {
-                setProcessing(false);
-                setLoading(false);
-              }
-            } else {
-              toast.error("unable to create, please try again");
-            }
-          } catch (error) {
-            console.log(error);
-          } finally {
+            console.log("done");
+            toast.success(`${filledData.name} created successfully.`);
             setLoading(false);
-            setProcessing(false);
+            router.push("/MyChamas");
+          } else {
+            toast.error("unable to create, please try again");
+            setErrorText("unable to create, please try again");
           }
         } else {
-          toast.error(`make sure you have ${amount} cKES in your wallet.`);
+          setErrorText(`Ensure you have ${amount} cUSD in your wallet.`);
         }
       } catch (error) {
         toast.error("Oops!!something happened.");
+        setErrorText("Oops!!something happened.");
         console.log(error);
       } finally {
         setProcessing(false);
         setLoading(false);
       }
-    } else {
-      toast.error("Please connect wallet.");
-    }
+
   };
 
   return (
@@ -158,11 +156,17 @@ const CreatePublic = () => {
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60">
           <div className="bg-white p-6 rounded-xl shadow-lg w-96">
+            {errorText && (
+              <div className="text-red-500 p-2 flex items-center border border-red-500 rounded-md relative mb-2">
+                <FiAlertTriangle className="text-red-500 text-sm mr-2" />
+                <span className="block sm:inline text-sm">{errorText}</span>
+              </div>
+            )}
             <h2 className="text-xl font-semibold text-gray-800 mb-4">
               Lock Amount
             </h2>
             <p className="text-gray-600 mb-6">
-              You need to lock the required amount before proceeding to create
+              You need to lock {amount} cUSD before proceeding to create
               the public chama.
             </p>
             <div className="flex justify-end space-x-4">
@@ -172,7 +176,10 @@ const CreatePublic = () => {
                 }
                 disabled={loading || processing}
                 className={`px-4 py-2 bg-gray-300 text-gray-700 rounded-md  ${
-                  loading || processing ? "hover:cursor-not-allowed":"hover:bg-gray-400"}`}
+                  loading || processing
+                    ? "hover:cursor-not-allowed hover:bg-gray-400"
+                    : "hover:bg-gray-400"
+                }`}
               >
                 Cancel
               </button>
@@ -203,20 +210,14 @@ const CreatePublic = () => {
         onSubmit={openModal}
         className="space-y-4 bg-white p-6 rounded-3xl shadow-md w-full mt-3 transform origin-top animate-fadeIn"
       >
-        <div className=" flex flex-column-2 space-x-2">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="currentColor"
-            className="w-10 h-10 text-downy-400"
-          >
-            <path
-              fillRule="evenodd"
-              d="M8.25 6.75a3.75 3.75 0 1 1 7.5 0 3.75 3.75 0 0 1-7.5 0ZM15.75 9.75a3 3 0 1 1 6 0 3 3 0 0 1-6 0ZM2.25 9.75a3 3 0 1 1 6 0 3 3 0 0 1-6 0ZM6.31 15.117A6.745 6.745 0 0 1 12 12a6.745 6.745 0 0 1 6.709 7.498.75.75 0 0 1-.372.568A12.696 12.696 0 0 1 12 21.75c-2.305 0-4.47-.612-6.337-1.684a.75.75 0 0 1-.372-.568 6.787 6.787 0 0 1 1.019-4.38Z"
-              clipRule="evenodd"
-            />
-            <path d="M5.082 14.254a8.287 8.287 0 0 0-1.308 5.135 9.687 9.687 0 0 1-1.764-.44l-.115-.04a.563.563 0 0 1-.373-.487l-.01-.121a3.75 3.75 0 0 1 3.57-4.047ZM20.226 19.389a8.287 8.287 0 0 0-1.308-5.135 3.75 3.75 0 0 1 3.57 4.047l-.01.121a.563.563 0 0 1-.373.486l-.115.04c-.567.2-1.156.349-1.764.441Z" />
-          </svg>
+        {errorText && (
+              <div className="text-red-500 p-2 flex items-center border border-red-500 rounded-md relative mb-2" role="alert">
+                <FiAlertTriangle className="text-red-500 text-sm mr-2" />
+                <span className="block sm:inline text-sm">{errorText}</span>
+              </div>
+            )}
+        <div className=" flex flex-column-2 items-center space-x-2">
+          <FiGlobe className="text-downy-500 text-3xl" />
 
           <input
             type="text"
@@ -235,7 +236,7 @@ const CreatePublic = () => {
             htmlFor="amount"
             className="block text-sm font-medium text-gray-700"
           >
-            Max No. of people
+            Max No. of people(min 2)
           </label>
           <input
             type="number"
@@ -253,7 +254,7 @@ const CreatePublic = () => {
             htmlFor="amount"
             className="block text-sm font-medium text-gray-700"
           >
-            Amount(in cKes)
+            Amount(in cUSD)
           </label>
           <input
             type="number"
@@ -262,7 +263,7 @@ const CreatePublic = () => {
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             required
-            placeholder="Contribution Amount(cKes)"
+            placeholder="Enter Contribution Amount(cUSD)"
             className="mt-1 block w-full rounded-md border-downy-200 shadow-sm focus:border-downy-500 focus:ring-downy-500 sm:text-sm"
           />
         </div>
@@ -280,6 +281,7 @@ const CreatePublic = () => {
             name="startDate"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
+            min={new Date().toISOString().split('T')[0]}
             required
             className="mt-1 block w-full text-gray-500 rounded-md border-downy-200 shadow-sm focus:border-downy-500 focus:ring-downy-500 sm:text-sm"
           />
@@ -289,7 +291,7 @@ const CreatePublic = () => {
             htmlFor="duration"
             className="block text-sm font-medium text-gray-700"
           >
-            Cycle Time (in days)
+            Cycle Time (in days) (min 1)
           </label>
           <input
             type="number"
@@ -336,7 +338,6 @@ const CreatePublic = () => {
                 </svg>
                 ...
               </>
-              
             ) : (
               "Create Chama"
             )}

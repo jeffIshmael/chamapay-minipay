@@ -1,13 +1,12 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { handler } from "../../lib/chama";
+import { getChamas } from "../../lib/chama";
 import Link from "next/link";
 import Image from "next/image";
-import { useReadContract } from "wagmi";
-import { contractAbi, contractAddress } from "../ChamaPayABI/ChamaPayContract";
 import { duration as getDuration } from "@/utils/duration";
 import BottomNavbar from "../Components/BottomNavbar";
+import { formatEther } from "viem";
 
 interface User {
   chamaId: number;
@@ -24,7 +23,7 @@ interface User {
 
 interface Chama {
   adminId: number;
-  amount: number;
+  amount: bigint;
   createdAt: Date;
   cycleTime: number;
   id: number;
@@ -92,7 +91,7 @@ const ChamaCard = ({ chama }: { chama: Chama }) => {
             {chama.maxNo}
           </h2>
           <h3 className="text-gray-700 mt-1">
-            {chama.amount} cKES / {chamaDuration ? chamaDuration : ""}
+            {formatEther(chama.amount)} cUSD / {chamaDuration ? chamaDuration : ""}
           </h3>
           <h3 className="text-gray-700 text-sm mt-1">
             {chama.started
@@ -129,7 +128,7 @@ const Page = () => {
     const fetchChamas = async () => {
       try {
         setLoading(true); // Start loading
-        const data = await handler();
+        const data = await getChamas();
         setChamas(data);
         console.log(data);
       } catch (error) {
@@ -172,4 +171,3 @@ const Page = () => {
 };
 
 export default Page;
-

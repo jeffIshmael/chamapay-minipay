@@ -1,7 +1,7 @@
 import Image from "next/image";
 import React from "react";
 
-const MPesaPay = () => {
+const MPesaPay = ({ onClose }: { onClose: () => void }) => {
   return (
     <div className="bg-white p-6 rounded-lg shadow-md max-w-sm mx-auto">
       <div className="flex items-center space-x-4 mb-6">
@@ -14,7 +14,7 @@ const MPesaPay = () => {
         <h3 className="text-xl font-semibold">MPesa Pay</h3>
       </div>
       <div>
-        <form className="space-y-4">
+        <form onSubmit={onClose} className="space-y-4">
           <div className="flex flex-col">
             <label htmlFor="phone" className="text-sm font-medium text-gray-600">Phone No (To pay from)</label>
             <input

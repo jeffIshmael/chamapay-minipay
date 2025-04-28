@@ -1,16 +1,16 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useReadContract } from "wagmi";
-import { contractAddress, contractAbi } from "../ChamaPayABI/ChamaPayContract";
-import { getUser } from "../../lib/chama";
+import { getUser, getChamaPayouts } from "../../lib/chama";
 
 interface Withdrawal {
-  id: number;
+  amount: bigint;
   chamaId: number;
+  doneAt: Date;
+  id: number;
   receiver: string;
-  amount: number;
-  timestamp: number;
+  txHash: string | null;
+  userId: number;
 }
 
 interface User {
@@ -19,56 +19,56 @@ interface User {
   address: string | null; // Allow address to be nullable
 }
 
-const Withdrawals = ({ cycle }: { cycle: number }) => {
+const Withdrawals = ({ chamaId }: { chamaId: number }) => {
   const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
   const [userNames, setUserNames] = useState<{ [key: string]: string }>({});
-  const { data, isError, isLoading } = useReadContract({
-    address: contractAddress,
-    abi: contractAbi,
-    functionName: "getPayments",
-  });
+
+  const fetchUserNames = async (withdrawals: Withdrawal[]) => {
+    const namesMap: { [key: string]: string } = {};
+
+    // Fetch user names for each deposit asynchronously
+    for (const withdrawal of withdrawals) {
+      const userData: User | null = await getUser(withdrawal.receiver);
+      if (userData) {
+        // Check if name is null, and provide a fallback (e.g., "Unknown User")
+        namesMap[withdrawal.receiver] = userData.name || "Anonymous";
+      }
+    }
+    setUserNames(namesMap);
+  };
+
 
   useEffect(() => {
-    if (data) {
-      const results = data as Withdrawal[];
-      setWithdrawals(results);
-      console.log(data);
-    }
-
-    const fetchUserNames = async (withdrawals: Withdrawal[]) => {
-      const namesMap: { [key: string]: string } = {};
-
-      // Fetch user names for each deposit asynchronously
-      for (const withdrawal of withdrawals) {
-        const userData: User | null = await getUser(withdrawal.receiver);
-        if (userData) {
-          // Check if name is null, and provide a fallback (e.g., "Unknown User")
-          namesMap[withdrawal.receiver] = userData.name || "Unknown User";
-        }
+    const fetchPayouts = async () =>{
+      const results = await getChamaPayouts(chamaId);
+      if (results) {
+        setWithdrawals(results);
+        fetchUserNames(results);
       }
-      setUserNames(namesMap);
-    };
-
-    fetchUserNames(withdrawals);
-  }, [data]);
+    }
+    fetchPayouts();
+  }, []);
 
   const formatDate = (timestamp: number) => {
     const date = new Date(timestamp);
     return new Date(date).toLocaleDateString("en-GB", {
       day: "numeric",
       month: "short",
+      year: "numeric",
+      hour: "numeric",
+      minute: "numeric",
     });
   };
 
   return (
     <div className="p-4 bg-white rounded-lg shadow-md">
       <h2 className="text-xl font-semibold mb-4 text-gray-700">
-        Withdrawals History
+        Payouts History
       </h2>
 
       {withdrawals.length === 0 && (
         <div className="flex items-center">
-          <p>No withdrawals found.</p>
+          <p>No payouts found.</p>
         </div>
       )}
 
@@ -97,13 +97,19 @@ const Withdrawals = ({ cycle }: { cycle: number }) => {
               </p>
             </div>
             <p className="text-sm text-gray-500">
-              {formatDate(Number(withdrawal.timestamp))}
+            {new Date(withdrawal.doneAt).toLocaleDateString("en-GB", {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
             </p>
           </div>
           <div className="flex justify-between items-center">
-            <p className="text-md text-gray-600">Cycle {cycle}</p>
+            <p className="text-md text-gray-600">Cycle 1</p>
             <p className="text-md text-downy-500 font-semibold">
-              {withdrawal.amount} cKES
+              {withdrawal.amount} cUSD
             </p>
           </div>
         </div>

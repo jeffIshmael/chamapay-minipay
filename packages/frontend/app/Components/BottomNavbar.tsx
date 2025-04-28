@@ -42,7 +42,7 @@ export default function BottomNavbar({
 
 
   return (
-    <nav className={`fixed bottom-0 w-full max-w-sm bg-white rounded-xl shadow-md py-1  ${ isVisible ? 'block' : 'hidden'}
+    <nav className={`fixed bottom-0 w-full max-w-sm bg-white rounded-xl shadow-md py-1 z-50  ${ isVisible ? 'block' : 'hidden'}
       `}>
       <div className="flex justify-around w-full items-center">
         <Link

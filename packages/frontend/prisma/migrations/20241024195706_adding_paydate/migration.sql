@@ -1,2 +1,0 @@
--- AlterTable
-ALTER TABLE "ChamaMember" ALTER COLUMN "payDate" SET DATA TYPE TIMESTAMP(3);

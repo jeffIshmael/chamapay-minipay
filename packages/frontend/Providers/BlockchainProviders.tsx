@@ -24,11 +24,11 @@ const connectors = connectorsForWallets(
 
 export const config = createConfig({
   connectors,
-  chains: [ celo],
+  chains: [ celoAlfajores],
   // chains: [celo],
   transports: {
-    // [celoAlfajores.id]: http(),
-    [celo.id]: http(),
+    [celoAlfajores.id]: http(),
+    // [celo.id]: http(),
   },
 });
 

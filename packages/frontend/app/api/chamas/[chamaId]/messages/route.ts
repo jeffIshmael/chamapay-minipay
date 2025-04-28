@@ -1,7 +1,11 @@
 // app/api/chamas/[chamaId]/messages/route.ts
 
 import { NextRequest, NextResponse } from 'next/server';
-import prisma from '@/lib/db'; // Ensure this path is correct
+// import prisma from '@/lib/db'; // Ensure this path is correct
+const { PrismaClient } = require('@prisma/client');
+
+const prisma = new PrismaClient();
+
 
 export async function GET(
   request: NextRequest,
@@ -25,14 +29,13 @@ export async function GET(
     });
 
     // Format messages
-    const formattedMessages = messages.map((msg) => ({
+    const formattedMessages = messages.map((msg: any) => ({
       id: msg.id,
       text: msg.text,
+      senderId: msg.senderId,
       sender: msg.sender.name || 'Anonymous',
       timestamp: msg.timestamp,
     }));
-
-    console.log(formattedMessages);
 
     return NextResponse.json({ messages: formattedMessages }, { status: 200 });
   } catch (error) {

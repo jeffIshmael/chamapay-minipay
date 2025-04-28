@@ -44,7 +44,7 @@ export default function ChamaNavbar({
 
   return (
     <nav
-      className={`fixed bottom-0 w-full max-w-sm bg-white rounded-xl shadow-md py-2 ${
+      className={`fixed bottom-0 w-full max-w-sm bg-white rounded-xl shadow-md  py-2 ${
         isVisible ? "block" : "hidden"
       }`}
     >

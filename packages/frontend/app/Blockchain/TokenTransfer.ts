@@ -9,15 +9,15 @@ import { toast } from "sonner";
 import ERC20Abi from "@/app/ChamaPayABI/ERC20.json"
 
 //transfer function
-export const processCheckout = async ( amount: number ) => {
+export const processCheckout = async (recepient: `0x${string}`, amount: bigint ) => {
     if (window.ethereum) {
       const privateClient = createWalletClient({
-        chain: celo,
+        chain: celoAlfajores,
         transport: custom(window.ethereum),
       });
 
       const publicClient = createPublicClient({
-        chain: celo,
+        chain: celoAlfajores,
         transport: custom(window.ethereum),
       });
 
@@ -26,10 +26,10 @@ export const processCheckout = async ( amount: number ) => {
       try {
         const checkoutTxnHash = await privateClient.writeContract({
           account: address,
-          address: "0x456a3D042C0DbD3db53D5489e98dFb038553B0d0",
+          address: "0x874069Fa1Eb16D44d622F2e0Ca25eeA172369bC1",
           abi: ERC20Abi,
           functionName: "transfer",
-          args: [contractAddress, BigInt(amount)],
+          args: [recepient, amount],
         });
 
         const checkoutTxnReceipt = await publicClient.waitForTransactionReceipt(
@@ -39,8 +39,6 @@ export const processCheckout = async ( amount: number ) => {
         );
 
         if (checkoutTxnReceipt.status == "success") {
-          // console.log(checkoutTxnHash);
-          // console.log(checkoutTxnReceipt.transactionHash);
           return checkoutTxnReceipt.transactionHash;
         }
 

@@ -6,14 +6,16 @@ import Deposits from "./Deposits";
 import dayjs from "dayjs";
 import { useAccount, useReadContract } from "wagmi";
 import { contractAbi, contractAddress } from "../ChamaPayABI/ChamaPayContract";
-import { getUser } from "../../lib/chama";
-import { Suspense } from "react";
-import { AccountStateConflictError } from "viem";
-
-type Member = {
-  name: string;
-  date: string;
-};
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  FiDollarSign,
+  FiClock,
+  FiLock,
+} from "react-icons/fi";
+import { formatEther } from "viem";
+import { formatTimeRemaining } from "@/lib/paydate";
+import { IoMdCalendar, IoMdPerson, IoMdWallet } from "react-icons/io";
+import { toast } from "sonner";
 
 interface User {
   chamaId: number;
@@ -30,10 +32,13 @@ interface User {
 
 interface Chama {
   adminId: number;
-  amount: number;
+  amount: bigint;
   createdAt: Date;
   cycleTime: number;
   id: number;
+  round: number;
+  cycle: number;
+  blockchainId: string;
   maxNo: number;
   members: User[];
   name: string;
@@ -46,209 +51,372 @@ interface Chama {
 
 type Account = [bigint, bigint];
 
-type ChamaDetailsTuple = [
-  bigint,
-  bigint,
-  bigint,
-  bigint,
-  bigint,
-  bigint,
-  string,
-  string[]
-];
-
 const Schedule = ({ chama, type }: { chama: Chama; type: string }) => {
   const [showDeposit, setShowDeposit] = useState(false);
-  const [progressPercentage, setProgressPercentage] = useState(0);
   const [members, setMembers] = useState<User[]>([]);
   const [round, setRound] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const [beginDate, setBeginDate] = useState(0);
-  const [userDetails, setUserDetails] = useState<{ [key: string]: any }>({});
-  const [balance, setBalance] = useState<Account | []>([]); // New state for balance
-  const { isConnected, address } = useAccount();
-
-  const {
-    data: chamaDetails,
-    isError,
-    isLoading,
-  } = useReadContract({
-    address: contractAddress,
-    abi: contractAbi,
-    functionName: "getChama",
-    args: [BigInt(chama.id-1)],
-  });
+  const [balance, setBalance] = useState<Account | []>([]);
+  const [cycle, setCycle] = useState(0);
+  const { address } = useAccount();
+  const [currentTime, setCurrentTime] = useState(Date.now());
+  const [timeUntilStart, setTimeUntilStart] = useState("");
 
   const { data } = useReadContract({
     address: contractAddress,
     abi: contractAbi,
     functionName: "getBalance",
-    args: [BigInt(chama.id-1), address],
+    args: [BigInt(Number(chama.blockchainId)), address],
   });
 
-  const chamaBalance = (data as Account) || [];
-
-  const startDate = beginDate; // Start date of the chama cycle
-  //at this time, the cycle starts from first payout
-  const firstPayoutDate = beginDate + duration * 24 * 60 * 60 * 1000;
-  const endDate = beginDate + duration * 24 * 60 * 60 * 1000 * members.length; // End date of the chama cycle (calculated based on members)
-  const totalDays = dayjs(endDate).diff(dayjs(startDate), "day");
-
+  // Update your useEffect for initial data loading
   useEffect(() => {
-    // Calculate the progress percentage based on today's date
-    const today = dayjs();
-    const elapsedDays = today.diff(dayjs(startDate), "day");
-    const progress = (elapsedDays / totalDays) * 100;
-    setProgressPercentage(progress);
-  }, [startDate, totalDays]);
-
-  useEffect(() => {
-    if (chamaDetails) {
-      const results = chamaDetails as ChamaDetailsTuple | undefined;
-      console.log(results);
-      if (results && Array.isArray(results[7])) {
-        setMembers(chama.members); // Set members based on addresses from the contract
-        setDuration(chama.cycleTime); // Set duration from contract data
-        setRound(Number(results[4])); // Set the current round from contract data
-        setBeginDate(Number(results[2])); // Set the start date of the chama
-      }
+    if (data) {
+      setBalance(data as Account);
+      setMembers(chama.members);
+      setRound(chama.round);
+      setCycle(chama.cycle);
     }
-  }, [chamaDetails]);
-
+  }, [data, chama]);
 
   useEffect(() => {
-    // Add your logic here to get the balance for the current user
+    const interval = setInterval(() => {
+      setCurrentTime(Date.now());
+    }, 1000); // update every second
 
-    if (chamaBalance) {
-      setBalance(chamaBalance);
-    }
-  }, [chamaBalance]);
+    return () => clearInterval(interval); // cleanup when component unmounts
+  }, []);
 
-  // Helper to calculate each member's position and payout date
-  const calculateMemberPosition = (index: number) => {
-    // Calculate each member's angle based on their index
-    const angle = (index / members.length) * 360;
-    return `rotate(${angle}deg) translate(140px) rotate(-${angle}deg)`;
+  // Calculate progress percentage
+  const calculateProgress = () => {
+    if (!chama?.startDate || !chama?.cycleTime || !chama?.members) return 0;
+
+    const startDate = new Date(chama.startDate);
+    const startTime = startDate.getTime();
+
+    // Calculate end date by adding (cycleTime * members.length) days to start date
+    const endDate = new Date(startDate);
+    endDate.setDate(
+      startDate.getDate() + chama.cycleTime * chama.members.length
+    );
+    const endTime = endDate.getTime();
+
+    const currentTime = Date.now();
+
+    if (currentTime < startTime) return 0;
+    if (currentTime >= endTime) return 100;
+
+    const totalDuration = endTime - startTime;
+    const elapsedDuration = currentTime - startTime;
+    return Math.min((elapsedDuration / totalDuration) * 100, 100);
   };
 
-  const calculatePayoutDate = (index: number) => {
-    // Calculate the payout date for each member based on the startDate and duration
-    return dayjs(firstPayoutDate)
-      .add(index * duration, "day")
-      .format("DD MMM");
+  const progress = calculateProgress();
+
+  //function to ge a members payout date
+  const getMemberPayoutDate = (memberIndex: number) => {
+    if (!chama?.startDate || !chama.cycleTime) return "";
+    const payoutDate = new Date(chama?.startDate);
+    payoutDate.setDate(
+      payoutDate.getDate() + chama.cycleTime * (memberIndex + 1)
+    );
+    return payoutDate;
+  };
+
+  useEffect(() => {
+    let mounted = true;
+
+    const updateTime = async () => {
+      if (!chama?.startDate) return;
+      const startTime = new Date(chama.startDate).getTime();
+      const diff = startTime - currentTime;
+      const result =
+        diff <= 0 ? "Starting..." : await formatTimeRemaining(diff);
+      if (mounted) setTimeUntilStart(result);
+    };
+
+    const interval = setInterval(updateTime, 1000);
+    updateTime(); // Initial call
+
+    return () => {
+      mounted = false;
+      clearInterval(interval);
+    };
+  }, [chama?.startDate, currentTime]);
+
+  // Calculate member position around the circle
+  const calculateMemberPosition = (index: number) => {
+    const angle = (index / members.length) * 360;
+    return `rotate(${angle}deg) translate(140px) rotate(-${angle}deg)`;
   };
 
   const toggleView = (type: string) => {
     setShowDeposit(type === "deposits");
   };
 
+  // function to get user to receive payout next
+  const getCurrentRecipient = () => {
+    if (
+      !chama?.startDate ||
+      currentTime < new Date(chama.startDate).getTime()
+    ) {
+      return null;
+    }
+
+    // Calculate current round index (0-based)
+    const startTime = new Date(chama.startDate).getTime();
+    const elapsedTime = currentTime - startTime;
+    const cycleDuration = chama.cycleTime * 24 * 60 * 60 * 1000;
+    const currentRoundIndex =
+      Math.floor(elapsedTime / cycleDuration) % members.length;
+
+    return members[currentRoundIndex]?.user;
+  };
+
+  const lockedAmount = balance[1] ? Number(balance[1]) / 10 ** 18 : 0;
+  const userBalance = balance[0] ? Number(balance[0]) / 10 ** 18 : 0;
+
   return (
-    <div className="min-h-screen bg-gray-200 flex flex-col items-center p-4">
-      {/* Top right balance display */}
-      {type === "Public" ? (
-        <div className="flex items-center bg-downy-50 w-fit px-4 py-2 border shadow-md rounded-full border-downy-300">
-          <div className="flex flex-col">
-            <h1 className="text-center">Chama Balance</h1>
-            <div className="flex items-center justify-between ">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                className="w-4 h-4 text-downy-500 mr-1"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M12 1.5a5.25 5.25 0 0 0-5.25 5.25v3a3 3 0 0 0-3 3v6.75a3 3 0 0 0 3 3h10.5a3 3 0 0 0 3-3v-6.75a3 3 0 0 0-3-3v-3c0-2.9-2.35-5.25-5.25-5.25Zm3.75 8.25v-3a3.75 3.75 0 1 0-7.5 0v3h7.5Z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              <span className="text-gray-600">
-                {Number(balance[1]) / 10 ** 18} cKES
-              </span>
-              <div className="w-[1px] h-6 bg-gray-400 mx-4"></div>{" "}
-              {/* Vertical Divider */}
-              <span className="text-gray-700">
-                {Number(balance[0]) / 10 ** 18} cKES
-              </span>
+    <div className="min-h-screen bg-downy-100 pb-20">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-downy-600 to-downy-700 px-6 pt-8 pb-6 rounded-b-3xl shadow-lg">
+        <div className="flex justify-between items-start">
+          <div>
+            <h1 className="text-2xl font-bold text-white">{chama.name}</h1>
+            <p className="text-downy-100">{type} Chama</p>
+          </div>
+
+          {/* Balance Card */}
+          <div className="bg-white bg-opacity-20 backdrop-blur-sm p-3 rounded-xl">
+            <div>
+              <div className="flex items-center space-x-2 mb-2">
+                <IoMdWallet className="text-white" />
+                <p className="text-white text-sm font-medium">Chama Balance</p>
+              </div>
+
+              {type === "Public" ? (
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center space-x-1 bg-downy-500  rounded-md p-2">
+                    <FiDollarSign className="text-white" size={14} />
+                    <span className="text-white font-semibold text-sm">
+                      {userBalance.toFixed(3)}
+                    </span>
+                  </div>
+                  <div className="flex items-center space-x-1 bg-downy-500  rounded-md p-2">
+                    <FiLock className="text-white" size={14} />
+                    <span className="text-white font-semibold text-sm">
+                      {lockedAmount.toFixed(3)}
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center space-x-1">
+                  <FiDollarSign className="text-white" size={14} />
+                  <span className="text-white font-semibold">
+                    {userBalance.toFixed(3)} cUSD
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         </div>
-      ) : (
-        <div className="flex  right-2 sm:top-2 sm:right-0 bg-downy-50 border border-downy-300 shadow-md justify-end p-2 sm:p-2 rounded-md z-50">
-          <div className="flex flex-col items-center">
-            <p className="font-normal text-gray-800">Chama Balance</p>
-            <p className="font-normal text-gray-600">
-              {Number(balance[0]) / 10 ** 18} cKES
-            </p>
-          </div>
-        </div>
-      )}
+      </div>
 
-      {/* Cycle progress container */}
-      <div className="relative mt-12">
-        <Suspense fallback={<div className="items-center">Loading...</div>}>
-          <div
-            className="relative w-[250px] h-[250px] rounded-full bg-white flex justify-center items-center"
-            style={{
-              background: `conic-gradient(#66d9d0 ${progressPercentage}%, #d1f6f1 ${progressPercentage}% 100%)`,
-            }}
-          >
-            {/* Inner circle */}
-            <div className="absolute w-[180px] h-[180px] bg-white rounded-full flex justify-center items-center">
-              <div className="text-center">
-                <h1 className="text-4xl font-bold">CYCLE</h1>
-                <p className="text-6xl font-semibold mt-4">{round}</p>
+      {/* Cycle Progress */}
+      <div className="px-2 mt-2">
+        <div className="bg-white p-4 rounded-2xl shadow-md border border-gray-100">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg font-bold text-gray-800">Cycle Progress</h2>
+            <div className="bg-downy-100 text-downy-600 px-3 py-1 rounded-full text-sm font-medium">
+              Cycle {cycle}
+            </div>
+          </div>
+
+          {/* Progress Circle */}
+          <div className="relative mx-auto w-[200px] h-[200px]">
+            <div
+              className="absolute w-full h-full rounded-full"
+              style={{
+                background: `conic-gradient(#66d9d0 ${progress}%, #e5f7f5 ${progress}% 100%)`,
+              }}
+            >
+              <div className="absolute inset-4 bg-white rounded-full flex flex-col items-center justify-center shadow-inner">
+                {chama?.startDate &&
+                currentTime < new Date(chama.startDate).getTime() ? (
+                  <div className="flex flex-col items-center">
+                    <FiClock className="text-downy-500 mb-2" size={24} />
+                    <p className="text-sm text-gray-500">Starts in</p>
+                    <p className="text-xl text-downy-500 mt-1">
+                      {timeUntilStart}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center">
+                    <span className="text-sm text-gray-500">Current Round</span>
+                    <p className="text-4xl font-bold text-downy-600 mt-1">
+                      {round}
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* Member clouds */}
+            {/* Member Indicators */}
             {members.map((member, index) => (
-              <div
-                key={member.id} // Use the id property as the key
-                className="absolute flex flex-col items-center justify-center w-[100px] h-[60px] rounded-full bg-downy-400 shadow-lg p-2"
+              <motion.div
+                key={member.id}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: index * 0.1 }}
+                className="absolute top-1/2 left-1/2 w-16 h-16 -ml-8 -mt-8 flex flex-col items-center justify-center"
                 style={{
                   transform: calculateMemberPosition(index),
                 }}
               >
-                <p className="text-sm font-bold">
-                  {member.user.name || "Unknown"}
-                </p>
-                <p className="text-xs">{calculatePayoutDate(index)}</p>
-              </div>
+                {/* <div className="bg-downy-500 text-white text-xs font-bold w-8 h-8 rounded-full flex items-center justify-center shadow-md">
+                  {index + 1}
+                </div> */}
+                <div className="absolute -bottom-6 text-xs font-medium text-center border border-gray-200 rounded-md p-2 w-20">
+                  <p className="truncate">
+                    {chama?.startDate &&
+                    currentTime < new Date(chama.startDate).getTime()
+                      ? "---"
+                      : member.user.name?.split(" ")[0] || "Member"}
+                  </p>
+                  <p className="text-downy-600">
+                    {chama?.startDate &&
+                    currentTime < new Date(chama.startDate).getTime()
+                      ? "---"
+                      : dayjs(getMemberPayoutDate(index)).format(
+                          "MMM D, YYYY h:mm A"
+                        )}
+                  </p>
+                </div>
+              </motion.div>
             ))}
           </div>
-        </Suspense>
+
+          {/* Stats */}
+          <div className="grid grid-cols-3 gap-4 mt-6 text-center">
+            {/* Next Payout */}
+            <div className="bg-downy-50 p-2 rounded-lg">
+              <FiClock className="mx-auto text-downy-600" />
+              <p className="text-xs font-semibold text-gray-600 mt-1">
+                Next Payout
+              </p>
+              {!chama?.startDate ||
+              currentTime < new Date(chama.startDate).getTime() ? (
+                <p className="text-xs text-gray-500 mt-1">---</p>
+              ) : (
+                <div className="flex flex-col items-center">
+                  <div className="flex items-center justify-between w-full">
+                    <IoMdCalendar className="text-gray-500" />
+                    <p className="text-xs font-semibold text-gray-500 mt-1">
+                      {dayjs(chama.payDate).format("MMM D, YYYY")}
+                    </p>
+                  </div>
+                  <div className="flex items-center justify-between w-full">
+                    <FiClock className="text-gray-500" />
+                    <p className="text-xs font-semibold text-gray-500 mt-1 mr-2">
+                      {dayjs(chama.payDate).format("h:mm A")}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Receiver */}
+            <div className="bg-downy-50 p-2 rounded-lg">
+              <IoMdPerson className="mx-auto text-downy-600" />
+              <p className="text-xs text-gray-600 font-semibold mt-1">
+                Receiver
+              </p>
+              {!chama?.startDate ||
+              currentTime < new Date(chama.startDate).getTime() ? (
+                <p className="text-xs text-gray-500 mt-2">---</p>
+              ) : getCurrentRecipient()?.address === address?.toString() ? (
+                <div className="flex items-center flex-col">
+                  <span className="text-2xl">🎉</span>
+                  <p className=" text-downy-600 font-semibold mt-1">You</p>
+                </div>
+              ) : (
+                <>
+                  <p className="font-semibold text-xs text-gray-500 mt-2">
+                    {getCurrentRecipient()?.name?.split(" ")[0] || "Member"}
+                  </p>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(
+                        getCurrentRecipient()?.address || ""
+                      );
+                      toast.success("Address copied to clipboard");
+                    }}
+                    className="text-xs text-gray-600 mt-1 hover:text-downy-600 bg-downy-200 border border-gray-200 rounded-md p-1"
+                  >
+                    {getCurrentRecipient()?.address?.slice(0, 6)}...
+                    {getCurrentRecipient()?.address?.slice(-4)}
+                  </button>
+                </>
+              )}
+            </div>
+
+            {/* Amount */}
+            <div className="bg-downy-50 p-2 rounded-lg">
+              <FiDollarSign className="mx-auto text-downy-600" />
+              <p className="text-xs font-bold text-gray-600 mt-1">Amount</p>
+              {!chama?.startDate ||
+              currentTime < new Date(chama.startDate).getTime() ? (
+                <p className="text-xs text-gray-500 mt-1">---</p>
+              ) : (
+                <p className="text-xs font-semibold text-gray-500 mt-2">
+                  {Number(formatEther(chama.amount)) * members.length} cUSD
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Payment History */}
-      <div className="mt-12 w-full flex flex-col items-center">
-        <h1 className="text-2xl font-semibold mb-2">Payment History</h1>
-        <div className="flex mb-2 rounded-lg py-1 bg-gray-300 w-full relative">
-          <button
-            onClick={() => toggleView("withdrawals")}
-            className={`rounded-md w-1/2 py-1 hover:bg-downy-300 ${
-              !showDeposit ? "bg-downy-500" : "bg-transparent"
-            }`}
-          >
-            Withdrawals
-          </button>
-          <button
-            onClick={() => toggleView("deposits")}
-            className={`rounded-md w-1/2 py-1 hover:bg-downy-300 ${
-              showDeposit ? "bg-downy-500" : "bg-transparent"
-            }`}
-          >
-            Deposits
-          </button>
-        </div>
+      <div className="px-2 mt-2">
+        <div className="bg-white p-4 rounded-2xl shadow-md border border-gray-100">
+          <div className="flex border-b border-gray-200 pb-2 mb-4">
+            <button
+              onClick={() => toggleView("withdrawals")}
+              className={`flex-1 py-2 font-medium bg-transparent rounded-md ${
+                !showDeposit
+                  ? "text-downy-600 border-b-2 border-downy-500"
+                  : "text-gray-500"
+              }`}
+            >
+              Payouts{" "}
+            </button>
+            <button
+              onClick={() => toggleView("deposits")}
+              className={`flex-1 py-2 font-medium bg-transparent rounded-md ${
+                showDeposit
+                  ? "text-downy-600 border-b-2 border-downy-500"
+                  : "text-gray-500"
+              }`}
+            >
+              Deposits
+            </button>
+          </div>
 
-        {/* Conditionally render Withdrawals or Deposits */}
-        <div className="mt-2 w-full px-4">
-          {!showDeposit ? (
-            <Withdrawals cycle={round} />
-          ) : (
-            <Deposits chamaId={chama.id} />
-          )}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={showDeposit ? "deposits" : "withdrawals"}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+            >
+              {!showDeposit ? (
+                <Withdrawals chamaId={chama.id} />
+              ) : (
+                <Deposits chamaId={chama.id} />
+              )}
+            </motion.div>
+          </AnimatePresence>
         </div>
       </div>
     </div>

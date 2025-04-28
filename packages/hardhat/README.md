@@ -1,4 +1,13 @@
-# ChamaPay SmartContract
+# Sample Hardhat Project
 
-Contract address - https://celoscan.io/address/0x2f1263561905989077d529f4ddf11c435c6e608d
+This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, and a Hardhat Ignition module that deploys that contract.
+
+Try running some of the following tasks:
+
+```shell
+npx hardhat help
+npx hardhat test
+REPORT_GAS=true npx hardhat test
+npx hardhat node
+npx hardhat ignition deploy ./ignition/modules/Lock.js
 ```

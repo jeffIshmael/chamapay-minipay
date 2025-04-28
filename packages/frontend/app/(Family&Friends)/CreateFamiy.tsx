@@ -6,81 +6,99 @@ import { useAccount, useWriteContract } from "wagmi";
 import { toast } from "sonner";
 import { contractAddress, contractAbi } from "../ChamaPayABI/ChamaPayContract";
 import { useRouter } from "next/navigation";
+import { getLatestChamaId } from "@/lib/readFunctions";
+import { parseEther } from "viem";
+import { FiAlertTriangle } from "react-icons/fi";
 
 const CreateFamily = () => {
   const [groupName, setGroupName] = useState("");
   const [amount, setAmount] = useState("");
   const [duration, setDuration] = useState("");
   const [startDate, setStartDate] = useState("");
-  const { writeContractAsync, isPending } = useWriteContract();
+  const [isPending, setIsPending] = useState(false);
+  const [errorText, setErrorText] = useState("");
+  const { writeContractAsync } = useWriteContract();
   const { isConnected, address } = useAccount();
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsPending(true);
+    setErrorText("");
     if (!isConnected) {
       toast.error("Please connect wallet");
+      setIsPending(false);
       return;
     }
     const formData = new FormData(e.target as HTMLFormElement);
     const data = Object.fromEntries(formData.entries());
     const amount = parseFloat(data.amount as string);
     console.log(amount);
+    console.log(`cycleTime: ${data.cycleTime}`);
 
     if (isNaN(amount) || amount <= 0) {
-      toast.error("Invalid amount");
+      setErrorText("Amount must be greater than 0");
+      setIsPending(false);
       return;
     }
-    const amountInWei = Number(amount * 10 ** 18);
+    if (isNaN(Number(data.cycleTime)) || Number(data.cycleTime) <= 0) {
+      setErrorText("Cycle time must be greater than 0");
+      setIsPending(false);
+      return;
+    }
+    if (!data.name || (data.name as string).length < 3 || data.name === "") {
+      setErrorText("Name must be at least 3 characters long");
+      setIsPending(false);
+      return;
+    }
 
     try {
       const exists = await checkChama(data.name as string);
       if (exists) {
-        toast.error("Choose another name.");
+        setErrorText("Chama with this name already exists");
         return;
-      } else {
-        if (address && isConnected) {
-          try {
-            const dateObject = new Date(data.startDate as string);
-            const dateInMilliseconds = dateObject.getTime();
+      }
+      if (address && isConnected) {
+        const dateObject = new Date(data.startDate as string);
+        const dateInMilliseconds = dateObject.getTime();
+        console.log(`dateInMilliseconds: ${dateInMilliseconds}`);
 
-            const hash = await writeContractAsync({
-              address: contractAddress,
-              abi: contractAbi,
-              functionName: "registerChama",
-              args: [
-                BigInt(Number(amountInWei)),
-                BigInt(Number(data.cycleTime)),
-                BigInt(dateInMilliseconds),
-                BigInt(Number(0)), //no max members
-                false
-              ],
-            });
+        // get the current blockchain id from the blockchain
+        const chamaIdToUse = await getLatestChamaId();
+        console.log(`${data.name} chama willl have a bc id ${chamaIdToUse}`);
 
-            if (hash) {
-              try {
-                await createChama(formData, "Private", address);
-                console.log("done");
-                toast.success(`${data.name} created successfully.`);
-                router.push("/MyChamas");
-              } catch (error) {
-                console.log(error);
-                toast.error("Unable, Try using another group name");
-              }
-            } else {
-              toast.error("unable to create, please try again");
-            }
-          } catch (error) {
-            console.log(error);
-            toast.error("A problem occured. Ensure wallet is connected.");
-          }
+        const hash = await writeContractAsync({
+          address: contractAddress,
+          abi: contractAbi,
+          functionName: "registerChama",
+          args: [
+            parseEther(data.amount as string),
+            BigInt(Number(data.cycleTime)),
+            BigInt(dateInMilliseconds),
+            BigInt(Number(0)), //no max members
+            false,
+          ],
+        });
+
+        if (hash) {
+          await createChama(formData, "Private", address, chamaIdToUse,hash);
+          console.log("done");
+          toast.success(`${data.name} created successfully.`);
+          router.push("/MyChamas");
         } else {
-          toast.error("Please connect wallet.");
+          toast.error(
+            "unable to write on bc, make sure you have enough funds"
+          );
         }
+      } else {
+        setErrorText("Please connect wallet.");
       }
     } catch (error) {
-      toast.error("A problem occured, try again.");
+      setErrorText("A problem occured, try again.");
+      setIsPending(false);
       console.log(error);
+    } finally {
+      setIsPending(false);
     }
   };
 
@@ -92,10 +110,15 @@ const CreateFamily = () => {
       {/* <div className="absolute w-0 h-0 border-b-[16px] border-b-white border-l-[24px]  border-l-white border-t-[1px] border-t-transparent left-1/2 transform -translate-x-1/2 -translate-y-[55%]"></div> */}
 
       <form
-        // action={createChama("Private")}
         onSubmit={handleSubmit}
         className="space-y-4 bg-white p-6 rounded-3xl shadow-md w-full mt-3 transform origin-top animate-fadeIn"
       >
+        {errorText && (
+          <div className="text-red-500 p-2 flex items-center border border-red-500 rounded-md relative mb-2">
+            <FiAlertTriangle className="text-red-500 text-sm mr-2" />
+            <span className="block sm:inline text-sm">{errorText}</span>
+          </div>
+        )}
         <div className=" flex flex-column-2 space-x-2">
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -127,7 +150,7 @@ const CreateFamily = () => {
             htmlFor="amount"
             className="block text-sm font-medium text-gray-700"
           >
-            Amount(in cKes)
+            Amount(in cUSD) (&gt; 0)
           </label>
           <input
             type="text"
@@ -135,7 +158,7 @@ const CreateFamily = () => {
             name="amount"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
-            placeholder="Enter Contribution Amount"
+            placeholder="Enter Contribution Amount(cUSD)"
             required
             className="mt-1 block w-full rounded-md border-downy-200 shadow-sm focus:border-downy-500 focus:ring-downy-500 sm:text-sm"
           />
@@ -153,6 +176,7 @@ const CreateFamily = () => {
             name="startDate"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
+            min={new Date().toISOString().slice(0, 16)}
             required
             className="mt-1 block w-full rounded-md border-downy-200 shadow-sm focus:border-downy-500 focus:ring-downy-500 sm:text-sm"
           />
@@ -162,7 +186,7 @@ const CreateFamily = () => {
             htmlFor="duration"
             className="block text-sm font-medium text-gray-700"
           >
-            Cycle Time (in days)
+            Cycle Time (in days) (min 1)
           </label>
           <input
             type="number"

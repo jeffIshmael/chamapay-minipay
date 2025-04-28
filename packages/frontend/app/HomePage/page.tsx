@@ -1,19 +1,9 @@
-"use client"
-import React, { useEffect } from "react";
-import { useRouter } from "next/navigation"; // Importing the useRouter hook
+"use client";
+import React from "react";
 
 const Page = () => {
-  const router = useRouter(); // Initialize router
 
-  useEffect(() => {
-    // Set a timer for 5 seconds (5000 milliseconds)
-    const timer = setTimeout(() => {
-      router.push("/Login"); // Redirect to /Login after 5 seconds
-    }, 5000);
 
-    // Clean up the timer when the component unmounts
-    return () => clearTimeout(timer);
-  }, [router]);
   return (
     <div className="h-screen flex items-center justify-center bg-downy-200">
       <div className="text-center">
@@ -36,7 +26,6 @@ const Page = () => {
         </div>
         <p className="text-lg text-gray-700 mt-4">Your digital chama.</p>
       </div>
-     
     </div>
   );
 };

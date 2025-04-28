@@ -1,10 +1,39 @@
-export const contractAddress = "0x27486749451017BA586289f442da449A4F896F09";
+export const contractAddress = "0x7aAa436c48359939cD06841c11DA55434Cf7762f";
+
+export const cUSDContractAddress = "0x874069Fa1Eb16D44d622F2e0Ca25eeA172369bC1";
 
 export const contractAbi = [
   {
     "inputs": [],
     "stateMutability": "nonpayable",
     "type": "constructor"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      }
+    ],
+    "name": "OwnableInvalidOwner",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      }
+    ],
+    "name": "OwnableUnauthorizedAccount",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ReentrancyGuardReentrantCall",
+    "type": "error"
   },
   {
     "anonymous": false,
@@ -16,7 +45,7 @@ export const contractAbi = [
         "type": "uint256"
       },
       {
-        "indexed": false,
+        "indexed": true,
         "internalType": "address",
         "name": "receiver",
         "type": "address"
@@ -84,7 +113,7 @@ export const contractAbi = [
         "type": "bool"
       },
       {
-        "indexed": false,
+        "indexed": true,
         "internalType": "address",
         "name": "admin",
         "type": "address"
@@ -103,7 +132,7 @@ export const contractAbi = [
         "type": "uint256"
       },
       {
-        "indexed": false,
+        "indexed": true,
         "internalType": "address",
         "name": "recipient",
         "type": "address"
@@ -128,7 +157,7 @@ export const contractAbi = [
         "type": "uint256"
       },
       {
-        "indexed": false,
+        "indexed": true,
         "internalType": "address",
         "name": "_address",
         "type": "address"
@@ -147,7 +176,7 @@ export const contractAbi = [
         "type": "uint256"
       },
       {
-        "indexed": false,
+        "indexed": true,
         "internalType": "address",
         "name": "_member",
         "type": "address"
@@ -160,7 +189,26 @@ export const contractAbi = [
     "anonymous": false,
     "inputs": [
       {
-        "indexed": false,
+        "indexed": true,
+        "internalType": "address",
+        "name": "previousOwner",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      }
+    ],
+    "name": "OwnershipTransferred",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
         "internalType": "address",
         "name": "_receiver",
         "type": "address"
@@ -185,7 +233,7 @@ export const contractAbi = [
         "type": "uint256"
       },
       {
-        "indexed": false,
+        "indexed": true,
         "internalType": "address[]",
         "name": "_payoutOrder",
         "type": "address[]"
@@ -204,7 +252,7 @@ export const contractAbi = [
         "type": "uint256"
       },
       {
-        "indexed": false,
+        "indexed": true,
         "internalType": "address",
         "name": "member",
         "type": "address"
@@ -242,7 +290,7 @@ export const contractAbi = [
         "type": "uint256"
       },
       {
-        "indexed": false,
+        "indexed": true,
         "internalType": "address",
         "name": "_receiver",
         "type": "address"
@@ -261,7 +309,20 @@ export const contractAbi = [
     "anonymous": false,
     "inputs": [
       {
-        "indexed": false,
+        "indexed": true,
+        "internalType": "address",
+        "name": "_aiAgent",
+        "type": "address"
+      }
+    ],
+    "name": "aiAgentSet",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
         "internalType": "address",
         "name": "_address",
         "type": "address"
@@ -309,7 +370,20 @@ export const contractAbi = [
   },
   {
     "inputs": [],
-    "name": "cKESToken",
+    "name": "aiAgent",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "cUSDToken",
     "outputs": [
       {
         "internalType": "contract IERC20",
@@ -449,6 +523,19 @@ export const contractAbi = [
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "_address",
+        "type": "address"
+      }
+    ],
+    "name": "emergencyWithdraw",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "uint256",
         "name": "_chamaId",
         "type": "uint256"
@@ -524,6 +611,25 @@ export const contractAbi = [
         "internalType": "bool",
         "name": "",
         "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_chamaId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getChamaPayoutOrder",
+    "outputs": [
+      {
+        "internalType": "address[]",
+        "name": "",
+        "type": "address[]"
       }
     ],
     "stateMutability": "view",
@@ -712,6 +818,26 @@ export const contractAbi = [
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "renounceOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_aiAgent",
+        "type": "address"
+      }
+    ],
+    "name": "setAiAgent",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "uint256",
@@ -759,11 +885,11 @@ export const contractAbi = [
     "inputs": [
       {
         "internalType": "address",
-        "name": "_address",
+        "name": "newOwner",
         "type": "address"
       }
     ],
-    "name": "withdraw",
+    "name": "transferOwnership",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

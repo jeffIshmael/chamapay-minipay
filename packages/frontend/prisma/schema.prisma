@@ -3,9 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("POSTGRES_PRISMA_URL")
-  directUrl = env("POSTGRES_URL_NON_POOLING")
+  provider = "sqlite"
+  url      = "file:./dev.db"
 }
 
 model User {
@@ -19,6 +18,7 @@ model User {
   notifications Notification[]
   payments      Payment[]
   messages      Message[]      // Added relation to Message
+  payOuts       PayOut[]
 }
 
 model Chama {
@@ -30,9 +30,13 @@ model Chama {
   payDate       DateTime
   cycleTime     Int
   started       Boolean       @default(false)
-  amount        Int
+  amount        BigInt
+  round         Int
+  cycle         Int
   maxNo         Int
+  blockchainId  String
   adminId       Int
+  payOutOrder   String?  // Json string of payout order array.
   createdAt     DateTime      @default(now())
   admin         User          @relation("AdminChamas", fields: [adminId], references: [id])
   members       ChamaMember[]
@@ -40,6 +44,7 @@ model Chama {
   notifications Notification[]
   payments      Payment[]
   messages      Message[]     // Added relation to Message
+  payOuts       PayOut[]
 }
 
 model ChamaMember {
@@ -53,7 +58,8 @@ model ChamaMember {
 
 model Payment {
   id      Int      @id @default(autoincrement())
-  amount  Int
+  amount  BigInt
+  description String?
   doneAt  DateTime @default(now())
   txHash  String
   userId  Int
@@ -93,5 +99,17 @@ model Message {
   senderId  Int
   text      String
   timestamp DateTime @default(now())
+}
+
+model PayOut {
+  id Int @id @default(autoincrement())
+  amount  BigInt
+  doneAt  DateTime @default(now())
+  txHash  String?
+  receiver String
+  userId  Int
+  chamaId Int
+  chama   Chama    @relation(fields: [chamaId], references: [id])
+  user    User     @relation(fields: [userId], references: [id])
 }
 

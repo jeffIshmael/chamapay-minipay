@@ -1,25 +1,32 @@
-// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.9;
+/**
+ * @title ChamaPay - Circular Savings  management smart contract
+ * @author Jeff Muchiri
+ */
 
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract ChamaPay {
+
+contract ChamaPay is Ownable,ReentrancyGuard {
 
     uint public totalChamas;
     uint public totalPayments;
 
-    IERC20 public cKESToken;
-    address public owner;
+    IERC20 public cUSDToken;
+    address public aiAgent;
        
     // address public cUSDTokenAddress = // 0x874069Fa1Eb16D44d622F2e0Ca25eeA172369bC1 //testnet
     // 0x765DE816845861e75A25fCA122bb6898B8B1282a //mainnet
 
     // 0x456a3D042C0DbD3db53D5489e98dFb038553B0d0  //cKES
-    constructor() {
+    constructor() Ownable(msg.sender) {
 
-    owner = msg.sender;
-    cKESToken = IERC20(0x456a3D042C0DbD3db53D5489e98dFb038553B0d0);
+    aiAgent = msg.sender;
+    cUSDToken = IERC20(0x456a3D042C0DbD3db53D5489e98dFb038553B0d0);
     
     }
 
@@ -54,18 +61,19 @@ contract ChamaPay {
 
     Payment[] public payments;
 
-    event ChamaRegistered(uint id,  uint amount, uint duration, uint maxMembers, uint startDate,bool _isPublic,  address admin);
-    event CashDeposited(uint chamaId, address receiver, uint amount);
-    event FundsDisbursed(uint chamaId, address recipient, uint amount);
-    event RefundIssued(uint chamaId, address member, uint amount);
-    event amountWithdrawn( address _address, uint amount);
-    event MemberAdded(uint _chamaId , address _address);
-    event PayoutOrderSet(uint _chamaId, address [] _payoutOrder);
-    event MemberRemoved(uint _chamaId, address _member);
+    event ChamaRegistered(uint id,  uint amount, uint duration, uint maxMembers, uint startDate,bool _isPublic,  address indexed admin);
+    event CashDeposited(uint chamaId, address indexed receiver, uint amount);
+    event FundsDisbursed(uint chamaId, address indexed recipient, uint amount);
+    event RefundIssued(uint chamaId, address indexed member, uint amount);
+    event amountWithdrawn( address indexed _address, uint amount);
+    event MemberAdded(uint _chamaId , address indexed   _address);
+    event PayoutOrderSet(uint _chamaId, address [] indexed _payoutOrder);
+    event MemberRemoved(uint _chamaId, address indexed _member);
     event ChamaDeleted(uint _chamaId);
-    event PayOutProcessed( address _receiver, uint _amount);
-    event WithdrawalRecorded(uint _chamaId, address _receiver, uint  _amount);
+    event PayOutProcessed( address indexed _receiver, uint _amount);
+    event WithdrawalRecorded(uint _chamaId, address indexed _receiver, uint  _amount);
     event RefundUpdated( uint _chamaId);
+    event aiAgentSet(address indexed _aiAgent);
 
    
    // Register a new chama
@@ -74,43 +82,45 @@ contract ChamaPay {
         uint _duration, 
         uint _startDate, 
         uint _maxMembers, 
-        bool _isPublic
-    ) public {
-    require(_startDate >= block.timestamp, "Start date must be in the future.");
+        bool _isPublic ) public {
+        require(_startDate >= block.timestamp, "Start date must be in the future.");
+        require(_duration > 0, "Duration must be greater than 0.");
+        require(_amount > 0, "Amount must be greater than 0.");
 
-    Chama storage newChama = chamas.push();
-    newChama.chamaId = totalChamas;
-    newChama.amount = _amount;
-    newChama.startDate = _startDate;
-    newChama.duration = _duration;
-    newChama.maxMembers = _maxMembers;
-    newChama.payDate = _startDate + _duration;
-    newChama.admin = msg.sender;
-    newChama.members.push(msg.sender);
-    newChama.cycle = 1;
-    newChama.round = 1;
-    newChama.balances[msg.sender] = 0;
-    newChama.hasSent[msg.sender] = false;
-    newChama.isPublic = _isPublic;
+        Chama storage newChama = chamas.push();
+        newChama.chamaId = totalChamas;
+        newChama.amount = _amount;
+        newChama.startDate = _startDate;
+        newChama.duration = _duration;
+        newChama.maxMembers = _maxMembers;
+        newChama.payDate = _startDate + _duration;
+        newChama.admin = msg.sender;
+        newChama.members.push(msg.sender);
+        newChama.payoutOrder.push(msg.sender);
+        newChama.cycle = 1;
+        newChama.round = 1;
+        newChama.balances[msg.sender] = 0;
+        newChama.hasSent[msg.sender] = false;
+        newChama.isPublic = _isPublic;
 
-    // Add locked amount only if chama is public
-    if (_isPublic) {
-        newChama.lockedAmounts[msg.sender] = _amount;
-    }
+        // Add locked amount only if chama is public
+        if (_isPublic) {
+            newChama.lockedAmounts[msg.sender] = _amount;
+        }
 
-    totalChamas++;
+        totalChamas++;
 
-    emit ChamaRegistered(
-        totalChamas - 1, 
-        _amount,
-        _maxMembers, 
-        _duration, 
-        _startDate, 
-        _isPublic,  
-        msg.sender
-    );
-    }
-
+        emit ChamaRegistered(
+            totalChamas - 1, 
+            _amount,
+            _maxMembers, 
+            _duration, 
+            _startDate, 
+            _isPublic,  
+            msg.sender
+        );
+        }
+    
     
     // Add a member to the chama(Private)
     function addMember(address _address, uint _chamaId) public onlyAdmin(_chamaId) {
@@ -140,7 +150,7 @@ contract ChamaPay {
     }
 
     // Deposit cash to a chama
-    function depositCash(uint _chamaId, uint _amount) public onlyMembers(_chamaId) {
+    function depositCash(uint _chamaId, uint _amount) public onlyMembers(_chamaId) nonReentrant {
         // Ensure the chama exists
         require(_chamaId < totalChamas, "Chama does not exist");
 
@@ -173,16 +183,16 @@ contract ChamaPay {
     }
 
     // Disburse funds to a member
-    function disburse(uint _chamaId) internal {
+    function disburse(uint _chamaId) internal nonReentrant {
         Chama storage chama = chamas[_chamaId];        
-        require(chama.members.length > 0, "Payout order is empty");
-        address recipient = chama.members[chama.cycle % chama.members.length];
+        require(chama.payoutOrder.length > 0, "Payout order is empty");
+        address recipient = chama.members[chama.cycle % chama.payoutOrder.length];
         uint totalPay = chama.amount * chama.members.length;
 
         // Calculate total available funds: sum of all balances + sum of all lockedAmounts (for public chamas)
         uint totalAvailable = 0;
-        for (uint i = 0; i < chama.members.length; i++) {
-            address member = chama.members[i];
+        for (uint i = 0; i < chama.payoutOrder.length; i++) {
+            address member = chama.payoutOrder[i];
             totalAvailable += chama.balances[member];
             if(chama.isPublic){
                 totalAvailable += chama.lockedAmounts[member];
@@ -191,8 +201,8 @@ contract ChamaPay {
         require(totalAvailable >= totalPay, "Not enough funds to disburse");
 
         // Ensure each member has contributed their amount, using lockedAmounts if necessary (only for public chamas)
-        for (uint i = 0; i < chama.members.length; i++) {
-            address member = chama.members[i];
+        for (uint i = 0; i < chama.payoutOrder.length; i++) {
+            address member = chama.payoutOrder[i];
             if (chama.balances[member] < chama.amount) {
                 require(chama.isPublic, "Member has not contributed and it's a private chama.");
                 uint deficit = chama.amount - chama.balances[member];
@@ -213,13 +223,13 @@ contract ChamaPay {
         recordWithdrawal(_chamaId, recipient, totalPay);
 
         // Reset payment status for the next round and deduct balances
-        for (uint i = 0; i < chama.members.length; i++) {
-            chama.hasSent[chama.members[i]] = false;
-            chama.balances[chama.members[i]] -= chama.amount;
+        for (uint i = 0; i < chama.payoutOrder.length; i++) {
+            chama.hasSent[chama.payoutOrder[i]] = false;
+            chama.balances[chama.payoutOrder[i]] -= chama.amount;
         }
 
         // Check if we have completed a rotation
-        if (chama.cycle + 1 > chama.members.length) {
+        if (chama.cycle + 1 > chama.payoutOrder.length) {
             chama.round += 1; // Increment the round after one rotation
         }
         chama.payDate += chama.duration;
@@ -281,9 +291,9 @@ contract ChamaPay {
     }
 
     //function to process payout
-    function processPayout(address _receiver, uint _amount) internal {
-        require(cKESToken.balanceOf(address(this)) >= _amount, "Contract does not have enough cKES");
-        require(cKESToken.transfer(_receiver, _amount), "Transfer failed");
+    function processPayout(address _receiver, uint _amount) internal nonReentrant {
+        require(cUSDToken.balanceOf(address(this)) >= _amount, "Contract does not have enough cKES");
+        require(cUSDToken.transfer(_receiver, _amount), "Transfer failed");
         emit PayOutProcessed(_receiver, _amount);
         
     }
@@ -333,8 +343,9 @@ contract ChamaPay {
         emit ChamaDeleted(_chamaId);
     }
 
+
    // Check pay date and trigger payout or refund
-    function checkPayDate(uint[] memory chamaIds) public {
+    function checkPayDate(uint[] memory chamaIds) public onlyAiAgent nonReentrant {
         for (uint i = 0; i < chamaIds.length; i++) {
             uint chamaId = chamaIds[i];
             require(chamaId < totalChamas, "Chama does not exist");
@@ -351,7 +362,6 @@ contract ChamaPay {
             }
         }
     }
-
 
    // Function to check the balance of a specific address in a specific chama
     function getBalance(uint _chamaId, address _member) public view returns (uint[] memory) {
@@ -371,13 +381,12 @@ contract ChamaPay {
     }
 
     // Set the shuffled payout order (off-chain generated)
-    function setPayoutOrder(uint _chamaId, address[] memory _payoutOrder) public onlyAdmin(_chamaId) {
+    function setPayoutOrder(uint _chamaId, address[] memory _payoutOrder) public onlyAiAgent {
         require(_payoutOrder.length == chamas[_chamaId].members.length, "Payout order length mismatch");
         Chama storage chama = chamas[_chamaId];
         chama.payoutOrder = _payoutOrder;
         emit PayoutOrderSet(_chamaId, _payoutOrder);
     }
-
 
     // Refund the cash if the startDate passes and not all members have paid
     function refund(uint _chamaId) internal {
@@ -472,6 +481,12 @@ contract ChamaPay {
     );
 }
 
+    //function to get a chama payout order
+    function getChamaPayoutOrder(uint _chamaId) public view returns (address[] memory) {
+        Chama storage chama = chamas[_chamaId];
+        return chama.payoutOrder;
+    }
+
     //function to check that one is member
     function isMember(uint _chamaId, address _user) public view returns (bool) {
         Chama storage chama = chamas[_chamaId];
@@ -497,11 +512,16 @@ contract ChamaPay {
     }
 
     //function to withdraw from the contract
-   function withdraw(address _address) public onlyOwner {
-       cKESToken.transfer(_address, cKESToken.balanceOf(address(this)));
-       emit amountWithdrawn(_address, cKESToken.balanceOf(address(this)));
+   function emergencyWithdraw(address _address) public onlyOwner {
+       cUSDToken.transfer(_address, cUSDToken.balanceOf(address(this)));
+       emit amountWithdrawn(_address, cUSDToken.balanceOf(address(this)));
    }
 
+   //function to set aiAgent
+   function setAiAgent(address _aiAgent) public onlyOwner {
+       aiAgent = _aiAgent;
+       emit aiAgentSet(_aiAgent);
+   }
    
    //modifier for only Admin
    modifier onlyAdmin(uint _chamaId){
@@ -509,9 +529,9 @@ contract ChamaPay {
     _;
    }
 
-   //modifier of only owner
-   modifier onlyOwner() {
-       require(msg.sender == owner, "Only owner");
+   //modifier for aiAgent
+   modifier onlyAiAgent() {
+       require(msg.sender == aiAgent, "Only aiAgent");
        _;
    }
 }
