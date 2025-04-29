@@ -21,6 +21,19 @@ export async function getChamas() {
   return chama;
 }
 
+//function to check if a user is registered
+export async function checkUser(userAddress: string) {
+  const user = await prisma.user.findUnique({
+    where: {
+      address: userAddress,
+    },
+  });
+  if (user) {
+    return true;
+  } else {
+    return false;
+  }
+}
 //function to get user specifically
 export async function getUser(userAddress: string) {
   const user = await prisma.user.findUnique({

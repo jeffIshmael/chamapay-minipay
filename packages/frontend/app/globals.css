@@ -40,6 +40,9 @@ button {
 button:hover {
   background-color: var(--button-light);
 }
+body.modal-open {
+  overflow: hidden;
+}
 
 @font-face {
   font-family: 'Playwrite US Trad';
