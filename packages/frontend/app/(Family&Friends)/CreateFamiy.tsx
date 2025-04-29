@@ -14,10 +14,11 @@ const CreateFamily = () => {
   const [groupName, setGroupName] = useState("");
   const [amount, setAmount] = useState("");
   const [duration, setDuration] = useState("");
-  const [startDate, setStartDate] = useState("");
   const [isPending, setIsPending] = useState(false);
   const [errorText, setErrorText] = useState("");
   const { writeContractAsync } = useWriteContract();
+  const [startDateDate, setStartDateDate] = useState("");
+  const [startDateTime, setStartDateTime] = useState("");
   const { isConnected, address } = useAccount();
   const router = useRouter();
 
@@ -33,8 +34,9 @@ const CreateFamily = () => {
     const formData = new FormData(e.target as HTMLFormElement);
     const data = Object.fromEntries(formData.entries());
     const amount = parseFloat(data.amount as string);
-    console.log(amount);
-    console.log(`cycleTime: ${data.cycleTime}`);
+    const startDate = `${startDateDate}T${startDateTime}`;
+    console.log(`startDate: ${startDate}`);
+    console.log(new Date().toISOString());
 
     if (isNaN(amount) || amount <= 0) {
       setErrorText("Amount must be greater than 0");
@@ -51,6 +53,11 @@ const CreateFamily = () => {
       setIsPending(false);
       return;
     }
+    if(new Date(startDate) < new Date()) {
+      setErrorText("Start date must be in the future");
+      setIsPending(false);
+      return;
+    }
 
     try {
       const exists = await checkChama(data.name as string);
@@ -59,7 +66,8 @@ const CreateFamily = () => {
         return;
       }
       if (address && isConnected) {
-        const dateObject = new Date(data.startDate as string);
+        const dateObject = new Date(startDate as string);
+        console.log(`dateObject: ${dateObject}`);
         const dateInMilliseconds = dateObject.getTime();
         console.log(`dateInMilliseconds: ${dateInMilliseconds}`);
 
@@ -81,14 +89,12 @@ const CreateFamily = () => {
         });
 
         if (hash) {
-          await createChama(formData, "Private", address, chamaIdToUse,hash);
+          await createChama(formData, startDate, "Private", address, chamaIdToUse, hash);
           console.log("done");
           toast.success(`${data.name} created successfully.`);
           router.push("/MyChamas");
         } else {
-          toast.error(
-            "unable to write on bc, make sure you have enough funds"
-          );
+          toast.error("unable to write on bc, make sure you have enough funds");
         }
       } else {
         setErrorText("Please connect wallet.");
@@ -163,24 +169,45 @@ const CreateFamily = () => {
             className="mt-1 block w-full rounded-md border-downy-200 shadow-sm focus:border-downy-500 focus:ring-downy-500 sm:text-sm"
           />
         </div>
-        <div>
-          <label
-            htmlFor="startDate"
-            className="block text-sm font-medium text-gray-700"
-          >
-            Start Date
-          </label>
-          <input
-            type="datetime-local"
-            id="startDate"
-            name="startDate"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-            min={new Date().toISOString().slice(0, 16)}
-            required
-            className="mt-1 block w-full rounded-md border-downy-200 shadow-sm focus:border-downy-500 focus:ring-downy-500 sm:text-sm"
-          />
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label
+              htmlFor="startDate"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Start Date
+            </label>
+            <input
+              type="date"
+              id="startDate"
+              name="startDate"
+              value={startDateDate}
+              onChange={(e) => setStartDateDate(e.target.value)}
+              min={new Date().toISOString().split("T")[0]}
+              required
+              className="mt-1 block w-full text-gray-500 rounded-md border-downy-200 shadow-sm focus:border-downy-500 focus:ring-downy-500 sm:text-sm"
+            />
+          </div>
+
+          <div>
+            <label
+              htmlFor="startTime"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Time
+            </label>
+            <input
+              type="time"
+              id="startTime"
+              name="startTime"
+              value={startDateTime}
+              onChange={(e) => setStartDateTime(e.target.value)}
+              required
+              className="mt-1 block w-full text-gray-500 rounded-md border-downy-200 shadow-sm focus:border-downy-500 focus:ring-downy-500 sm:text-sm"
+            />
+          </div>
         </div>
+
         <div>
           <label
             htmlFor="duration"

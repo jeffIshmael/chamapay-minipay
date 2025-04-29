@@ -7,6 +7,7 @@ import Image from "next/image";
 import { duration as getDuration } from "@/utils/duration";
 import BottomNavbar from "../Components/BottomNavbar";
 import { formatEther } from "viem";
+import { IoMdCash, IoMdPeople } from "react-icons/io";
 
 interface User {
   chamaId: number;
@@ -39,10 +40,7 @@ interface Chama {
 
 
 const ChamaCard = ({ chama }: { chama: Chama }) => {
-
   const [chamaDuration, setChamaDuration] = useState<string | null>(null);
-
-
 
   useEffect(() => {
     const fetchDuration = async () => {
@@ -54,65 +52,53 @@ const ChamaCard = ({ chama }: { chama: Chama }) => {
   }, [chama.cycleTime]);
 
   return (
-    <Link href={`/Chama/${chama.slug}`} className="block">
-      <div className="border p-4 rounded-lg shadow-md hover:shadow-xl transition-shadow bg-white flex flex-col justify-between min-h-[300px] h-full ">
-        {/* Status and Arrow */}
-        <div className="flex justify-end items-center mb-4">
-          <p
-            className={`text-sm ${
-              chama.started ? "text-green-500" : "text-red-500"
+    <Link href={`/Chama/${chama.slug}`} className="block h-full">
+      <div className="border p-4 rounded-2xl shadow-sm hover:shadow-lg transition-all bg-white flex flex-col   h-full group">
+        {/* Status */}
+        <div className="flex justify-end">
+          <span
+            className={`text-xs font-medium px-2 py-1 rounded-full ${
+              chama.started ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"
             }`}
           >
             {chama.started ? "Started" : "Not Started"}
-          </p>
+          </span>
         </div>
 
-        {/* Profile Image and Name */}
-        <div className="flex items-center mb-4">
+        {/* Profile and Name */}
+        <div className="flex flex-col mt-2 ">
           <Image
             src={`https://ipfs.io/ipfs/Qmd1VFua3zc65LT93Sv81VVu6BGa2QEuAakAFJexmRDGtX/${chama.id}.jpg`}
             alt="Chama Profile"
-            width={50}
-            height={50}
-            className="rounded-full "
+            width={100}
+            height={100}
+            className="rounded-full border border-gray-200"
             priority={false}
             loading="lazy"
           />
+          <h1 className="text-lg font-semibold text-gray-800 truncate">
+            {chama.name}
+          </h1>
         </div>
-        <h1 className="ml-2 text-xl font-bold text-gray-800 truncate">
-          {chama.name}
-        </h1>
 
-        {/* Chama Details */}
-        <div className="mb-4">
-          <h2 className="text-gray-700">
-            Members: {chama.members.length} /{" "}
-            {chama.maxNo}
-          </h2>
-          <h3 className="text-gray-700 mt-1">
-            {formatEther(chama.amount)} cUSD / {chamaDuration ? chamaDuration : ""}
-          </h3>
-          <h3 className="text-gray-700 text-sm mt-1">
+        {/* Details */}
+        <div className="mt-2 space-y-2 text-sm text-gray-600">
+          <div className="flex items-center gap-2">
+            <IoMdPeople className="text-downy-600" />
+            <span>{chama.members.length} / {chama.maxNo} Members</span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <IoMdCash className="text-downy-600" />
+            <span>{formatEther(chama.amount)} cUSD</span>
+            {chamaDuration && <span className=" text-gray-500">/{chamaDuration}</span>}
+          </div>
+
+          <div className="text-sm text-gray-500">
             {chama.started
               ? `Next Pay: ${new Date(chama.payDate).toLocaleDateString()}`
-              : `Start Date: ${new Date(chama.startDate).toLocaleDateString()}`}
-          </h3>
-        </div>
-
-        {/* Arrow Icon at the Bottom */}
-        <div className="flex justify-end">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="currentColor"
-            className="w-6 h-6 text-gray-400"
-          >
-            <path
-              fillRule="evenodd"
-              d="M16.28 11.47a.75.75 0 0 1 0 1.06l-7.5 7.5a.75.75 0 0 1-1.06-1.06L14.69 12 7.72 5.03a.75.75 0 0 1 1.06-1.06l7.5 7.5Z"
-              clipRule="evenodd"
-            />
-          </svg>
+              : `Starts on: ${new Date(chama.startDate).toLocaleDateString()}`}
+          </div>
         </div>
       </div>
     </Link>

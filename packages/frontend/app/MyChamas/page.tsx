@@ -104,19 +104,13 @@ const Page = () => {
       minute: "2-digit",
     });
   };
-  
 
   return (
     <div className="min-h-screen bg-downy-100 pb-24">
       {/* Header */}
       <div className="sticky top-0 z-10 bg-white rounded-b-lg shadow-sm px-4 pt-4 pb-2">
         <div className="flex justify-between items-center">
-          <h1
-            className="text-3xl font-bold text-downy-800"
-            style={{ fontFamily: "Lobster, cursive" }}
-          >
-            ChamaPay
-          </h1>
+          <h1 className="text-3xl font-bold text-downy-800">ChamaPay</h1>
           <Link href="/Explore">
             <motion.button
               whileHover={{ scale: 1.05 }}
@@ -157,11 +151,12 @@ const Page = () => {
 
       {/* Content */}
       <div className="px-4 pt-2 pb-6">
-        {
-          !isConnected ? (
-            <div className="flex flex-col items-center justify-center py-12">
-              <p className="text-gray-600">Connect your wallet to view your chamas</p>
-            </div>
+        {!isConnected ? (
+          <div className="flex flex-col items-center justify-center py-12">
+            <p className="text-gray-600">
+              Connect your wallet to view your chamas
+            </p>
+          </div>
         ) : loading ? (
           <div className="flex flex-col items-center justify-center py-12">
             <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-downy-500 mb-4"></div>

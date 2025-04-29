@@ -56,6 +56,7 @@ export async function getChama(chamaSlug: string, address: string) {
           user: true,
         },
       },
+      admin: true,
     },
   });
   //get user
@@ -68,7 +69,9 @@ export async function getChama(chamaSlug: string, address: string) {
   }))
     ? true
     : false;
-  return { chama, isMember };
+  // return the admin wallet address
+  const adminWallet = chama?.admin.address;
+  return { chama, isMember, adminWallet };
 }
 
 //get a single chama
@@ -80,6 +83,8 @@ export async function getChamaById(chamaId: number) {
   });
   return chama;
 }
+
+//create a user
 export async function createUser(userName: string | null, address: string) {
   // Check if the address already exists
   let user = await prisma.user.findUnique({
@@ -137,6 +142,7 @@ export async function getChamasByUser(userId: number) {
 //create a chama
 export async function createChama(
   formData: FormData,
+  startDate: string,
   chamaType: string,
   adminAddress: `0x${string}`,
   blockchainId: number,
@@ -154,22 +160,17 @@ export async function createChama(
         slug: (formData.get("name") as string)
           .replace(/\s+/g, "-")
           .toLowerCase(),
-        startDate: new Date(formData.get("startDate") as string),
+        startDate: new Date(startDate),
         payDate: new Date(
-          new Date(formData.get("startDate") as string).getTime() +
+          new Date(startDate).getTime() +
             Number(formData.get("cycleTime")) * 24 * 60 * 60 * 1000
         ),
         blockchainId: blockchainId.toString(),
         round: 1, // Adding default round
         cycle: 1, // Adding default cycle
         admin: {
-          connectOrCreate: {
-            where: { address: adminAddress },
-            create: {
-              address: adminAddress,
-              name: "admin", // Or retrieve from form data
-              role: "admin", // Add role here as it's required
-            },
+          connect: {
+            address: adminAddress,
           },
         },
       },
@@ -179,13 +180,8 @@ export async function createChama(
       await prisma.chamaMember.create({
         data: {
           user: {
-            connectOrCreate: {
-              where: { address: adminAddress },
-              create: {
-                address: adminAddress,
-                name: "admin", // Or retrieve from form data
-                role: "admin", // Add role here as it's required for the User model
-              },
+            connect: {
+              address: adminAddress,
             },
           },
           chama: {
@@ -240,13 +236,8 @@ export async function addMemberToPublicChama(
   await prisma.chamaMember.create({
     data: {
       user: {
-        connectOrCreate: {
-          where: { address: address },
-          create: {
-            address: address,
-            name: "slim",
-            role: "admin",
-          },
+        connect: {
+          address: address,
         },
       },
       chama: {
@@ -294,15 +285,8 @@ export async function makePayment(
       txHash: _txHash,
       description: message,
       user: {
-        connectOrCreate: {
-          where: {
-            address: userAddress,
-          },
-          create: {
-            address: userAddress,
-            name: "slim",
-            role: "admin",
-          },
+        connect: {
+          address: userAddress,
         },
       },
       chama: {

@@ -73,6 +73,7 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
   const [chamaType, setChamaType] = useState("");
   const [included, setIncluded] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [adminWallet, setAdminWallet] = useState<string | null>(null);
   const { connect } = useConnect();
   const { writeContractAsync } = useWriteContract();
   const [loading, setLoading] = useState(false);
@@ -95,6 +96,7 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
       if (data) {
         setChama(data.chama);
         setIncluded(data.isMember);
+        setAdminWallet(data.adminWallet || null);
         const time = await duration(data.chama?.cycleTime || 0);
         setCycle(time);
         setChamaType(data.chama?.type || "");
@@ -220,7 +222,7 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
                 </h2>
                 <p className="text-gray-600 mb-6">
                   You need to lock {formatEther(chama.amount)} cUSD before
-                  joining the public chama.
+                  joining {chama.name} chama.
                 </p>
                 <div className="flex justify-end space-x-4">
                   <button
@@ -248,7 +250,7 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
                     }`}
                   >
                     {loading
-                      ? "adding..."
+                      ? "Joining..."
                       : processing
                       ? "Processing..."
                       : "Proceed"}
@@ -369,12 +371,13 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
           name={chama.name}
           slug={chama.slug}
           members={chama.members}
+          adminWallet={adminWallet || ""}
         />
       )}
       {activeSection === "Chats" && (
         <div className="bg-downy-100 h-[100vh] flex flex-col">
           {/* Header */}
-          <div className="flex items-center w-full px-4 py-2 space-x-2 shadow-md bg-white">
+          <div className="flex items-center w-full px-4 py-2 space-x-2 shadow-md bg-downy-200">
             {/* Back arrow icon */}
             <svg
               xmlns="http://www.w3.org/2000/svg"

@@ -28,6 +28,8 @@ const CreatePublic = () => {
   const [loading, setLoading] = useState(false);
   const [openingModal, setOpeningModal] = useState(false);
   const [errorText, setErrorText] = useState("");
+  const [startDateDate, setStartDateDate] = useState("");
+  const [startDateTime, setStartDateTime] = useState("");
   const router = useRouter();
   const { isConnected, address } = useAccount();
   const { writeContractAsync } = useWriteContract();
@@ -44,6 +46,7 @@ const CreatePublic = () => {
     setErrorText("");
     const formData = new FormData(e.target as HTMLFormElement);
     const data = Object.fromEntries(formData.entries());
+    const startDate = `${startDateDate}T${startDateTime}`;
     console.log(data);
 
     if (isNaN(Number(data.amount)) || Number(data.amount) <= 0) {
@@ -60,6 +63,10 @@ const CreatePublic = () => {
     }
     if (!data.name || (data.name as string).length < 3 || data.name === "") {
       setErrorText("Name must be at least 3 characters long");
+      return;
+    }
+    if(startDate < new Date().toISOString()) {
+      setErrorText("Start date must be in the future");
       return;
     }
 
@@ -94,60 +101,61 @@ const CreatePublic = () => {
     const blockchainId = await getLatestChamaId();
     console.log(`blockchainId: ${blockchainId}`);
 
- 
-      //function to send the lock amount
-      try {
-        setProcessing(true);
-        const paid = await processCheckout(contractAddress as `0x${string}`, amountInWei);
-        if (paid) {
-          setProcessing(false);
-          setLoading(true);
-          const dateObject = new Date(filledData.startDate as string);
-          const dateInMilliseconds = dateObject.getTime();
-
-          const hash = await writeContractAsync({
-            address: contractAddress,
-            abi: contractAbi,
-            functionName: "registerChama",
-            args: [
-              amountInWei,
-              BigInt(Number(filledData.cycleTime)),
-              BigInt(dateInMilliseconds),
-              BigInt(Number(filledData.maxNumber)),
-              true,
-            ],
-          });
-
-          if (hash) {
-            const formData = new FormData();
-            formData.append("name", filledData.name);
-            formData.append("amount", filledData.amount);
-            formData.append("cycleTime", filledData.cycleTime);
-            formData.append("maxNumber", filledData.maxNumber);
-            formData.append("startDate", filledData.startDate);
-
-            await createChama(formData, "Public", address, blockchainId, paid);
-
-            console.log("done");
-            toast.success(`${filledData.name} created successfully.`);
-            setLoading(false);
-            router.push("/MyChamas");
-          } else {
-            toast.error("unable to create, please try again");
-            setErrorText("unable to create, please try again");
-          }
-        } else {
-          setErrorText(`Ensure you have ${amount} cUSD in your wallet.`);
-        }
-      } catch (error) {
-        toast.error("Oops!!something happened.");
-        setErrorText("Oops!!something happened.");
-        console.log(error);
-      } finally {
+    //function to send the lock amount
+    try {
+      setProcessing(true);
+      const paid = await processCheckout(
+        contractAddress as `0x${string}`,
+        amountInWei
+      );
+      if (paid) {
         setProcessing(false);
-        setLoading(false);
-      }
+        setLoading(true);
+        const dateObject = new Date(filledData.startDate as string);
+        const dateInMilliseconds = dateObject.getTime();
 
+        const hash = await writeContractAsync({
+          address: contractAddress,
+          abi: contractAbi,
+          functionName: "registerChama",
+          args: [
+            amountInWei,
+            BigInt(Number(filledData.cycleTime)),
+            BigInt(dateInMilliseconds),
+            BigInt(Number(filledData.maxNumber)),
+            true,
+          ],
+        });
+
+        if (hash) {
+          const formData = new FormData();
+          formData.append("name", filledData.name);
+          formData.append("amount", filledData.amount);
+          formData.append("cycleTime", filledData.cycleTime);
+          formData.append("maxNumber", filledData.maxNumber);
+          formData.append("startDate", startDate);
+
+          await createChama(formData, startDate, "Public", address, blockchainId, paid);
+
+          console.log("done");
+          toast.success(`${filledData.name} created successfully.`);
+          setLoading(false);
+          router.push("/MyChamas");
+        } else {
+          toast.error("unable to create, please try again");
+          setErrorText("unable to create, please try again");
+        }
+      } else {
+        setErrorText(`Ensure you have ${amount} cUSD in your wallet.`);
+      }
+    } catch (error) {
+      toast.error("Oops!!something happened.");
+      setErrorText("Oops!!something happened.");
+      console.log(error);
+    } finally {
+      setProcessing(false);
+      setLoading(false);
+    }
   };
 
   return (
@@ -167,7 +175,7 @@ const CreatePublic = () => {
             </h2>
             <p className="text-gray-600 mb-6">
               You need to lock {amount} cUSD before proceeding to create
-              the public chama.
+              {filledData.name} chama.
             </p>
             <div className="flex justify-end space-x-4">
               <button
@@ -211,11 +219,14 @@ const CreatePublic = () => {
         className="space-y-4 bg-white p-6 rounded-3xl shadow-md w-full mt-3 transform origin-top animate-fadeIn"
       >
         {errorText && (
-              <div className="text-red-500 p-2 flex items-center border border-red-500 rounded-md relative mb-2" role="alert">
-                <FiAlertTriangle className="text-red-500 text-sm mr-2" />
-                <span className="block sm:inline text-sm">{errorText}</span>
-              </div>
-            )}
+          <div
+            className="text-red-500 p-2 flex items-center border border-red-500 rounded-md relative mb-2"
+            role="alert"
+          >
+            <FiAlertTriangle className="text-red-500 text-sm mr-2" />
+            <span className="block sm:inline text-sm">{errorText}</span>
+          </div>
+        )}
         <div className=" flex flex-column-2 items-center space-x-2">
           <FiGlobe className="text-downy-500 text-3xl" />
 
@@ -268,24 +279,45 @@ const CreatePublic = () => {
           />
         </div>
 
-        <div>
-          <label
-            htmlFor="startDate"
-            className="block text-sm font-medium text-gray-700"
-          >
-            Start Date
-          </label>
-          <input
-            type="datetime-local"
-            id="startDate"
-            name="startDate"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-            min={new Date().toISOString().split('T')[0]}
-            required
-            className="mt-1 block w-full text-gray-500 rounded-md border-downy-200 shadow-sm focus:border-downy-500 focus:ring-downy-500 sm:text-sm"
-          />
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label
+              htmlFor="startDate"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Start Date
+            </label>
+            <input
+              type="date"
+              id="startDate"
+              name="startDate"
+              value={startDateDate}
+              onChange={(e) => setStartDateDate(e.target.value)}
+              min={new Date().toISOString().split("T")[0]}
+              required
+              className="mt-1 block w-full text-gray-500 rounded-md border-downy-200 shadow-sm focus:border-downy-500 focus:ring-downy-500 sm:text-sm"
+            />
+          </div>
+
+          <div>
+            <label
+              htmlFor="startTime"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Time
+            </label>
+            <input
+              type="time"
+              id="startTime"
+              name="startTime"
+              value={startDateTime}
+              onChange={(e) => setStartDateTime(e.target.value)}
+              required
+              className="mt-1 block w-full text-gray-500 rounded-md border-downy-200 shadow-sm focus:border-downy-500 focus:ring-downy-500 sm:text-sm"
+            />
+          </div>
         </div>
+
         <div>
           <label
             htmlFor="duration"

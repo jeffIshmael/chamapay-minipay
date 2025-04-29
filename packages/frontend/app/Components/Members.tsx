@@ -30,11 +30,13 @@ const Members = ({
   name,
   slug,
   members,
+  adminWallet,
 }: {
   imageSrc: string;
   name: string;
   slug: string;
   members: User[];
+  adminWallet: string;
 }) => {
   const [groupLink, setGroupLink] = useState("");
   const { isConnected, address } = useAccount();
@@ -43,6 +45,7 @@ const Members = ({
   // Generate invite link
   useEffect(() => {
     setGroupLink(`${window.location.origin}/Chama/${slug}`);
+
   }, [slug]);
 
   // Copy invite link to clipboard
@@ -95,16 +98,13 @@ const Members = ({
           <h2 className="text-xl font-bold text-gray-800">
             Members ({members.length})
           </h2>
-          <div className="text-downy-600 text-sm font-medium">
-            {members.filter((m) => m.user.role === "admin").length} Admin
-          </div>
         </div>
 
         <div className="space-y-3">
           {members.map((member, index) => {
             const isCurrentUser =
               isConnected && member.user.address === address;
-            const isAdmin = member.user.role === "admin";
+            const isAdmin =  member.user.address === adminWallet;
             const truncatedAddress = `${member.user.address.slice(
               0,
               6

@@ -61,6 +61,7 @@ const Schedule = ({ chama, type }: { chama: Chama; type: string }) => {
   const [currentTime, setCurrentTime] = useState(Date.now());
   const [timeUntilStart, setTimeUntilStart] = useState("");
 
+
   const { data } = useReadContract({
     address: contractAddress,
     abi: contractAbi,
@@ -126,12 +127,17 @@ const Schedule = ({ chama, type }: { chama: Chama; type: string }) => {
     let mounted = true;
 
     const updateTime = async () => {
+
       if (!chama?.startDate) return;
+    
       const startTime = new Date(chama.startDate).getTime();
       const diff = startTime - currentTime;
       const result =
         diff <= 0 ? "Starting..." : await formatTimeRemaining(diff);
-      if (mounted) setTimeUntilStart(result);
+      if (mounted) {
+        setTimeUntilStart(result);
+       
+      }
     };
 
     const interval = setInterval(updateTime, 1000);
@@ -195,13 +201,13 @@ const Schedule = ({ chama, type }: { chama: Chama; type: string }) => {
 
               {type === "Public" ? (
                 <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center space-x-1 bg-downy-500  rounded-md p-2">
+                  <div className="flex items-center space-x-1 bg-downy-600  rounded-md p-2">
                     <FiDollarSign className="text-white" size={14} />
                     <span className="text-white font-semibold text-sm">
                       {userBalance.toFixed(3)}
                     </span>
                   </div>
-                  <div className="flex items-center space-x-1 bg-downy-500  rounded-md p-2">
+                  <div className="flex items-center space-x-1 bg-downy-600  rounded-md p-2">
                     <FiLock className="text-white" size={14} />
                     <span className="text-white font-semibold text-sm">
                       {lockedAmount.toFixed(3)}
