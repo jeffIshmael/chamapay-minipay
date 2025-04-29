@@ -23,6 +23,11 @@ import {
 import { HiOutlineQrcode } from "react-icons/hi";
 import { formatEther } from "viem";
 import { TbReceiptFilled } from "react-icons/tb";
+import { useRouter } from "next/navigation";
+import DepositModal from "./DepositModal";
+import SendModal from "./sendModal";
+import WithdrawModal from "./WithdrawModal";
+import QRCodeModal from "./QRCodeModal";
 
 interface Payment {
   amount: bigint;
@@ -44,7 +49,7 @@ const Wallet = () => {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [chamaNames, setChamaNames] = useState<{ [key: number]: string }>({});
   const [hideButton, setHideButton] = useState(false);
-
+  const router = useRouter();
   const { data: balanceData } = useReadContract({
     chainId: celoAlfajores.id,
     address: cUSDContractAddress,
@@ -52,6 +57,15 @@ const Wallet = () => {
     abi: erc20Abi,
     args: [address],
   });
+
+  const [activeModal, setActiveModal] = useState<
+    "deposit" | "send" | "withdraw" | "qr" | null
+  >(null);
+
+  // Add these handlers
+  const openModal = (modal: "deposit" | "send" | "withdraw" | "qr") =>
+    setActiveModal(modal);
+  const closeModal = () => setActiveModal(null);
 
   const balance = balanceData ? Number(balanceData) / 10 ** 18 : 0;
   const truncatedAddress = address
@@ -121,7 +135,6 @@ const Wallet = () => {
           paymentsData.map(async (payment) => {
             const chama = await getChamaById(payment.chamaId);
             names[payment.chamaId] = chama?.name || "Unknown Chama";
-
           })
         );
         setChamaNames(names);
@@ -153,7 +166,6 @@ const Wallet = () => {
             </button>
           )}
         </div>
-        
 
         {/* Balance Card */}
         <motion.div
@@ -188,7 +200,10 @@ const Wallet = () => {
               <p className="text-white text-sm font-medium truncate">
                 {truncatedAddress}
               </p>
-              <button onClick={copyToClipboard} className="text-white bg-transparent">
+              <button
+                onClick={copyToClipboard}
+                className="text-white bg-transparent"
+              >
                 <FiCopy />
               </button>
             </div>
@@ -210,29 +225,30 @@ const Wallet = () => {
             {
               icon: <FiDownload className="text-xl" />,
               label: "Deposit",
-              color: "bg-downy-500",
+              action: () => openModal("deposit"),
             },
             {
               icon: <FiSend className="text-xl" />,
               label: "Send",
-              color: "bg-downy-500",
+              action: () => openModal("send"),
             },
             {
               icon: <FiDollarSign className="text-xl" />,
               label: "Withdraw",
-              color: "bg-downy-500",
+              action: () => openModal("withdraw"),
             },
             {
               icon: <HiOutlineQrcode className="text-xl" />,
               label: "QR Code",
-              color: "bg-downy-500",
+              action: () => openModal("qr"),
             },
           ].map((action, index) => (
             <motion.button
               key={index}
               whileHover={{ y: -3 }}
               whileTap={{ scale: 0.95 }}
-              className={`${action.color} text-white p-3 rounded-xl shadow-sm flex flex-col items-center`}
+              onClick={action.action}
+              className="bg-downy-500 text-white p-3 rounded-xl shadow-sm flex flex-col items-center"
             >
               <div className="bg-white bg-opacity-20 p-2 rounded-full">
                 {action.icon}
@@ -289,11 +305,20 @@ const Wallet = () => {
                     <div>
                       <h3 className="font-medium text-gray-800">
                         {"sent to "}
-                        <Link href={`/Chama/${(chamaNames[payment.chamaId]).toLowerCase().replace(/\s+/g, '-')}`}>
+                        <button
+                          onClick={() => {
+                            router.push(
+                              `/Chama/${chamaNames[payment.chamaId]
+                                .toLowerCase()
+                                .replace(/\s+/g, "-")}`
+                            );
+                          }}
+                          className="text-downy-600 hover:text-downy-500 bg-transparent border-none  rounded-md"
+                        >
                           <span className="text-downy-600">
                             {chamaNames[payment.chamaId]}
                           </span>
-                        </Link>
+                        </button>
                       </h3>
                       <p className="text-gray-500 text-xs">
                         {new Date(payment.doneAt).toLocaleDateString("en-GB", {
@@ -332,6 +357,26 @@ const Wallet = () => {
           </motion.div>
         )}
       </div>
+      {activeModal === "deposit" && (
+        <DepositModal
+          isOpen={true}
+          onClose={closeModal}
+          address={address || ""}
+        />
+      )}
+      {activeModal === "send" && (
+        <SendModal isOpen={true} onClose={closeModal} balance={balance} />
+      )}
+      {activeModal === "withdraw" && (
+        <WithdrawModal isOpen={true} onClose={closeModal} balance={balance} />
+      )}
+      {activeModal === "qr" && (
+        <QRCodeModal
+          isOpen={true}
+          onClose={closeModal}
+          address={address || ""}
+        />
+      )}
     </div>
   );
 };

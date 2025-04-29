@@ -135,8 +135,7 @@ const Schedule = ({ chama, type }: { chama: Chama; type: string }) => {
       const result =
         diff <= 0 ? "Starting..." : await formatTimeRemaining(diff);
       if (mounted) {
-        setTimeUntilStart(result);
-       
+        setTimeUntilStart(result);       
       }
     };
 

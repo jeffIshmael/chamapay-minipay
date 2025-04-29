@@ -1,26 +1,16 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { getChamas } from "../../lib/chama";
+import {   getPublicNotMember } from "../../lib/chama";
 import Link from "next/link";
 import Image from "next/image";
 import { duration as getDuration } from "@/utils/duration";
 import BottomNavbar from "../Components/BottomNavbar";
 import { formatEther } from "viem";
 import { IoMdCash, IoMdPeople } from "react-icons/io";
+import { useAccount } from "wagmi";
 
-interface User {
-  chamaId: number;
-  id: number;
-  payDate: Date;
-  user: {
-    id: number;
-    address: string;
-    name: string | null;
-    role: string;
-  };
-  userId: number;
-}
+
 
 interface Chama {
   adminId: number;
@@ -29,7 +19,12 @@ interface Chama {
   cycleTime: number;
   id: number;
   maxNo: number;
-  members: User[];
+  members: {
+    id: number;
+    userId: number;
+    chamaId: number;
+    payDate: Date;
+  }[];
   name: string;
   payDate: Date;
   slug: string;
@@ -108,12 +103,13 @@ const ChamaCard = ({ chama }: { chama: Chama }) => {
 const Page = () => {
   const [chamas, setChamas] = useState<Chama[]>([]);
   const [loading, setLoading] = useState<boolean>(true); // New loading state
+  const {address} = useAccount();
 
   useEffect(() => {
     const fetchChamas = async () => {
       try {
         setLoading(true); // Start loading
-        const data = await getChamas();
+        const data = await getPublicNotMember(address as string);
         setChamas(data);
         console.log(data);
       } catch (error) {

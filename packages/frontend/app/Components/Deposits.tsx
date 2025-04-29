@@ -16,13 +16,16 @@ interface Deposit {
 
 const Deposits = ({ chamaId }: { chamaId: number }) => {
   const [deposits, setDeposits] = useState<Deposit[]>([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchDeposits = async () => {
+      setLoading(true);
       const results: Deposit[] = await getPaymentsById(chamaId);
       if (results) {
         setDeposits(results);
       }
+      setLoading(false);
     };
     fetchDeposits();
   }, [chamaId]); // Make sure to add the dependency here
@@ -46,9 +49,15 @@ const Deposits = ({ chamaId }: { chamaId: number }) => {
         </div>
       )}
 
-      {deposits.map((deposit: Deposit, index: number) => (
-        <div
-          key={index}
+      {
+        loading ? (
+          <div className="flex items-center justify-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900"></div>
+          </div>
+        ) : 
+          deposits.map((deposit: Deposit, index: number) => (
+            <div
+              key={index}
           className="p-4 mb-4 border border-gray-300 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
         >
           <div className="flex justify-between items-center mb-2">
