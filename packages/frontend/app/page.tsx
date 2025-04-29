@@ -3,22 +3,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { updateChamaStatus } from "../lib/chama";
 import { useEffect } from "react";
-import { injected, useAccount, useConnect } from "wagmi";
-
 
 export default function Home() {
-  const { connect } = useConnect();
-  const { isConnected } = useAccount();
+
   useEffect(() => {
     updateChamaStatus();
   }, []);
 
-  useEffect(() => {
-    // if (isConnected) return;
-    if (window.ethereum && window.ethereum.isMiniPay) {
-      connect({ connector: injected({ target: "metaMask" }) });
-    }
-  }, [isConnected]);
 
   return (
     <main className="bg-gradient-to-b from-downy-100 to-gray-50 min-h-screen rounded-md p-6">

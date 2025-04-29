@@ -22,15 +22,22 @@ import { TbPigMoney } from "react-icons/tb";
 const Page = () => {
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState("Home");
-  const { isConnected } = useAccount();
-  const { connect, isPending, isSuccess, isError } = useConnect();
+  // const { isConnected } = useAccount();
+  const { connectAsync, isPending, isSuccess, isError } = useConnect();
 
   useEffect(() => {
     // if (isConnected) return;
+    const injectWallet = async () => {
     if (window.ethereum && window.ethereum.isMiniPay) {
-      connect({ connector: injected({ target: "metaMask" }) });
+      try {
+        await connectAsync({ connector: injected({ target: "metaMask" }) });
+      } catch (error) {
+          console.error(error);
+        }
+      };
+      injectWallet();
     }
-  }, [isConnected, connect]);
+  }, []);
 
   const toggleSection = (section: string) => {
     setExpandedSection(expandedSection === section ? null : section);
