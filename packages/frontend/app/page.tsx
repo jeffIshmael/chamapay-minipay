@@ -18,7 +18,7 @@ export default function Home() {
     if (window.ethereum && window.ethereum.isMiniPay) {
       connect({ connector: injected({ target: "metaMask" }) });
     }
-  }, [isConnected, connect]);
+  }, [isConnected]);
 
   return (
     <main className="bg-gradient-to-b from-downy-100 to-gray-50 min-h-screen rounded-md p-6">
