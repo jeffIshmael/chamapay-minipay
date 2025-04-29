@@ -6,14 +6,14 @@ import { useAccount, useConnect } from "wagmi";
 import { injected } from "wagmi/connectors";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  FiChevronDown, 
-  FiUsers, 
-  FiGlobe, 
-  FiShield, 
+import {
+  FiChevronDown,
+  FiUsers,
+  FiGlobe,
+  FiShield,
   FiPieChart,
   FiZap,
-  FiDollarSign
+  FiDollarSign,
 } from "react-icons/fi";
 import { RiHandCoinLine } from "react-icons/ri";
 import { IoMdPeople } from "react-icons/io";
@@ -22,8 +22,8 @@ import { TbPigMoney } from "react-icons/tb";
 const Page = () => {
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState("Home");
-  const { isConnected, address } = useAccount();
-  const { connect } = useConnect();
+  const { isConnected } = useAccount();
+  const { connect, isPending, isSuccess, isError } = useConnect();
 
   useEffect(() => {
     // if (isConnected) return;
@@ -36,49 +36,57 @@ const Page = () => {
     setExpandedSection(expandedSection === section ? null : section);
   };
 
+  if (isPending) {
+    return <div>Connecting...</div>;
+  }
+  if (isSuccess) {
+    return <div>Connected</div>;
+  }
+  if (isError) {
+    return <div>Error</div>;
+  }
   return (
     <div className="min-h-screen bg-downy-100 pb-24">
-    
       {/* Hero Section */}
       <div className="relative bg-gradient-to-br from-downy-600 to-downy-800 px-6 pt-10 pb-20 text-center rounded-b-3xl shadow-2xl overflow-hidden">
         {/* Decorative Waves */}
         <div className="absolute bottom-0 left-0 right-0 h-20 bg-[url('/wave-pattern.svg')] bg-repeat-x opacity-10"></div>
-        
+
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
           className="relative z-10"
         >
-          <motion.div 
+          <motion.div
             whileHover={{ scale: 1.05 }}
             className="inline-block mb-4"
           >
             <div className="bg-white/20 p-4 rounded-2xl backdrop-blur-sm border border-white/10">
               <h1
                 className="text-5xl font-bold text-white mb-1"
-                style={{ 
+                style={{
                   fontFamily: "Lobster, cursive",
-                  textShadow: "0 2px 8px rgba(0,0,0,0.2)"
+                  textShadow: "0 2px 8px rgba(0,0,0,0.2)",
                 }}
               >
                 ChamaPay
               </h1>
             </div>
           </motion.div>
-          
+
           <p className="text-xl text-downy-100 mb-8 max-w-md mx-auto">
-            Circular savings made <span className="font-semibold">simple</span>,{' '}
-            <span className="font-semibold">secure</span>, and{' '}
+            Circular savings made <span className="font-semibold">simple</span>,{" "}
+            <span className="font-semibold">secure</span>, and{" "}
             <span className="font-semibold">social</span>
           </p>
 
           <div className="flex flex-col space-y-4 px-4">
             <Link href="/Explore" legacyBehavior>
               <motion.button
-                whileHover={{ 
-                  scale: 1.03, 
-                  boxShadow: "0 8px 20px rgba(255,255,255,0.2)"
+                whileHover={{
+                  scale: 1.03,
+                  boxShadow: "0 8px 20px rgba(255,255,255,0.2)",
                 }}
                 whileTap={{ scale: 0.98 }}
                 className="w-full bg-white text-downy-700 font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all flex items-center justify-center"
@@ -89,9 +97,9 @@ const Page = () => {
             </Link>
             <Link href="/Create" legacyBehavior>
               <motion.button
-                whileHover={{ 
+                whileHover={{
                   scale: 1.03,
-                  boxShadow: "0 8px 20px rgba(255,255,255,0.1)"
+                  boxShadow: "0 8px 20px rgba(255,255,255,0.1)",
                 }}
                 whileTap={{ scale: 0.98 }}
                 className="w-full bg-downy-900/80 text-white font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all border border-white/20 flex items-center justify-center"
@@ -102,7 +110,6 @@ const Page = () => {
             </Link>
           </div>
         </motion.div>
-
       </div>
 
       {/* Features Grid */}
@@ -115,30 +122,30 @@ const Page = () => {
           className="grid grid-cols-2 gap-4"
         >
           {[
-            { 
+            {
               icon: <FiUsers className="text-downy-600 text-xl" />,
-              title: "Private Chamas", 
+              title: "Private Chamas",
               desc: "Family & Friends",
-              bg: "bg-gradient-to-br from-blue-100 to-blue-200"
+              bg: "bg-gradient-to-br from-blue-100 to-blue-200",
             },
-            { 
+            {
               icon: <FiGlobe className="text-downy-600 text-xl" />,
-              title: "Public Chamas", 
+              title: "Public Chamas",
               desc: "Join Communities",
-              bg: "bg-gradient-to-br from-green-100 to-green-200"
+              bg: "bg-gradient-to-br from-green-100 to-green-200",
             },
-            { 
+            {
               icon: <FiShield className="text-downy-600 text-xl" />,
-              title: "Secure", 
+              title: "Secure",
               desc: "Blockchain Backed",
-              bg: "bg-gradient-to-br from-purple-100 to-purple-200"
+              bg: "bg-gradient-to-br from-purple-100 to-purple-200",
             },
-            { 
+            {
               icon: <FiPieChart className="text-downy-600 text-xl" />,
-              title: "Transparent", 
+              title: "Transparent",
               desc: "Real-time Tracking",
-              bg: "bg-gradient-to-br from-amber-50 to-amber-100"
-            }
+              bg: "bg-gradient-to-br from-amber-50 to-amber-100",
+            },
           ].map((feature, index) => (
             <motion.div
               key={index}
@@ -166,7 +173,7 @@ const Page = () => {
 
       {/* Value Propositions */}
       <div className="px-6 mt-14">
-        <motion.h2 
+        <motion.h2
           className="text-3xl font-bold text-gray-800 mb-8 text-center"
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
@@ -181,23 +188,24 @@ const Page = () => {
             {
               icon: <RiHandCoinLine className="text-downy-600 text-2xl" />,
               title: "Community Trust",
-              description: "Trusted by many users across Kenya for their group savings needs.",
-              highlight: "Many users"
+              description:
+                "Trusted by many users across Kenya for their group savings needs.",
+              highlight: "Many users",
             },
             {
               icon: <FiZap className="text-downy-600 text-2xl" />,
               title: "Lightning Fast",
-              description: "Instant settlements with our optimized blockchain technology.",
-              highlight: "Instant settlements"
+              description:
+                "Instant settlements with our optimized blockchain technology.",
+              highlight: "Instant settlements",
             },
-
           ].map((item, index) => (
             <motion.div
               key={index}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: 0.2 + (index * 0.1), type: "spring" }}
+              transition={{ delay: 0.2 + index * 0.1, type: "spring" }}
               className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100/50 hover:border-downy-200 transition-all"
             >
               <div className="flex items-start">
@@ -208,9 +216,7 @@ const Page = () => {
                   <h3 className="text-xl font-bold text-gray-800 mb-2">
                     {item.title}
                   </h3>
-                  <p className="text-gray-600">
-                    {item.description}
-                  </p>
+                  <p className="text-gray-600">{item.description}</p>
                   <span className="inline-block mt-2 px-2 py-1 bg-downy-100 text-downy-800 text-xs font-medium rounded-full">
                     {item.highlight}
                   </span>
@@ -238,19 +244,22 @@ const Page = () => {
             {[
               {
                 question: "How do I create a chama?",
-                answer: "Simply click 'Create Chama', set your rules (contribution amount, frequency, etc.), and invite members via WhatsApp or email. Setup takes less than 2 minutes!",
-                icon: <FiUsers className="text-downy-600" />
+                answer:
+                  "Simply click 'Create Chama', set your rules (contribution amount, frequency, etc.), and invite members via WhatsApp or email. Setup takes less than 2 minutes!",
+                icon: <FiUsers className="text-downy-600" />,
               },
               {
                 question: "What are the fees?",
-                answer: "ChamaPay is free to use. We only charge minimal blockchain transaction fees (typically less than 0.1 cUSD per transaction). No hidden costs!",
-                icon: <FiDollarSign className="text-downy-600" />
+                answer:
+                  "ChamaPay is free to use. We only charge minimal blockchain transaction fees (typically less than 0.1 cUSD per transaction). No hidden costs!",
+                icon: <FiDollarSign className="text-downy-600" />,
               },
               {
                 question: "Can I use mobile money?",
-                answer: "Yes! We support M-Pesa integration for easy deposits and withdrawals. Funds are converted to stable cUSD tokens automatically.",
-                icon: <FiZap className="text-downy-600" />
-              }
+                answer:
+                  "Yes! We support M-Pesa integration for easy deposits and withdrawals. Funds are converted to stable cUSD tokens automatically.",
+                icon: <FiZap className="text-downy-600" />,
+              },
             ].map((item, index) => (
               <div
                 key={index}
@@ -305,7 +314,7 @@ const Page = () => {
           {/* Decorative elements */}
           <div className="absolute -top-20 -right-20 w-40 h-40 rounded-full bg-white/10"></div>
           <div className="absolute -bottom-10 -left-10 w-60 h-60 rounded-full bg-white/10"></div>
-          
+
           <h3 className="text-2xl font-bold text-white mb-3 relative z-10">
             Ready to revolutionize your chama?
           </h3>
@@ -315,9 +324,9 @@ const Page = () => {
           <div className="relative z-10">
             <Link href="/Create" legacyBehavior>
               <motion.button
-                whileHover={{ 
-                  scale: 1.03, 
-                  boxShadow: "0 8px 25px rgba(0,0,0,0.2)"
+                whileHover={{
+                  scale: 1.03,
+                  boxShadow: "0 8px 25px rgba(0,0,0,0.2)",
                 }}
                 whileTap={{ scale: 0.98 }}
                 className="w-full max-w-xs mx-auto bg-white text-downy-700 font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all"
@@ -332,7 +341,6 @@ const Page = () => {
       <BottomNavbar
         activeSection={activeSection}
         setActiveSection={setActiveSection}
-       
       />
     </div>
   );
