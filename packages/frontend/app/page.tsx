@@ -1,13 +1,13 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
-import { updateChamaStatus } from "../lib/chama";
+import { initializeCronJobs } from "../lib/cronJobs";
 import { useEffect } from "react";
 
 export default function Home() {
 
   useEffect(() => {
-    updateChamaStatus();
+    initializeCronJobs();
   }, []);
 
 
