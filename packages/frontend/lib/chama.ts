@@ -2,7 +2,6 @@
 "use server";
 import { PrismaClient } from "@prisma/client";
 import { revalidatePath } from "next/cache";
-import { assignPayDates } from "./paydate";
 import { parseEther } from "viem";
 const cron = require("node-cron");
 const prisma = new PrismaClient();
