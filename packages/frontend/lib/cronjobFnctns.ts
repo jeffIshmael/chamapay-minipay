@@ -6,7 +6,6 @@
 
 import { PrismaClient } from "@prisma/client";
 import { getUser, sendNotificationToAllMembers } from "./chama";
-import { shuffleArray } from "./paydate";
 import { performPayout } from "./PayOut";
 import { getFundsDisbursedEventLogs } from "./readFunctions";
 import { formatEther } from "viem";
