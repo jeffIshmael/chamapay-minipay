@@ -6,6 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useAccount } from "wagmi";
 import { getChamasByUser, getUser } from "../../lib/chama";
+import ChamaLinkSearch from "../Components/SearchModal";
 import { motion } from "framer-motion";
 import {
   FiUsers,
@@ -45,6 +46,7 @@ const Page = () => {
   const [chamas, setChamas] = useState<Chama[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [activeTab, setActiveTab] = useState<"friends" | "public">("friends");
+  const [showLinkSearch, setShowLinkSearch] = useState(false);
 
   const { isConnected, address } = useAccount();
 
@@ -111,15 +113,16 @@ const Page = () => {
       <div className="sticky top-0 z-10 bg-white rounded-b-lg shadow-sm px-4 pt-4 pb-2">
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold text-downy-800">ChamaPay</h1>
-          <Link href="/Explore">
+         
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="bg-downy-500 text-white p-2 rounded-full shadow-md"
+              className=" text-white p-2 rounded-full bg-downy-500"
+              onClick={() => setShowLinkSearch(true)}
             >
               <FiSearch className="text-lg" />
             </motion.button>
-          </Link>
+          
         </div>
 
         <h2 className="text-xl font-bold text-gray-800 mt-2">My Chamas</h2>
@@ -217,6 +220,9 @@ const Page = () => {
         activeSection={activeSection}
         setActiveSection={setActiveSection}
       />
+      {showLinkSearch && (
+        <ChamaLinkSearch onClose={() => setShowLinkSearch(false)} />
+      )}
     </div>
   );
 };

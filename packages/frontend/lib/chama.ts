@@ -73,6 +73,14 @@ export async function getChama(chamaSlug: string, address: string) {
   return { chama, isMember, adminWallet };
 }
 
+//get a single chama by slug
+export async function getChamaBySlug(slug: string) {
+  const chama = await prisma.chama.findUnique({
+    where: { slug },
+  });
+  return chama;
+}
+
 //get a single chama
 export async function getChamaById(chamaId: number) {
   const chama = await prisma.chama.findUnique({
