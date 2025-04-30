@@ -1,7 +1,27 @@
+// this file has helper functions
+
+
 "use server";
 import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 const cron = require("node-cron");
+
+interface Member {
+  id: number;
+  payDate: Date;
+  userId: number;
+  chamaId: number;
+  user: {
+    name: string;
+    address: string;
+    id: number;
+
+  };
+  chama: {
+    name: string;
+    type: string;
+  };
+}
 
 export async function assignPayDates(chamaId: number) {
   // Fetch the chama and its members
@@ -29,6 +49,11 @@ export async function assignPayDates(chamaId: number) {
       data: { payDate },
     });
   }
+}
+
+// function to shuffle an array
+export function shuffleArray(array: any[]) {
+  return array.sort(() => Math.random() - 0.5);
 }
 
 export async function checkAndNotifyMembers() {

@@ -352,52 +352,19 @@ export async function getChamaPayouts(chamaId: number) {
   return payouts;
 }
 
-// Function to update chama status
-export async function updateChamaStatus() {
-  try {
-    const now = new Date();
-
-    // Fetch all chamas that haven't started yet and where startDate <= current date
-    const chamas = await prisma.chama.findMany({
-      where: {
-        started: false,
-        startDate: {
-          lte: now,
-        },
-      },
-    });
-
-    for (const chama of chamas) {
-      // Update the started flag to true
-      await prisma.chama.update({
-        where: { id: chama.id },
-        data: { started: true },
-      });
-
-      //update the paydates
-      await assignPayDates(chama.id);
-    }
-
-    console.log(`Updated ${chamas.length} chamas.`);
-  } catch (error) {
-    console.error("Error updating chama status:", error);
-  }
-  // Schedule the task to run periodically (every hour)
-  cron.schedule("0 * * * *", updateChamaStatus); // Runs every hour
-}
-
+//function to create a notification
 export async function createNotification(
   userId: number,
   message: string,
-  senderId: number,
-  requestId: number,
+  senderId: number | null,
+  requestId: number | null,
   chamaId?: number | null
 ) {
   await prisma.notification.create({
     data: {
       message: message,
-      senderId: senderId,
-      requestId: requestId,
+      senderId: senderId || null,
+      requestId: requestId || null,
       user: {
         connect: {
           id: userId,
@@ -414,6 +381,31 @@ export async function createNotification(
       read: false,
     },
   });
+}
+
+// function to send notifications to an array of user ids
+export async function sendNotificationToUserIds(
+  userIds: number[],
+  message: string
+) {
+  await prisma.notification.createMany({
+    data: userIds.map((userId) => ({
+      message,
+      userId,
+    })),
+  });
+}
+
+// function to send notification to all members
+export async function sendNotificationToAllMembers(
+  chamaId: number,
+  message: string
+) {
+  const members = await prisma.chamaMember.findMany({
+    where: { chamaId },
+  });
+  const memberUserIds = members.map((member) => member.userId);
+  await sendNotificationToUserIds(memberUserIds, message);
 }
 
 // sending request to join private chama
