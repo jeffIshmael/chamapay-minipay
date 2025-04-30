@@ -1,16 +1,16 @@
 import { NextResponse } from "next/server";
 import { initializeCronJobs } from "@/lib/cronJobs";
 
-export const dynamic = "force-dynamic"; // Required for cron jobs
+// export const dynamic = "force-dynamic"; // Required for cron jobs
 
 export async function GET(request: Request) {
-  // 1. Verify secret (from .env)
+  // Verify secret 
   const authHeader = request.headers.get("authorization");
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // 2. Initialize cron jobs
+  //Initialize cron jobs
   try {
     await initializeCronJobs();
     return NextResponse.json({ success: true });
