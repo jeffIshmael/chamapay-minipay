@@ -19,7 +19,7 @@ import { FiCheck, FiX, FiBell, FiClock, FiUserPlus } from "react-icons/fi";
 interface Notification {
   id: number;
   message: string;
-  senderId: number;
+  senderId: number | null;
   requestId: number | null;
   read: boolean;
   createdAt: Date;
@@ -232,7 +232,7 @@ const Page = () => {
                                   notification.id,
                                   "approve",
                                   notification.chamaId ?? 0,
-                                  notification.senderId,
+                                  notification.senderId ?? 0,
                                   notification.requestId ?? 0
                                 )
                               }
@@ -250,7 +250,7 @@ const Page = () => {
                                   notification.id,
                                   "reject",
                                   notification.chamaId ?? 0,
-                                  notification.senderId,
+                                  notification.senderId ?? 0,
                                   notification.requestId ?? 0
                                 )
                               }
