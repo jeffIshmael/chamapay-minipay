@@ -1,13 +1,16 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
-// import { initializeCronJobs } from "../lib/cronJobs";
+import { allFunctions } from "../lib/cronJobs";
 import { useEffect } from "react";
 
 export default function Home() {
-
-
-
+  useEffect(() => {
+    const runFunctions = async () => {
+      await allFunctions();
+    };
+    runFunctions();
+  }, []);
 
   return (
     <main className="bg-gradient-to-b from-downy-100 to-gray-50 min-h-screen rounded-md p-6">

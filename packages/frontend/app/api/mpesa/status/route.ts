@@ -30,7 +30,7 @@ export async function getAccessToken() {
   }
 }
 
-// STK Push
+// get the status of the STK Push
 export async function POST(req: Request) {
   const body = await req.json(); // Parse the request body
   console.log(body);
@@ -51,7 +51,7 @@ export async function POST(req: Request) {
     headers.append("Content-Type", "application/json");
 
     const response = await fetch(
-      "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest",
+      "https://sandbox.safaricom.co.ke/mpesa/stkpushquery/v1/query",
       {
         method: "POST",
         headers,
@@ -59,19 +59,12 @@ export async function POST(req: Request) {
           BusinessShortCode: 174379,
           Password: password,
           Timestamp: timestamp,
-          TransactionType: "CustomerPayBillOnline",
-          Amount: body.amount,
-          PartyA: body.phone,
-          PartyB: 174379,
-          PhoneNumber: body.phone,
-          CallBackURL: "https://chamapay-minipay.vercel.app/api/mpesa-callback",
-          AccountReference: "CompanyXLTD",
-          TransactionDesc: "Trial payment",
+          CheckoutRequestID: body.checkOutRequest,
         }),
       }
     );
     const result = await response.json();
-    console.log("result of stk push: ", result);
+    console.log("result of stk push status: ", result);
     return NextResponse.json(result);
   } catch (error) {
     console.log(error);
