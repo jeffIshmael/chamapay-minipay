@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import moment from "moment";
 
 // Get the access token
-export async function getAccessToken() {
+export async function GET() {
   const consumerKey = process.env.MPESA_CONSUMER_KEY;
   const consumerSecret = process.env.MPESA_CONSUMER_SECRET;
   if (!consumerKey || !consumerSecret) {
@@ -44,7 +44,7 @@ export async function POST(req: Request) {
 
   try {
     // Get the access token using the GET function
-    const accessToken = await getAccessToken();
+    const accessToken = await GET();
     console.log("access token: ", accessToken);
     const headers = new Headers();
     headers.append("Authorization", `Bearer ${accessToken}`);
