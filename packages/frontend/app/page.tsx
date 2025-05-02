@@ -1,7 +1,7 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
-import { allFunctions } from "../lib/cronJobs";
+import { allFunctions } from "../lib/functions";
 import { useEffect } from "react";
 
 export default function Home() {
