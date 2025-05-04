@@ -210,14 +210,14 @@ const MPesaPay = ({ chamaName }: { chamaName: string }) => {
                   <span className="font-medium">Exchange rate:</span> 1 cUSD = 130 KES
                 </p>
                 <p className="text-sm text-gray-700 mt-1">
-                  <span className="font-medium">You'll receive:</span> {amount ? (amount / 130).toFixed(2) : "0.00"} cUSD
+                  <span className="font-medium">You&apos;ll receive:</span> {amount ? (amount / 130).toFixed(2) : "0.00"} cUSD
                 </p>
               </div>
             </div>
             
             <button
               type="submit"
-              disabled={isLoading || !phone || !amount || amount < 1 || phone.length < 10}
+              disabled={isLoading || !phone || !amount || amount < 1 || phone.length < 10 }
               className={`w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
                 isLoading || !phone || !amount || amount < 10 || phone.length < 10
                   ? "opacity-50 cursor-not-allowed"
