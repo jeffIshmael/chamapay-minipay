@@ -1,8 +1,8 @@
-export const contractAddress = "0x7aAa436c48359939cD06841c11DA55434Cf7762f";
+export const contractAddress = "0x284240b2B7A9Fa5dCA3a5a2fDcf5b4257B8583db";
 
 export const cUSDContractAddress = "0x874069Fa1Eb16D44d622F2e0Ca25eeA172369bC1";
 
-export const contractAbi = [
+export const contractAbi =  [
   {
     "inputs": [],
     "stateMutability": "nonpayable",
@@ -39,7 +39,7 @@ export const contractAbi = [
     "anonymous": false,
     "inputs": [
       {
-        "indexed": false,
+        "indexed": true,
         "internalType": "uint256",
         "name": "chamaId",
         "type": "uint256"
@@ -64,7 +64,7 @@ export const contractAbi = [
     "anonymous": false,
     "inputs": [
       {
-        "indexed": false,
+        "indexed": true,
         "internalType": "uint256",
         "name": "_chamaId",
         "type": "uint256"
@@ -77,7 +77,7 @@ export const contractAbi = [
     "anonymous": false,
     "inputs": [
       {
-        "indexed": false,
+        "indexed": true,
         "internalType": "uint256",
         "name": "id",
         "type": "uint256"
@@ -126,7 +126,7 @@ export const contractAbi = [
     "anonymous": false,
     "inputs": [
       {
-        "indexed": false,
+        "indexed": true,
         "internalType": "uint256",
         "name": "chamaId",
         "type": "uint256"
@@ -151,7 +151,7 @@ export const contractAbi = [
     "anonymous": false,
     "inputs": [
       {
-        "indexed": false,
+        "indexed": true,
         "internalType": "uint256",
         "name": "_chamaId",
         "type": "uint256"
@@ -170,7 +170,7 @@ export const contractAbi = [
     "anonymous": false,
     "inputs": [
       {
-        "indexed": false,
+        "indexed": true,
         "internalType": "uint256",
         "name": "_chamaId",
         "type": "uint256"
@@ -227,7 +227,7 @@ export const contractAbi = [
     "anonymous": false,
     "inputs": [
       {
-        "indexed": false,
+        "indexed": true,
         "internalType": "uint256",
         "name": "_chamaId",
         "type": "uint256"
@@ -246,7 +246,7 @@ export const contractAbi = [
     "anonymous": false,
     "inputs": [
       {
-        "indexed": false,
+        "indexed": true,
         "internalType": "uint256",
         "name": "chamaId",
         "type": "uint256"
@@ -271,7 +271,7 @@ export const contractAbi = [
     "anonymous": false,
     "inputs": [
       {
-        "indexed": false,
+        "indexed": true,
         "internalType": "uint256",
         "name": "_chamaId",
         "type": "uint256"
@@ -284,7 +284,7 @@ export const contractAbi = [
     "anonymous": false,
     "inputs": [
       {
-        "indexed": false,
+        "indexed": true,
         "internalType": "uint256",
         "name": "_chamaId",
         "type": "uint256"

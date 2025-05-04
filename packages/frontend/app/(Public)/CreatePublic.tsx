@@ -46,7 +46,8 @@ const CreatePublic = () => {
     setErrorText("");
     const formData = new FormData(e.target as HTMLFormElement);
     const data = Object.fromEntries(formData.entries());
-    const startDate = `${startDateDate}T${startDateTime}`;
+    const startingDate = `${startDateDate}T${startDateTime}`;
+    setStartDate(startingDate);
     console.log(data);
 
     if (isNaN(Number(data.amount)) || Number(data.amount) <= 0) {
@@ -65,7 +66,7 @@ const CreatePublic = () => {
       setErrorText("Name must be at least 3 characters long");
       return;
     }
-    if(startDate < new Date().toISOString()) {
+    if(startingDate < new Date().toISOString()) {
       setErrorText("Start date must be in the future");
       return;
     }
@@ -111,7 +112,7 @@ const CreatePublic = () => {
       if (paid) {
         setProcessing(false);
         setLoading(true);
-        const dateObject = new Date(filledData.startDate as string);
+        const dateObject = new Date(startDate);
         const dateInMilliseconds = dateObject.getTime();
 
         const hash = await writeContractAsync({
@@ -174,7 +175,7 @@ const CreatePublic = () => {
               Lock Amount
             </h2>
             <p className="text-gray-600 mb-6">
-              You need to lock {amount} cUSD before proceeding to create
+              You need to lock {amount} cUSD before proceeding to create  
               {filledData.name} chama.
             </p>
             <div className="flex justify-end space-x-4">

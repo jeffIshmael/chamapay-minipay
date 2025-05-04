@@ -10,6 +10,7 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
+    console.log('post mpesa', body);
 
     const resultCode = body?.Body?.stkCallback?.ResultCode;
 
@@ -23,7 +24,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true });
   } catch (err) {
-    console.error("Error handling MPesa callback:", err);
+    console.log("Error handling MPesa callback:", err);
     return NextResponse.json(
       { success: false, error: "Internal error" },
       { status: 500 }

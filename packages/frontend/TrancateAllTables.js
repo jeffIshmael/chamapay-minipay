@@ -1,3 +1,4 @@
+// this file contains prisma code to delete all data
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 

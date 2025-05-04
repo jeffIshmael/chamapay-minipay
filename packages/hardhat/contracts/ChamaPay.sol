@@ -61,18 +61,18 @@ contract ChamaPay is Ownable,ReentrancyGuard {
 
     Payment[] public payments;
 
-    event ChamaRegistered(uint id,  uint amount, uint duration, uint maxMembers, uint startDate,bool _isPublic,  address indexed admin);
-    event CashDeposited(uint chamaId, address indexed receiver, uint amount);
-    event FundsDisbursed(uint chamaId, address indexed recipient, uint amount);
-    event RefundIssued(uint chamaId, address indexed member, uint amount);
+    event ChamaRegistered(uint indexed id,  uint amount, uint duration, uint maxMembers, uint startDate,bool _isPublic,  address indexed admin);
+    event CashDeposited(uint indexed chamaId, address indexed receiver, uint amount);
+    event FundsDisbursed(uint indexed chamaId, address indexed recipient, uint amount);
+    event RefundIssued(uint indexed chamaId, address indexed member, uint amount);
     event amountWithdrawn( address indexed _address, uint amount);
-    event MemberAdded(uint _chamaId , address indexed   _address);
-    event PayoutOrderSet(uint _chamaId, address [] indexed _payoutOrder);
-    event MemberRemoved(uint _chamaId, address indexed _member);
-    event ChamaDeleted(uint _chamaId);
+    event MemberAdded(uint indexed _chamaId , address indexed   _address);
+    event PayoutOrderSet(uint indexed _chamaId, address [] indexed _payoutOrder);
+    event MemberRemoved(uint indexed _chamaId, address indexed _member);
+    event ChamaDeleted(uint indexed _chamaId);
     event PayOutProcessed( address indexed _receiver, uint _amount);
-    event WithdrawalRecorded(uint _chamaId, address indexed _receiver, uint  _amount);
-    event RefundUpdated( uint _chamaId);
+    event WithdrawalRecorded(uint indexed _chamaId, address indexed _receiver, uint  _amount);
+    event RefundUpdated( uint indexed _chamaId);
     event aiAgentSet(address indexed _aiAgent);
 
    
