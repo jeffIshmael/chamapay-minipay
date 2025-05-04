@@ -151,7 +151,7 @@ const MPesaPay = ({ chamaName }: { chamaName: string }) => {
                 <p className="text-sm text-green-700">{successText}</p>
                 {showConfirmPayment && (
                   <p className="mt-2 text-sm text-green-600 font-medium">
-                    After completing the payment on your phone, click "Confirm Payment" below.
+                    After completing the payment on your phone, click &quot;Confirm Payment&quot; below.
                   </p>
                 )}
               </div>
