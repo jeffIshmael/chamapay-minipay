@@ -28,7 +28,7 @@ const transporter = nodemailer.createTransport({
 // Function to send an email
 export async function sendEmail(subject:string, text:string) {
   try {
-    // Define email options
+    // Define 
     const mailOptions = {
       from: intelEmail, // Sender address
       to: "jeffishmael141@gmail.com", // Recipient address
