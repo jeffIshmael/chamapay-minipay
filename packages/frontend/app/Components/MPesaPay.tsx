@@ -251,7 +251,7 @@ const MPesaPay = ({ chamaName }: { chamaName: string }) => {
                   <div className="mt-2 text-sm text-yellow-700">
                     <p>1. Check your phone for the MPesa prompt</p>
                     <p>2. Enter your MPesa PIN to complete payment</p>
-                    <p>3. Click "Confirm Payment" below once done</p>
+                    <p>3. Click &quot;Confirm Payment&quot; below once done</p>
                   </div>
                 </div>
               </div>
