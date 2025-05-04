@@ -11,6 +11,7 @@ import {
   FiShare2,
   FiChevronRight,
 } from "react-icons/fi";
+import { showToast } from "./Toast";
 
 interface User {
   chamaId: number;
@@ -52,7 +53,7 @@ const Members = ({
   const copyToClipboard = async () => {
     await navigator.clipboard.writeText(groupLink);
     setCopied(true);
-    toast.success("Invite link copied!");
+    showToast("Invite link copied!", "info");
     setTimeout(() => setCopied(false), 2000);
   };
 

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Dialog } from "@headlessui/react";
 import { FiX, FiDollarSign } from "react-icons/fi";
 import { toast } from "sonner";
+import { showToast } from "./Toast";
 
 export default function WithdrawModal({
   isOpen,
@@ -20,22 +21,22 @@ export default function WithdrawModal({
 
   const handleWithdraw = async () => {
     if (!amount) {
-      toast.error("Please enter an amount");
+      showToast("Please enter an amount","warning");
       return;
     }
 
     if (parseFloat(amount) > balance) {
-      toast.error("Insufficient balance");
+      showToast("Insufficient balance","warning");
       return;
     }
 
     try {
       setIsWithdrawing(true);
       // Implement your withdrawal logic here
-      toast.success(`Withdrawal request for ${amount} cUSD submitted!`);
+      showToast(`Withdrawal request for ${amount} cUSD submitted!`,"success");
       onClose();
     } catch (error) {
-      toast.error("Failed to process withdrawal");
+      showToast("Failed to process withdrawal","error");
     } finally {
       setIsWithdrawing(false);
     }

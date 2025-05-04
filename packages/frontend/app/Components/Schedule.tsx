@@ -16,6 +16,7 @@ import { formatEther } from "viem";
 import { formatTimeRemaining } from "@/lib/paydate";
 import { IoMdCalendar, IoMdPerson, IoMdWallet } from "react-icons/io";
 import { toast } from "sonner";
+import { showToast } from "./Toast";
 
 interface User {
   chamaId: number;
@@ -353,7 +354,7 @@ const Schedule = ({ chama, type }: { chama: Chama; type: string }) => {
                       navigator.clipboard.writeText(
                         getCurrentRecipient()?.address || ""
                       );
-                      toast.success("Address copied to clipboard");
+                      showToast("Address copied to clipboard", "info");
                     }}
                     className="text-xs text-gray-600 mt-1 hover:text-downy-600 bg-downy-200 border border-gray-200 rounded-md p-1"
                   >

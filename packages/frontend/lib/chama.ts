@@ -281,7 +281,7 @@ export async function getPublicNotMember(userAddress: string) {
         },
       },
     },
-    include: {members: true},
+    include: { members: true },
   });
   return chamas;
 }
@@ -416,11 +416,7 @@ export async function sendNotificationToAllMembers(
 }
 
 // sending request to join private chama
-export async function requestToJoinChama(
-  address: string,
-  userName: string,
-  chamaId: number
-) {
+export async function requestToJoinChama(address: string, chamaId: number) {
   //get user
   const user = await getUser(address);
 
@@ -430,7 +426,7 @@ export async function requestToJoinChama(
   });
 
   if (existingRequest) {
-    throw new Error("You have already requested to join this chama.");
+    return true;
   }
 
   // Create the request
@@ -451,14 +447,30 @@ export async function requestToJoinChama(
   if (chama) {
     await createNotification(
       chama.admin.id,
-      `${userName || "A user"} has requested to join your chama ${chama.name}.`,
+      `${user?.name} has requested to join your chama ${chama.name}.`,
       user?.id || 0,
       request.id,
       chamaId
     );
   }
 
-  return request;
+  return false;
+}
+
+//check if a user has a request to join a chama
+export async function checkRequest(address: string, chamaId: number) {
+  //get user
+  const user = await getUser(address);
+
+  // Check if user has already requested to join
+  const existingRequest = await prisma.chamaRequest.findFirst({
+    where: { userId: user?.id, chamaId, status: "pending" },
+  });
+
+  if (existingRequest) {
+    return true;
+  }
+  return false;
 }
 
 //confirming join request
@@ -551,6 +563,9 @@ export async function getUserNotifications(userId: number) {
   const notifications = await prisma.notification.findMany({
     where: { userId },
     orderBy: { createdAt: "desc" }, // Sort by newest first
+    include:{
+      chama:true
+    }
   });
   return notifications;
 }

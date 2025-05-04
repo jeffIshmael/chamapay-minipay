@@ -11,14 +11,11 @@ import {
   getChama,
   requestToJoinChama,
   addMemberToPublicChama,
+  checkRequest,
 } from "@/lib/chama";
 import { duration } from "@/utils/duration";
 import Pay from "@/app/Components/Pay";
-import {
-  useAccount,
-  useConnect,
-  useWriteContract,
-} from "wagmi";
+import { useAccount, useConnect, useWriteContract } from "wagmi";
 import {
   contractAbi,
   contractAddress,
@@ -30,6 +27,7 @@ import { processCheckout } from "@/app/Blockchain/TokenTransfer";
 import { useRouter } from "next/navigation";
 import { formatEther } from "viem";
 import { FiAlertTriangle } from "react-icons/fi";
+import { showToast } from "@/app/Components/Toast";
 
 interface User {
   chamaId: number;
@@ -54,8 +52,8 @@ interface Chama {
   blockchainId: string;
   members: User[];
   name: string;
-  round:number;
-  cycle:number;
+  round: number;
+  cycle: number;
   payDate: Date;
   slug: string;
   startDate: Date;
@@ -78,6 +76,7 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
   const { writeContractAsync } = useWriteContract();
   const [loading, setLoading] = useState(false);
   const [processing, setProcessing] = useState(false);
+  const [hasRequest, setHasRequest] = useState(false);
   const router = useRouter();
 
   const togglePayModal = () => {
@@ -100,6 +99,9 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
         const time = await duration(data.chama?.cycleTime || 0);
         setCycle(time);
         setChamaType(data.chama?.type || "");
+        const result = await checkRequest(address as string ,data.chama?.id ?? 0)
+        setHasRequest(result);
+        
       }
     };
     fetchChama();
@@ -108,27 +110,26 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
   // sending request to join private chama
   const joinChama = async () => {
     if (!isConnected) {
-      toast.error("Please connect your wallet");
+      showToast("Please connect your wallet", "warning");
       return;
     }
 
     try {
       const request = await requestToJoinChama(
         address as string,
-        "Trial User",
         chama?.id ?? 0
       );
-      console.log(request);
-      toast.success("Join request sent.");
+      if (!request) {
+        showToast(
+          "Join request sent to admin./n wait for approval.",
+          "success"
+        );
+      }
+      showToast("You already sent a request.", "warning");
     } catch (error: any) {
       console.log(error);
-      if (
-        error.message.includes("You have already requested to join this chama.")
-      ) {
-        toast.error("You have already sent a join request.");
-      } else {
-        toast.error("An error occurred while sending the join request.");
-      }
+
+      showToast("An error occurred while sending the join request.", "error");
     }
   };
 
@@ -136,7 +137,6 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
   const joinPublicChama = async () => {
     setError("");
     if (!isConnected || !address) {
-      toast.error("Please connect your wallet");
       setError("Please connect your wallet");
       return;
     }
@@ -166,22 +166,20 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
             chama?.amount ?? BigInt(0),
             hash
           );
-          toast.success(`successfully joined ${chama?.name}`);
+          showToast(`successfully joined ${chama?.name}`,"success");
           setLoading(false);
           router.push("/MyChamas");
         } else {
-          toast.error("Something happened, please try again");
+          // toast.error("Something happened, please try again");
           setError("Something happened, please try again.");
         }
       } else {
-        toast.error(
-          "Payment failed. Ensure you have enough funds in your wallet."
-        );
+
         setError("Ensure you have enough funds in your wallet.");
       }
     } catch (error) {
       console.log("error", error);
-      toast.error("Oops! Something went wrong. Try again.");
+      // toast.error("Oops! Something went wrong. Try again.");
       setError("Oops! Something went wrong. Try again.");
     } finally {
       setProcessing(false);
@@ -327,9 +325,10 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
                       ? () => setShowModal(true)
                       : joinChama
                   }
-                  className="bg-downy-500 px-16 rounded-md py-2 text-white font-semibold text-center hover:bg-downy-700 transition-all"
+                  disabled={hasRequest}
+                  className={`bg-downy-500 px-16 rounded-md py-2 text-white font-semibold text-center  transition-all ${hasRequest ? "bg-opacity-50 cursor-not-allowed " :"hover:bg-downy-700"}`}
                 >
-                  Join
+                 {hasRequest ? "Request sent" : "Join" }
                 </button>
               ) : (
                 <button
@@ -444,8 +443,8 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
             }}
           >
             <Pay
-             openModal={isOpen}
-             closeModal={()=> setIsOpen(false)}
+              openModal={isOpen}
+              closeModal={() => setIsOpen(false)}
               chamaId={Number(chama.id)}
               chamaName={chama.name}
               chamaBlockchainId={Number(chama.blockchainId)}

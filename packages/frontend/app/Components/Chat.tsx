@@ -192,10 +192,11 @@ const Chat: React.FC<ChatProps> = ({ chamaId }) => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.2 }}
               className={`flex ${
-                msg.senderId || msg.isOptimistic === userDetails?.id
+                msg.senderId === userDetails?.id || msg.isOptimistic
                   ? "justify-end"
                   : "justify-start"
               }`}
+              
             >
               <div
                 className={`max-w-xs lg:max-w-md rounded-2xl p-3 ${

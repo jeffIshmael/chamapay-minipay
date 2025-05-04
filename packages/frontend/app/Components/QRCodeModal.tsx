@@ -5,6 +5,7 @@ import { Dialog } from "@headlessui/react";
 import { FiX, FiCopy, FiCheck } from "react-icons/fi";
 import QRCode from "react-qr-code";
 import { toast } from "sonner";
+import { showToast } from "./Toast";
 
 export default function QRCodeModal({
   isOpen,
@@ -21,10 +22,10 @@ export default function QRCodeModal({
     try {
       await navigator.clipboard.writeText(address);
       setCopied(true);
-      toast.success("Address copied!");
+      showToast("Address copied!","info");
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
-      toast.error("Failed to copy address");
+      showToast("Failed to copy address","error");
     }
   };
 

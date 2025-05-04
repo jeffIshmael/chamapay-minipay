@@ -11,7 +11,8 @@ import {
 } from "../ChamaPayABI/ChamaPayContract";
 import { makePayment } from "../../lib/chama";
 import { toast } from "sonner";
-import {  parseEther } from "viem";
+import { parseEther } from "viem";
+import { showToast } from "./Toast";
 
 const CUSDPay = ({
   chamaId,
@@ -42,17 +43,16 @@ const CUSDPay = ({
   const handlePayment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isConnected || !address) {
-      toast.error("Please connect wallet");
+      showToast("Please connect wallet", "warning");
       return;
     }
     const formData = new FormData(e.target as HTMLFormElement);
     const data = Object.fromEntries(formData.entries());
     // Convert the input amount (as a string) to a float
     const amount = parseFloat(data.amount as string);
-    console.log(amount);
 
     if (isNaN(amount) || amount <= 0) {
-      toast.error("Invalid amount");
+      showToast("Invalid amount", "warning");
       return;
     }
     // Convert to wei
@@ -78,20 +78,21 @@ const CUSDPay = ({
             "You deposited"
           );
 
-          toast(`${amount} cUSD paid to ${name}`);
+          showToast(`${amount} cUSD paid to ${name}`, "success");
           onClose();
           setIsLoading(false);
         } else {
-          toast.error("unable to make payment, please try again");
+          showToast("unable to make payment, please try again", "error");
         }
       } else {
-        toast.error(
-          "Unable to make payment, please ensure you have enough cUSD."
+        showToast(
+          "Unable to make payment, please ensure you have enough cUSD.",
+          "error"
         );
       }
     } catch (error) {
       console.log(error);
-      toast.error("A problem occured. Ensure wallet is connected.");
+      showToast("A problem occured. Ensure wallet is connected.","error");
     } finally {
       setIsLoading(false);
     }

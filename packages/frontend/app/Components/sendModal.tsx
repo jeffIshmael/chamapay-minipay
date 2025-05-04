@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Dialog } from "@headlessui/react";
 import { FiX, FiUser, FiDollarSign } from "react-icons/fi";
 import { toast } from "sonner";
+import { showToast } from "./Toast";
 
 export default function SendModal({
   isOpen,
@@ -20,12 +21,12 @@ export default function SendModal({
 
   const handleSend = async () => {
     if (!recipient || !amount) {
-      toast.error("Please fill all fields");
+      showToast("Please fill all fields","warning");
       return;
     }
 
     if (parseFloat(amount) > balance) {
-      toast.error("Insufficient balance");
+      showToast("Insufficient balance", "warning");
       return;
     }
 
@@ -33,10 +34,10 @@ export default function SendModal({
       setIsSending(true);
       // Implement your send logic here
       // This would typically involve a smart contract call
-      toast.success(`${amount} cUSD sent successfully!`);
+      showToast(`${amount} cUSD sent successfully!`,"success");
       onClose();
     } catch (error) {
-      toast.error("Failed to send transaction");
+      showToast("Failed to send transaction","error");
     } finally {
       setIsSending(false);
     }

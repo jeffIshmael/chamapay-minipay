@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Dialog } from "@headlessui/react";
 import { FiCopy, FiX, FiCheck } from "react-icons/fi";
 import { toast } from "sonner";
+import { showToast } from "./Toast";
 
 export default function DepositModal({
   isOpen,
@@ -20,7 +21,7 @@ export default function DepositModal({
     try {
       await navigator.clipboard.writeText(address);
       setCopied(true);
-      toast.success("Address copied!");
+      showToast("Address copied!","info");
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
       toast.error("Failed to copy address");

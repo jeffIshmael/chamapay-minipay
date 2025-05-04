@@ -8,6 +8,7 @@ import { processCheckout } from "../Blockchain/TokenTransfer";
 import { FiAlertTriangle, FiGlobe } from "react-icons/fi";
 import { parseEther } from "viem";
 import { getLatestChamaId } from "@/lib/readFunctions";
+import { showToast } from "../Components/Toast";
 
 interface Form {
   amount: string;
@@ -139,18 +140,18 @@ const CreatePublic = () => {
           await createChama(formData, startDate, "Public", address, blockchainId, paid);
 
           console.log("done");
-          toast.success(`${filledData.name} created successfully.`);
+          showToast(`${filledData.name} created successfully.`,"success");
           setLoading(false);
           router.push("/MyChamas");
         } else {
-          toast.error("unable to create, please try again");
+          showToast("unable to create, please try again.","error");
           setErrorText("unable to create, please try again");
         }
       } else {
         setErrorText(`Ensure you have ${amount} cUSD in your wallet.`);
       }
     } catch (error) {
-      toast.error("Oops!!something happened.");
+      showToast("Oops!!something happened.", "error");
       setErrorText("Oops!!something happened.");
       console.log(error);
     } finally {
@@ -186,7 +187,7 @@ const CreatePublic = () => {
                 disabled={loading || processing}
                 className={`px-4 py-2 bg-gray-300 text-gray-700 rounded-md  ${
                   loading || processing
-                    ? "hover:cursor-not-allowed hover:bg-gray-400"
+                    ? "hover:cursor-not-allowed hover:bg-gray-300"
                     : "hover:bg-gray-400"
                 }`}
               >
@@ -197,7 +198,7 @@ const CreatePublic = () => {
                 disabled={loading || processing}
                 className={`px-4 py-2  text-white rounded-md  ${
                   processing || loading
-                    ? "opacity-50 cursor-not-allowed"
+                    ? "opacity-50 cursor-not-allowed :"
                     : "bg-downy-500 hover:bg-downy-600"
                 }`}
               >

@@ -20,6 +20,7 @@ import { IoMdPeople } from "react-icons/io";
 import { TbPigMoney } from "react-icons/tb";
 import { checkUser, createUser } from "@/lib/chama";
 import { toast } from "sonner";
+import { showToast } from "../Components/Toast";
 
 const Page = () => {
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
@@ -79,7 +80,7 @@ const Page = () => {
     try {
       if (address) {
         await createUser(userName.trim(), address);
-        toast("Username set successfully!");
+        showToast("Username set successfully!","success");
         setShowRegister(false);
       }
     } catch (error) {

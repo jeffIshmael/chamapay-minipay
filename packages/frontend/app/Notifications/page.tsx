@@ -15,6 +15,25 @@ import { toast } from "sonner";
 import { contractAbi, contractAddress } from "../ChamaPayABI/ChamaPayContract";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { FiCheck, FiX, FiBell, FiClock, FiUserPlus } from "react-icons/fi";
+import { showToast } from "../Components/Toast";
+
+interface Chama {
+  adminId: number;
+  amount: bigint;
+  createdAt: Date;
+  cycleTime: number;
+  id: number;
+  maxNo: number;
+  blockchainId: string;
+  name: string;
+  round: number;
+  cycle: number;
+  payDate: Date;
+  slug: string;
+  startDate: Date;
+  started: boolean;
+  type: string;
+}
 
 interface Notification {
   id: number;
@@ -24,10 +43,11 @@ interface Notification {
   read: boolean;
   createdAt: Date;
   chamaId: number | null;
+  chama?: Chama;
 }
 
 interface Request {
-  chama: object;
+  chama: Chama;
   chamaId: number;
   createdAt: Date;
   id: number;
@@ -77,7 +97,12 @@ const Page = () => {
             getUserNotifications(userId),
           ]);
           setPendingRequests(pending);
-          setNotifications(fetchedNotifications);
+          setNotifications(
+            fetchedNotifications.map((notification) => ({
+              ...notification,
+              chama: notification.chama || undefined,
+            }))
+          );
         } catch (error) {
           console.error("Error fetching data:", error);
           toast.error("Failed to fetch notifications or requests.");
@@ -90,9 +115,10 @@ const Page = () => {
   }, [userId]);
 
   const handleJoin = async (
-    notificationId: number,
     action: "approve" | "reject",
+    chamaBlockchainId: number,
     chamaId: number,
+    chamaName: string,
     senderId: number,
     requestId: number
   ) => {
@@ -119,18 +145,21 @@ const Page = () => {
             address: contractAddress,
             abi: contractAbi,
             functionName: "addMember",
-            args: [userData.address, BigInt(chamaId - 1)],
+            args: [userData.address, BigInt(chamaBlockchainId)],
           });
 
           if (txHash) {
-            toast.success(`${userData.name} successfully joined the chama`);
+            showToast(
+              `${userData.name} successfully added to ${chamaName}`,
+              "success"
+            );
           }
         } catch (error) {
-          toast.error(`Failed to add ${userData.name} to the chama`);
-          console.error(error);
+          showToast(`Failed to add ${userData.name} to ${chamaName}`);
+          console.log(error);
         }
       } else {
-        toast.success(`Request successfully rejected`);
+        showToast(`Request successfully rejected`, "error");
       }
 
       // Refetch data
@@ -139,10 +168,15 @@ const Page = () => {
         getUserNotifications(userId),
       ]);
       setPendingRequests(updatedPending);
-      setNotifications(updatedNotifications);
+      setNotifications(
+        updatedNotifications.map((notification) => ({
+          ...notification,
+          chama: notification.chama || undefined,
+        }))
+      );
     } catch (error) {
-      toast.error(`Failed to ${action} request`);
-      console.error(error);
+      showToast(`Failed to ${action} request`, "error");
+      console.log(error);
     } finally {
       setLoading(false);
     }
@@ -179,7 +213,9 @@ const Page = () => {
         ) : notifications.length === 0 && isConnected ? (
           <div className="flex flex-col items-center justify-center h-64 text-center">
             <FiClock className="text-gray-300 text-5xl mb-4" />
-            <h3 className="text-lg font-medium text-gray-700">No notifications yet</h3>
+            <h3 className="text-lg font-medium text-gray-700">
+              No notifications yet
+            </h3>
             <p className="text-gray-500 mt-1">
               You&apos;ll see notifications here when you have new activity
             </p>
@@ -194,7 +230,7 @@ const Page = () => {
               return (
                 <div
                   key={notification.id}
-                  className={`relative p-4 rounded-xl shadow-sm border ${
+                  className={`relative p-2 rounded-xl shadow-sm border ${
                     notification.read
                       ? "bg-white border-gray-200"
                       : "bg-downy-50 border-downy-200"
@@ -203,35 +239,52 @@ const Page = () => {
                   {!notification.read && (
                     <div className="absolute top-2 right-2 w-2 h-2 bg-downy-500 rounded-full"></div>
                   )}
-                  
+
                   <div className="flex items-start">
-                    <div className={`p-2 rounded-lg mr-3 ${
-                      isPending ? "bg-purple-100 text-purple-600" : "bg-downy-100 text-downy-600"
-                    }`}>
-                      {isPending ? <FiUserPlus size={18} /> : <FiBell size={18} />}
+                    <div
+                      className={`p-2 rounded-lg mr-3 ${
+                        isPending
+                          ? "bg-purple-100 text-purple-600"
+                          : "bg-downy-100 text-downy-600"
+                      }`}
+                    >
+                      {isPending ? (
+                        <FiUserPlus size={18} />
+                      ) : (
+                        <FiBell size={18} />
+                      )}
                     </div>
                     <div className="flex-1">
-                      <p className="text-gray-800 font-medium">{notification.message}</p>
+                      <p className="text-gray-800 font-medium">
+                        {notification.message}
+                      </p>
                       <div className="flex justify-between items-center mt-2">
                         <span className="text-xs text-gray-500 flex items-center">
-                          {new Date(notification.createdAt).toLocaleTimeString([], {
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })}
-                          {' • '}
-                          {new Date(notification.createdAt).toLocaleDateString("en-US", {
-                            month: "short",
-                            day: "numeric",
-                          })}
+                          {new Date(notification.createdAt).toLocaleTimeString(
+                            [],
+                            {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            }
+                          )}
+                          {" • "}
+                          {new Date(notification.createdAt).toLocaleDateString(
+                            "en-US",
+                            {
+                              month: "short",
+                              day: "numeric",
+                            }
+                          )}
                         </span>
                         {isPending && (
                           <div className="flex space-x-2">
                             <button
                               onClick={() =>
                                 handleJoin(
-                                  notification.id,
                                   "approve",
+                                  notification.chama ? Number(notification.chama.blockchainId) : 0,
                                   notification.chamaId ?? 0,
+                                  notification.chama ? notification.chama.name : "",
                                   notification.senderId ?? 0,
                                   notification.requestId ?? 0
                                 )
@@ -247,9 +300,10 @@ const Page = () => {
                             <button
                               onClick={() =>
                                 handleJoin(
-                                  notification.id,
                                   "reject",
+                                  notification.chama ? Number(notification.chama.blockchainId) : 0,
                                   notification.chamaId ?? 0,
+                                  notification.chama ? notification.chama.name : "",
                                   notification.senderId ?? 0,
                                   notification.requestId ?? 0
                                 )
@@ -276,7 +330,9 @@ const Page = () => {
         {!isConnected && (
           <div className="flex flex-col items-center justify-center h-64 text-center">
             <div className="bg-downy-100 p-4 rounded-xl max-w-xs">
-              <h3 className="text-lg font-medium text-gray-700">Wallet not connected</h3>
+              <h3 className="text-lg font-medium text-gray-700">
+                Wallet not connected
+              </h3>
               <p className="text-gray-500 mt-2">
                 Connect your wallet to view notifications
               </p>

@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import { getLatestChamaId } from "@/lib/readFunctions";
 import { parseEther } from "viem";
 import { FiAlertTriangle } from "react-icons/fi";
+import { showToast } from "../Components/Toast";
 
 const CreateFamily = () => {
   const [groupName, setGroupName] = useState("");
@@ -27,7 +28,7 @@ const CreateFamily = () => {
     setIsPending(true);
     setErrorText("");
     if (!isConnected) {
-      toast.error("Please connect wallet");
+      showToast("Please connect wallet", "warning");
       setIsPending(false);
       return;
     }
@@ -35,8 +36,6 @@ const CreateFamily = () => {
     const data = Object.fromEntries(formData.entries());
     const amount = parseFloat(data.amount as string);
     const startDate = `${startDateDate}T${startDateTime}`;
-    console.log(`startDate: ${startDate}`);
-    console.log(new Date().toISOString());
 
     if (isNaN(amount) || amount <= 0) {
       setErrorText("Amount must be greater than 0");
@@ -67,13 +66,12 @@ const CreateFamily = () => {
       }
       if (address && isConnected) {
         const dateObject = new Date(startDate as string);
-        console.log(`dateObject: ${dateObject}`);
+
         const dateInMilliseconds = dateObject.getTime();
-        console.log(`dateInMilliseconds: ${dateInMilliseconds}`);
+
 
         // get the current blockchain id from the blockchain
         const chamaIdToUse = await getLatestChamaId();
-        console.log(`${data.name} chama willl have a bc id ${chamaIdToUse}`);
 
         const hash = await writeContractAsync({
           address: contractAddress,
@@ -90,8 +88,8 @@ const CreateFamily = () => {
 
         if (hash) {
           await createChama(formData, startDate, "Private", address, chamaIdToUse, hash);
-          console.log("done");
-          toast.success(`${data.name} created successfully.`);
+
+          showToast(`${data.name} created successfully.`, "success");
           router.push("/MyChamas");
         } else {
           toast.error("unable to write on bc, make sure you have enough funds");
@@ -185,7 +183,7 @@ const CreateFamily = () => {
               onChange={(e) => setStartDateDate(e.target.value)}
               min={new Date().toISOString().split("T")[0]}
               required
-              className="mt-1 block w-full text-gray-500 rounded-md border-downy-200 shadow-sm focus:border-downy-500 focus:ring-downy-500 sm:text-sm"
+              className="mt-1 block w-full text-gray-700 rounded-md border-downy-200 shadow-sm focus:border-downy-500 focus:ring-downy-500 sm:text-sm"
             />
           </div>
 
@@ -203,7 +201,7 @@ const CreateFamily = () => {
               value={startDateTime}
               onChange={(e) => setStartDateTime(e.target.value)}
               required
-              className="mt-1 block w-full text-gray-500 rounded-md border-downy-200 shadow-sm focus:border-downy-500 focus:ring-downy-500 sm:text-sm"
+              className="mt-1 block w-full text-gray-700 rounded-md border-downy-200 shadow-sm focus:border-downy-500 focus:ring-downy-500 sm:text-sm"
             />
           </div>
         </div>
