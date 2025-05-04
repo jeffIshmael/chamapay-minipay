@@ -2,13 +2,32 @@
 
 ![ChamaPay Logo](logo-no-background.png)
 
-ChamaPay is a decentralized platform that leverages the **cKES stablecoin** to facilitate the traditional _chama_ system of rotary giving. Users can create and manage public or private chamas where members contribute funds that are distributed to participants in rotating turns. By integrating blockchain technology, ChamaPay ensures transparent, secure, and efficient fund management for these savings groups.
+ChamaPay is a decentralized platform that leverages the **cUSD stablecoin** to facilitate the traditional _chama_ system of cicular savings. 
+
+### What is Circular Saving?
+
+Circular saving is a community-based saving practice where members contribute fixed amounts at regular intervals. Funds are then distributed rotationally to each participant, combining savings and peer lending.
+With chamapay, users can create and manage public or private chamas where members contribute funds that are distributed to participants in rotating turns. By integrating blockchain technology, ChamaPay ensures transparent, secure, and efficient fund management for these savings groups.
 
 ---
 
-## Overview
+## Problem Statement
 
-ChamaPay aims to bring the traditional _chama_ model into the digital world using the power of blockchain. It allows users to form groups where members take turns receiving funds from a shared pool. By leveraging the cKES stablecoin, ChamaPay ensures the stability of funds, and smart contracts manage the contribution and disbursement process, eliminating the need for intermediaries.
+Traditional circular savings groups face several limitations:
+
+1. **Geographical Barriers** – Limited to physical communities due to trust requirements (e.g., workplace or neighborhood groups).
+2. **Lack of Variety** – Few options for joining different types of savings groups.
+3. **Manual Management** – Requires extensive record-keeping (contributions, payouts, penalties) which is prone to errors.
+
+---
+
+## Solution
+
+Chamapay solves these problems by offering a **digital circular savings platform** powered by the **Celo blockchain**. Key benefits include:
+
+- **Smart Contract Automation** – Contributions and payouts are enforced programmatically.
+- **Transparency** – All transactions are recorded on-chain.
+- **Access to variety group** – With chamapay platform you get variety of chamas that you can join.
 
 ---
 
@@ -20,7 +39,7 @@ ChamaPay aims to bring the traditional _chama_ model into the digital world usin
   Funds are contributed and distributed to chama members in turns, managed by smart contracts.
 
 - **Hybrid Payment Options:**  
-  Supports payments with cKES stablecoin and integration with mobile money systems like M-Pesa (future plans).
+  Supports payments with cUSD stablecoin and integration with mobile money systems like M-Pesa (future plans).
 
 - **Smart Contract-based Transparency:**  
   All transactions and fund rotations are handled transparently on the blockchain.
@@ -36,28 +55,27 @@ Here’s a preview of the ChamaPay platform:
 
 <div style="display: flex; flex-wrap: wrap; justify-content: space-between;">
 
-  <img src="Screenshot from 2024-09-29 12-44-40.png" alt="Home Page" width="22%" />
-  <img src="Screenshot from 2024-09-29 12-45-28.png" alt="Landing Page" width="22%" />
-  <img src="Screenshot from 2024-09-29 12-48-09.png" alt="Create Chama" width="22%" />
-  <img src="public.png" alt="Create public Chama" width="22%" />
+  <img src="/packages/frontend/public/static/chamapay-demo/start.jpg" alt="start Page" width="22%" />
+  <img src="/packages/frontend/public/static/chamapay-demo/home_page.jpg" alt="home Page" width="22%" />
+  <img src="/packages/frontend/public/static/chamapay-demo/createChama.jpeg" alt="Create Chama" width="22%" />
+  <img src="/packages/frontend/public/static/chamapay-demo/createPublic.jpeg" alt="Create public Chama" width="22%" />
 
-  <img src="Screenshot from 2024-09-29 12-48-27.png" alt="View Chamas" width="22%" />
-  <img src="exploring.png" alt="Explore Chamas" width="22%" />  
-  <img src="Screenshot from 2024-09-29 12-48-50.png" alt="Chama Details" width="22%" />
-  <img src="join.png" alt="Joining public chama" width="22%" />
+  <img src="/packages/frontend/public/static/chamapay-demo/my_chamas.jpg" alt="View Chamas" width="22%" />
+  <img src="/packages/frontend/public/static/chamapay-demo/explore.jpg" alt="Explore Chamas" width="22%" />  
+  <img src="/packages/frontend/public/static/chamapay-demo/details.jpeg" alt="Chama Details" width="22%" />
+  <img src="/packages/frontend/public/static/chamapay-demo/joinPublic.jpeg" alt="Joining public chama" width="22%" />
 
-  <img src="Screenshot from 2024-09-29 12-49-17.png" alt="Chama Chat" width="22%" />
-  <img src="pubschedule.png" alt="public schedule" width="22%" />
-  <img src="private.png" alt="private Schedule" width="22%" />
-  <img src="Screenshot from 2024-09-29 12-47-55.png" alt="Wallet" width="22%" />
+  <img src="/packages/frontend/public/static/chamapay-demo/chat.jpg" alt="Chama Chat" width="22%" />
+  <img src="/packages/frontend/public/static/chamapay-demo/schedule_started.jpg" alt="started schedule" width="22%" />
+  <img src="/packages/frontend/public/static/chamapay-demo/schedule_unstarted.jpg" alt="unstarted Schedule" width="22%" />
+  <img src="/packages/frontend/public/static/chamapay-demo/wallet.jpg" alt="Wallet" width="22%" />
+
+   <img src="/packages/frontend/public/static/chamapay-demo/paste_link.jpg" alt="paste link" width="22%" />
+  <img src="/packages/frontend/public/static/chamapay-demo/join_request.jpg" alt="join request" width="22%" />
+  <img src="/packages/frontend/public/static/chamapay-demo/request_sent.jpg" alt="request sent" width="22%" />
+  <img src="/packages/frontend/public/static/chamapay-demo/notification.jpeg" alt="notification" width="22%" />
 
 </div>
-
----
-
-## Inspiration
-
-ChamaPay was inspired by the need to digitize communal saving systems like _chamas_, which have been used for generations to build financial security within communities. By using blockchain, we aim to bring more transparency, security, and efficiency to the process while ensuring that anyone can participate without geographical restrictions.
 
 ---
 
@@ -65,12 +83,17 @@ ChamaPay was inspired by the need to digitize communal saving systems like _cham
 
 - **Blockchain:** Celo
 - **Smart Contracts:** Solidity
-- **Stablecoin:** cKES
+- **Stablecoin:** cUSD
 - **Frontend:** Next.js, Tailwind CSS
 - **Web3 Integration:** wagmi
 - **Prisma:** Prisma is utilized as the ORM (Object-Relational Mapping) tool to manage database interactions. 
-- **Notifications:** Custom backend for real-time updates
-- **Mobile Money Integration:** cKES ,M-Pesa (future plans)
+- **Mobile Money Integration:** cUSD ,M-Pesa (future plans)
+
+---
+
+## Architecture
+
+<img src="/packages/frontend/public/static/chamapay-demo/chamapay_arch.png" alt="Chama architecture" width="100%" />
 
 ---
 
@@ -78,11 +101,12 @@ ChamaPay was inspired by the need to digitize communal saving systems like _cham
 
 1. **Create a Chama:**  
    Users can create a chama by defining parameters like group type (public or private), number of members, contribution amount, and rotation schedule.
+
 2. **Invite Members:**  
    In private chamas, the group creator can invite specific people, while public chamas are open for anyone to join.
 
 3. **Contribute Funds:**  
-   Members contribute a fixed amount of funds in **cKES**, which are pooled together.
+   Members contribute a fixed amount of funds in **cUSD**, which are pooled together.
 
 4. **Rotary Disbursement:**  
    Funds are distributed to each member in turns.
@@ -90,16 +114,49 @@ ChamaPay was inspired by the need to digitize communal saving systems like _cham
 5. **Withdrawal:**  
    Members can claim their funds when it’s their turn, and the smart contract ensures they receive the correct amount.
 
+---
+
 ## Security Measures
+
  - **Public Chama Safeguard:** In public chamas, each member is required to lock an amount equal to the chama’s contribution amount. This locked amount can be used to cover the member’s share in case they default on a payment, ensuring that the chama’s payout structure remains secure.
+
  - **Private Chama Access Control:** For private chamas, users need a direct link and admin approval to join, maintaining privacy and group integrity by allowing only selected participants.
+
 - **Non-Contribution on Payout Date:** If, on the payout date, any member has not contributed their required amount, all contributing members are automatically refunded to their wallets. This measure protects contributors and maintains fairness in payout timing.
+
+---
+
+## Implemented Features
+
+- ✅ Smart contract deployment (Celo Alfajores) [View smart contract](https://celoscan.io/address/0x284240b2B7A9Fa5dCA3a5a2fDcf5b4257B8583db)
+- ✅ Chama creation (public/private)
+- ✅ Join public chamas
+- ✅ Deposit funds (cUSD via M-Pesa or wallet)
+- ✅ Automated payouts
+
+## Upcoming Features
+
+🛠 **Paymaster Integration**
+
+- Sponsor gas fees for users.
+
+🛠 **M-pesa integration**
+
+- Enable users to pay for chamas via m-pesa.
+
+🛠 **Deploy to mainnet**
+
+- Deploy the smart contract to celo mainnet.
+
+---
 
 ### Getting Started
 
-- Watch our video demo [Live Demo](https://youtu.be/z1XXxHw6LDM)
-- Try out our platform in our [live link](https://chama-pay.vercel.app/)
+- Watch our video demo [Live Demo](https://youtu.be/QWdLC_tvImo?si=T2chg5htx1sYIYg5)
+- Try out our platform in our [live link](https://chamapay-minipay.vercel.app/)
+
+---
 
 ## Contact
 
-<a href="jeffianmuchiri24@gmai.com">@ChamaPay devs </a>
+<a href="chamapay37@gmail.com">@ChamaPay devs </a>

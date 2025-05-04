@@ -1,6 +1,6 @@
 // this file contains a payout smart contract function that is done by agent wallet
 
-import { createPublicClient, createWalletClient, http } from "viem";
+import { createPublicClient, createWalletClient, formatEther, http } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { celoAlfajores } from "viem/chains";
 import { contractAbi, contractAddress } from "../app/ChamaPayABI/ChamaPayContract";
@@ -34,7 +34,7 @@ export const getAgentWalletBalance = async () => {
   const balance = await publicClient.getBalance({
     address: agentWalletAccount.address,
   });
-  return balance;
+  return formatEther(balance);
 };
 
 // function to perform payout smart contract function

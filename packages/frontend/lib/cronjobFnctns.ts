@@ -6,9 +6,10 @@
 
 import { PrismaClient } from "@prisma/client";
 import { getUser, sendNotificationToAllMembers } from "./chama";
-import { performPayout } from "./PayOut";
+import { getAgentWalletBalance, performPayout } from "./PayOut";
 import { getFundsDisbursedEventLogs } from "./readFunctions";
 import { formatEther } from "viem";
+import { sendEmail } from "../app/actions/emailService";
 
 const prisma = new PrismaClient();
 
@@ -99,7 +100,10 @@ export async function checkChamaStarted() {
   } catch (error) {
     console.error("Error in checkChamaStarted:", error);
     // send myself email
-    // Add alerting (e.g., Sentry, email admin)
+    await sendEmail(
+      "An error occured in check chama start date",
+      JSON.stringify(error)
+    );
   }
 }
 
@@ -131,6 +135,10 @@ export async function getChamasWithPaydateToday() {
     });
   } catch (error) {
     console.error("Error fetching chamas:", error);
+    await sendEmail(
+      "An error occured in getChamaWithPaydateToday",
+      JSON.stringify(error)
+    );
     chamasToBePayedToday = []; // Reset on error
   }
 }
@@ -195,13 +203,14 @@ export async function checkChamaPaydate() {
                 error instanceof Error ? error.message : "Unknown error"
               }`
           );
-          // send me an email
-          // await sendAdminAlert(
-          //   `⚠️ Payout Failed for ${chama.name}\n` +
-          //     `Attempts: ${retries}\nError: ${
-          //       error instanceof Error ? error.message : "Unknown error"
-          //     }`
-          // );
+          // send email
+          await sendEmail(
+            `⚠️ Payout Failed for ${chama.name}\n` +
+              `Attempts: ${retries}\nError: ${
+                error instanceof Error ? error.message : "Unknown error"
+              }`,
+            "error in check chama paydate"
+          );
         }
       }
     }
@@ -218,22 +227,36 @@ export async function notifyDeadline() {
       where: {
         payDate: {
           gte: new Date(now.getTime() + 23 * 60 * 60 * 1000), // 23-25h from now
-          lte: new Date(now.getTime() + 25 * 60 * 60 * 1000)
+          lte: new Date(now.getTime() + 25 * 60 * 60 * 1000),
         },
-      }
+      },
     });
 
-    await Promise.all(chamas.map(async (chama) => {
-      await sendNotificationToAllMembers(
-        chama.id,
-        `⏰ FINAL REMINDER\n\n` +
-          `${chama.name} payment due in 24 hours!\n` +
-          `Amount: ${formatEther(chama.amount)} cUSD\n` +
-          `Pay by: ${chama.payDate.toLocaleString()}`
+    await Promise.all(
+      chamas.map(async (chama) => {
+        await sendNotificationToAllMembers(
+          chama.id,
+          `⏰ FINAL REMINDER\n\n` +
+            `${chama.name} payment due in 24 hours!\n` +
+            `Amount: ${formatEther(chama.amount)} cUSD\n` +
+            `Pay by: ${chama.payDate.toLocaleString()}`
         );
       })
     );
   } catch (error) {
-    console.error("Notification error:", error);
+    await sendEmail(
+      "An error occured in notify deadline",
+      JSON.stringify(error)
+    );
+    console.log("Notification error:", error);
+  }
+}
+
+// check balance and send email
+export async function checkBalance() {
+  const balance = getAgentWalletBalance();
+  // send email if agent balance is below 1 celo
+  if (Number(balance) < 1) {
+    await sendEmail("Balance is low", `Your agent balance is ${balance} celo.`);
   }
 }

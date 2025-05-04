@@ -36,7 +36,7 @@ export async function sendEmail(subject:string, text:string) {
       text, // Plain text body
       html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
-        <h2 style="color: #2c3e50;">Your Transfer to Intel AI Wallet Was Successful!</h2>
+        <h2 style="color: #2c3e50;">${text}</h2>
         <p style="font-size: 16px; color: #555;">
           Dear Valued User,
         </p>
@@ -44,15 +44,12 @@ export async function sendEmail(subject:string, text:string) {
           We're pleased to confirm that your recent transfer to your <strong>Intel AI wallet</strong> was successful.
         </p>
         <p style="font-size: 16px; color: #555;">
-          The amount has been securely received and is now ready for our AI agent to begin <strong>smart, automated staking</strong> on your behalf.
-        </p>
-        <p style="font-size: 16px; color: #555;">
-          Thank you for choosing Intel — where staking is smarter and simpler.
+          Thank you for choosing chamapay.
         </p>
         <p style="font-size: 16px; color: #555;">
           Best regards,  
           <br>
-          <strong>Intel AI Team</strong>
+          <strong>Chamapay team</strong>
         </p>
       </div>
     `, // HTML body

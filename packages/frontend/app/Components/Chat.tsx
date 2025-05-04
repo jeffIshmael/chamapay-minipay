@@ -113,14 +113,17 @@ const Chat: React.FC<ChatProps> = ({ chamaId }) => {
         }
       );
 
-      setMessages((prev) => [
-        ...prev.filter((msg) => msg.id !== tempId),
-        {
-          ...response.data.message,
-          status: "delivered",
-          isOptimistic: false, // Ensure server response is not marked as optimistic
-        },
-      ]);
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === tempId
+            ? {
+                ...response.data.message,
+                status: "delivered",
+                isOptimistic: false,
+              }
+            : msg
+        )
+      );
     } catch (err) {
       console.error("Error sending message:", err);
       setError("Message failed to send. Try again.");
@@ -196,7 +199,6 @@ const Chat: React.FC<ChatProps> = ({ chamaId }) => {
                   ? "justify-end"
                   : "justify-start"
               }`}
-              
             >
               <div
                 className={`max-w-xs lg:max-w-md rounded-2xl p-3 ${
