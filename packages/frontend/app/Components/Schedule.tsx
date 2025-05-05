@@ -91,26 +91,24 @@ const Schedule = ({ chama, type }: { chama: Chama; type: string }) => {
   // Calculate progress percentage
   const calculateProgress = () => {
     if (!chama?.startDate || !chama?.cycleTime || !chama?.members) return 0;
-
+  
     const startDate = new Date(chama.startDate);
     const startTime = startDate.getTime();
-
-    // Calculate end date by adding (cycleTime * members.length) days to start date
-    const endDate = new Date(startDate);
-    endDate.setDate(
-      startDate.getDate() + chama.cycleTime * chama.members.length
-    );
-    const endTime = endDate.getTime();
-
+  
+    // Total duration = cycleTime (in days) × number of members
+    const totalDays = chama.cycleTime * chama.members.length;
+    const totalMilliseconds = totalDays * 24 * 60 * 60 * 1000; // convert days to ms
+  
+    const endTime = startTime + totalMilliseconds;
     const currentTime = Date.now();
-
+  
     if (currentTime < startTime) return 0;
     if (currentTime >= endTime) return 100;
-
-    const totalDuration = endTime - startTime;
+  
     const elapsedDuration = currentTime - startTime;
-    return Math.min((elapsedDuration / totalDuration) * 100, 100);
+    return Math.min((elapsedDuration / totalMilliseconds) * 100, 100);
   };
+  
 
   const progress = calculateProgress();
 
