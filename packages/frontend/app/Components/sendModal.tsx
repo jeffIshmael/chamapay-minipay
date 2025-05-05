@@ -3,8 +3,9 @@
 import { useState } from "react";
 import { Dialog } from "@headlessui/react";
 import { FiX, FiUser, FiDollarSign } from "react-icons/fi";
-import { toast } from "sonner";
+import { processCheckout } from "@/app/Blockchain/TokenTransfer";
 import { showToast } from "./Toast";
+import { parseEther } from "viem";
 
 export default function SendModal({
   isOpen,
@@ -20,8 +21,24 @@ export default function SendModal({
   const [isSending, setIsSending] = useState(false);
 
   const handleSend = async () => {
+    // Validate inputs
     if (!recipient || !amount) {
-      showToast("Please fill all fields","warning");
+      showToast("Please fill all fields", "warning");
+      return;
+    }
+
+    if (!recipient.startsWith("0x") || recipient.length !== 42) {
+      showToast("Please enter a valid Ethereum address", "warning");
+      return;
+    }
+
+    if (isNaN(parseFloat(amount))) {
+      showToast("Please enter a valid amount", "warning");
+      return;
+    }
+
+    if (parseFloat(amount) <= 0) {
+      showToast("Amount must be greater than 0", "warning");
       return;
     }
 
@@ -32,16 +49,29 @@ export default function SendModal({
 
     try {
       setIsSending(true);
-      // Implement your send logic here
-      // This would typically involve a smart contract call
-      showToast(`${amount} cUSD sent successfully!`,"success");
+      const parsedAmount = parseEther(amount);
+      const sent = await processCheckout(recipient as `0x${string}`, parsedAmount);
+      
+      if (!sent) {
+        showToast("Unable to send payment. Please try again.", "error");
+        return;
+      }
+
+      showToast(`${amount} cUSD sent successfully!`, "success");
+      setRecipient("");
+      setAmount("");
       onClose();
     } catch (error) {
-      showToast("Failed to send transaction","error");
+      console.error("Send error:", error);
+      showToast(
+        `Failed to send: ${error instanceof Error ? error.message : "Unknown error"}`,
+        "error"
+      );
     } finally {
       setIsSending(false);
     }
   };
+
 
   return (
     <Dialog open={isOpen} onClose={onClose} className="relative z-50">
@@ -113,7 +143,7 @@ export default function SendModal({
                 Cancel
               </button>
               <button
-                onClick={handleSend}
+                onClick={()=> handleSend()}
                 disabled={isSending}
                 className={`flex-1 bg-downy-600 text-white py-2 rounded-lg font-medium hover:bg-downy-700 transition ${
                   isSending ? "opacity-70 cursor-not-allowed" : ""

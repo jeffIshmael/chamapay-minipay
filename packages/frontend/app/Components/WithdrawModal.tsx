@@ -3,8 +3,9 @@
 import { useState } from "react";
 import { Dialog } from "@headlessui/react";
 import { FiX, FiDollarSign } from "react-icons/fi";
-import { toast } from "sonner";
 import { showToast } from "./Toast";
+import { parseEther } from "viem";
+import { processCheckout } from "../Blockchain/TokenTransfer";
 
 export default function WithdrawModal({
   isOpen,
@@ -17,26 +18,61 @@ export default function WithdrawModal({
 }) {
   const [amount, setAmount] = useState("");
   const [isWithdrawing, setIsWithdrawing] = useState(false);
+  const [receiver, setReceiver] = useState("");
   const [destination, setDestination] = useState("mpesa"); // 'bank' or 'crypto'
 
   const handleWithdraw = async () => {
-    if (!amount) {
-      showToast("Please enter an amount","warning");
+    // Validate inputs
+    if (!receiver || !amount) {
+      showToast("Please fill all fields", "warning");
+      return;
+    }
+
+    if (!receiver.startsWith("0x") || receiver.length !== 42) {
+      showToast("Please enter a valid Ethereum address", "warning");
+      return;
+    }
+
+    if (isNaN(parseFloat(amount))) {
+      showToast("Please enter a valid amount", "warning");
+      return;
+    }
+
+    if (parseFloat(amount) <= 0) {
+      showToast("Amount must be greater than 0", "warning");
       return;
     }
 
     if (parseFloat(amount) > balance) {
-      showToast("Insufficient balance","warning");
+      showToast("Insufficient balance", "warning");
       return;
     }
 
     try {
       setIsWithdrawing(true);
-      // Implement your withdrawal logic here
-      showToast(`Withdrawal request for ${amount} cUSD submitted!`,"success");
+      const parsedAmount = parseEther(amount);
+      const sent = await processCheckout(
+        receiver as `0x${string}`,
+        parsedAmount
+      );
+
+      if (!sent) {
+        showToast("Unable to withdraw. Please try again.", "error");
+        return;
+      }
+
+      showToast(`${amount} cUSD withdrawn successfully!`, "success");
+      setReceiver("");
+      setAmount("");
       onClose();
     } catch (error) {
-      showToast("Failed to process withdrawal","error");
+      console.error("Send error:", error);
+      showToast(
+        `Failed to send: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`,
+        "error"
+      );
     } finally {
       setIsWithdrawing(false);
     }
@@ -51,7 +87,10 @@ export default function WithdrawModal({
             <Dialog.Title className="text-xl font-bold text-gray-900">
               Withdraw Funds
             </Dialog.Title>
-            <button onClick={onClose} className="text-gray-500 hover:text-gray-700 bg-transparent hover:bg-gray-100 rounded-full p-1">
+            <button
+              onClick={onClose}
+              className="text-gray-500 hover:text-gray-700 bg-transparent hover:bg-gray-100 rounded-full p-1"
+            >
               <FiX size={24} />
             </button>
           </div>
@@ -80,6 +119,15 @@ export default function WithdrawModal({
               </button>
             </div>
 
+            {destination === "mpesa" && (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mt-4">
+                <p className="text-yellow-800 text-sm">
+                  <strong>Note:</strong> M-pesa section is still under
+                  development.
+                </p>
+              </div>
+            )}
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Amount (cUSD)
@@ -97,7 +145,7 @@ export default function WithdrawModal({
                 />
                 <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
                   <button
-                    onClick={() => setAmount((balance.toFixed(3)).toString())}
+                    onClick={() => setAmount(balance.toFixed(3).toString())}
                     className="text-xs text-downy-600 hover:text-downy-800 bg-transparent hover:bg-gray-100 rounded-md p-1"
                   >
                     Max
@@ -107,20 +155,18 @@ export default function WithdrawModal({
               <p className="text-xs text-gray-500 mt-1">
                 Available: {balance.toFixed(3)} cUSD
               </p>
-              
             </div>
 
             {destination === "mpesa" && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                 Phone Number
+                  Phone Number
                 </label>
                 <input
                   type="number"
                   placeholder="e.g. 0712345678"
                   className="w-full rounded-lg border-gray-300 focus:border-downy-500 focus:ring-downy-500 mb-2"
                 />
-             
               </div>
             )}
 
@@ -131,15 +177,18 @@ export default function WithdrawModal({
                 </label>
                 <input
                   type="text"
+                  value={receiver}
+                  onChange={(e) => setReceiver(e.target.value)}
                   placeholder="0x..."
                   className="w-full rounded-lg border-gray-300 focus:border-downy-500 focus:ring-downy-500"
                 />
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mt-4">
-              <p className="text-yellow-800 text-sm">
-                <strong>Note:</strong> Only send to an address that is on the celo network. Sending to
-                other networks may result in permanent loss.
-              </p>
-            </div>
+                  <p className="text-yellow-800 text-sm">
+                    <strong>Note:</strong> Only send to an address that is on
+                    the celo network. Sending to other networks may result in
+                    permanent loss.
+                  </p>
+                </div>
               </div>
             )}
 

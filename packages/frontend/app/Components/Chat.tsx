@@ -113,17 +113,6 @@ const Chat: React.FC<ChatProps> = ({ chamaId }) => {
         }
       );
 
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.id === tempId
-            ? {
-                ...response.data.message,
-                status: "delivered",
-                isOptimistic: false,
-              }
-            : msg
-        )
-      );
     } catch (err) {
       console.error("Error sending message:", err);
       setError("Message failed to send. Try again.");
@@ -195,14 +184,14 @@ const Chat: React.FC<ChatProps> = ({ chamaId }) => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.2 }}
               className={`flex ${
-                msg.senderId === userDetails?.id || msg.isOptimistic
+                msg.senderId == userDetails?.id 
                   ? "justify-end"
                   : "justify-start"
               }`}
             >
               <div
                 className={`max-w-xs lg:max-w-md rounded-2xl p-3 ${
-                  msg.senderId === userDetails?.id || msg.isOptimistic
+                  msg.senderId === userDetails?.id 
                     ? "bg-downy-400 text-white rounded-br-none"
                     : "bg-white text-gray-800 rounded-bl-none shadow-sm"
                 }`}
