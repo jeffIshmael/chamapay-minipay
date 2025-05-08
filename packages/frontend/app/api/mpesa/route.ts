@@ -66,7 +66,7 @@ export async function POST(req: Request) {
           BusinessShortCode: paybill,
           Password: password,
           Timestamp: timestamp,
-          TransactionType: "CustomerPayBillOnline",
+          TransactionType: "CustomerBuyGoodsOnline",
           Amount: (body.amount).toString(),
           PartyA: (body.phone).toString(),
           PartyB: paybill,
