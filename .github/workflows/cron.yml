@@ -2,12 +2,13 @@ name: Scheduled Cron Job
 
 on:
   schedule:
-    - cron: '0/30 * * * *'  # runs every hour (UTC)
-  workflow_dispatch:      # allows manual trigger from GitHub Actions UI
+    - cron: "0/30 * * * *" # runs every 30 mins (UTC)
+  workflow_dispatch: # allows manual trigger from GitHub Actions UI
 
 jobs:
   ping-vercel-api:
     runs-on: ubuntu-latest
-        steps:
+    steps:
       - name: Curl Vercel API Route with auth
-        run: curl -sS -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" https://chamapay-minipay.vercel.app/api/cron
+        run: |
+          curl -sS -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" https://chamapay-minipay.vercel.app/api/cron
