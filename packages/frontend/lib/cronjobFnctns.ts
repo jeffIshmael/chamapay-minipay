@@ -146,7 +146,13 @@ export async function getChamasWithPaydateToday() {
 // function to check if chama paydate has reached to run after 15 mins
 export async function checkChamaPaydate() {
   const MAX_RETRIES = 3;
-
+  if (chamasToBePayedToday.length == 0) {
+    await sendEmail(
+      "No chama has payout of today",
+      "function of chama pay date"
+    );
+    return;
+  }
   for (const chama of chamasToBePayedToday) {
     let retries = 0;
     let success = false;
@@ -156,7 +162,9 @@ export async function checkChamaPaydate() {
         const txHash = await performPayout(Number(chama.blockchainId));
         if (!txHash) throw new Error("Payout failed");
 
-        const logs: EventLog = await getFundsDisbursedEventLogs((Number(chama.blockchainId)));
+        const logs: EventLog = await getFundsDisbursedEventLogs(
+          Number(chama.blockchainId)
+        );
         if (!logs?.args) throw new Error("Event logs missing");
 
         const recipient = logs.args.recipient;
