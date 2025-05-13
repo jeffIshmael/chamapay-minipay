@@ -28,6 +28,7 @@ interface Chama {
   name: string;
   round: number;
   cycle: number;
+  canJoin: boolean;
   payDate: Date;
   slug: string;
   startDate: Date;
@@ -120,7 +121,8 @@ const Page = () => {
     chamaId: number,
     chamaName: string,
     senderId: number,
-    requestId: number
+    requestId: number,
+    canJoin: boolean,
   ) => {
     if (!isConnected) {
       toast.error("Please connect your wallet");
@@ -137,7 +139,7 @@ const Page = () => {
       if (!userData) throw new Error("User details not found");
 
       // setSenderDetails(userData);
-      await handleJoinRequest(requestId, action, userId, chamaId);
+      await handleJoinRequest(requestId, action, userId, chamaId, canJoin);
 
       if (action === "approve") {
         try {
@@ -286,7 +288,8 @@ const Page = () => {
                                   notification.chamaId ?? 0,
                                   notification.chama ? notification.chama.name : "",
                                   notification.senderId ?? 0,
-                                  notification.requestId ?? 0
+                                  notification.requestId ?? 0,
+                                  notification.chama ? notification.chama.canJoin : false,
                                 )
                               }
                               disabled={loading}
@@ -305,7 +308,8 @@ const Page = () => {
                                   notification.chamaId ?? 0,
                                   notification.chama ? notification.chama.name : "",
                                   notification.senderId ?? 0,
-                                  notification.requestId ?? 0
+                                  notification.requestId ?? 0,
+                                  notification.chama ? notification.chama.canJoin : false,
                                 )
                               }
                               disabled={loading}
