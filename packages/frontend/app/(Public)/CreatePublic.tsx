@@ -117,7 +117,7 @@ const CreatePublic = () => {
       //   functionName: "transfer",
       //   args: [contractAddress as `0x${string}`, amountInWei],
       // });
-      const paid = true;
+      const paid = "0x7438dsedw";
       if (paid) {
         setProcessing(false);
         setLoading(true);
