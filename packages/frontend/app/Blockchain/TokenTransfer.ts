@@ -1,27 +1,40 @@
 import { createPublicClient, createWalletClient, custom, http } from "viem";
-import { celoAlfajores, celo } from "viem/chains";
+import { celoAlfajores } from "viem/chains";
 import { toast } from "sonner";
 import ERC20Abi from "@/app/ChamaPayABI/ERC20.json";
-import { farcasterFrame as miniAppConnector } from "@farcaster/frame-wagmi-connector";
 
-//transfer function
+// Ensure that 'sdk' is available in the Farcaster Frame environment
+declare const sdk: any;
+
 export const processCheckout = async (
   recepient: `0x${string}`,
   amount: bigint,
   currentConnector: string
 ) => {
-  let isFarcaster: boolean = false;
+  let transport;
+
   if (currentConnector === "farcaster") {
-    isFarcaster = true;
+    if (typeof sdk !== "undefined" && sdk.wallet?.ethProvider) {
+      transport = custom(sdk.wallet.ethProvider);
+    } else {
+      toast("Farcaster wallet provider not available.");
+      return false;
+    }
+  } else if (typeof window !== "undefined" && window.ethereum) {
+    transport = custom(window.ethereum);
+  } else {
+    toast("Ethereum provider not found.");
+    return false;
   }
+
   const privateClient = createWalletClient({
     chain: celoAlfajores,
-    transport: custom(!isFarcaster ? window.ethereum : miniAppConnector()),
+    transport,
   });
 
   const publicClient = createPublicClient({
     chain: celoAlfajores,
-    transport: custom(!isFarcaster ? window.ethereum : miniAppConnector()),
+    transport,
   });
 
   const [address] = await privateClient.getAddresses();
@@ -39,13 +52,13 @@ export const processCheckout = async (
       hash: checkoutTxnHash,
     });
 
-    if (checkoutTxnReceipt.status == "success") {
+    if (checkoutTxnReceipt.status === "success") {
       return checkoutTxnReceipt.transactionHash;
     }
 
     return false;
   } catch (error) {
-    console.log(error);
+    console.error(error);
     toast("Transaction failed, make sure you have enough balance");
     return false;
   }
