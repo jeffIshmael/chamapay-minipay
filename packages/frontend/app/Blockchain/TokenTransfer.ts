@@ -4,30 +4,69 @@ import { toast } from "sonner";
 import ERC20Abi from "@/app/ChamaPayABI/ERC20.json";
 import sdk from "@farcaster/frame-sdk";
 
-// Ensure that 'sdk' is available in the Farcaster Frame environment
-// declare const sdk: any;
-
 export const processCheckout = async (
   recepient: `0x${string}`,
   amount: bigint,
   currentConnector: string
 ) => {
-  let transport;
+  let provider;
 
   if (currentConnector === "farcaster") {
-    console.log("the sdk", sdk);
     if (sdk.wallet?.ethProvider) {
-      transport = custom(sdk.wallet.ethProvider);
+      provider = sdk.wallet.ethProvider;
     } else {
       toast("Farcaster wallet provider not available.");
       return false;
     }
   } else if (typeof window !== "undefined" && window.ethereum) {
-    transport = custom(window.ethereum);
+    provider = window.ethereum;
   } else {
     toast("Ethereum provider not found.");
     return false;
   }
+
+  // 🟡 Step 1: Switch chain if needed
+  try {
+    const currentChainId = await provider.request({ method: "eth_chainId" });
+    if (parseInt(currentChainId, 16) !== celoAlfajores.id) {
+      await provider.request({
+        method: "wallet_switchEthereumChain",
+        params: [{ chainId: "0xaef3" }], // 44787 in hex
+      });
+    }
+  } catch (err: any) {
+    // If Alfajores isn't added to the wallet, add it
+    if (err.code === 4902) {
+      try {
+        await provider.request({
+          method: "wallet_addEthereumChain",
+          params: [
+            {
+              chainId: "0xaef3",
+              chainName: "Celo Alfajores",
+              nativeCurrency: {
+                name: "CELO",
+                symbol: "CELO",
+                decimals: 18,
+              },
+              rpcUrls: ["https://alfajores-forno.celo-testnet.org"],
+              blockExplorerUrls: ["https://alfajores.celoscan.io"],
+            },
+          ],
+        });
+      } catch (addError) {
+        console.error("Failed to add Alfajores chain:", addError);
+        toast("Please add the Alfajores network to your wallet.");
+        return false;
+      }
+    } else {
+      console.error("Failed to switch chain:", err);
+      toast("Please switch to the Celo Alfajores network.");
+      return false;
+    }
+  }
+
+  const transport = custom(provider);
 
   const privateClient = createWalletClient({
     chain: celoAlfajores,
