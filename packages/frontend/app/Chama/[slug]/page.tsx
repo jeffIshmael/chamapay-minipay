@@ -92,9 +92,9 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
   useEffect(() => {
     if (!isConnected) {
       connect({ connector: injected({ target: "metaMask" }) });
-      const connections = getConnections(config);
-      setCurrentConnector(connections[0].connector?.id);
     }
+    const connections = getConnections(config);
+    setCurrentConnector(connections[0].connector?.id);
   }, [isConnected]);
 
   useEffect(() => {
@@ -199,7 +199,9 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
 
   const frameContent = {
     version: "next",
-    imageUrl: `https://ipfs.io/ipfs/Qmd1VFua3zc65LT93Sv81VVu6BGa2QEuAakAFJexmRDGtX/${Number(chama?.id)}.jpg`,
+    imageUrl: `https://ipfs.io/ipfs/Qmd1VFua3zc65LT93Sv81VVu6BGa2QEuAakAFJexmRDGtX/${Number(
+      chama?.id
+    )}.jpg`,
     button: {
       title: "view chama",
       action: {
@@ -207,9 +209,9 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
         url: `https://chamapay-minipay.vercel.app/Chama/${chama?.slug}`,
         name: "ChamaApp",
         splashImageUrl: "https://chamapay-minipay.vercel.app/images/logo.png",
-        splashBackgroundColor: "#f5f0ec"
-      }
-    }
+        splashBackgroundColor: "#f5f0ec",
+      },
+    },
   };
 
   if (!chama || (chama === null && !isConnected)) {
@@ -227,10 +229,7 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
   return (
     <div>
       <Head>
-        <meta
-          name="fc:frame"
-          content={JSON.stringify(frameContent)}
-        />
+        <meta name="fc:frame" content={JSON.stringify(frameContent)} />
       </Head>
       {activeSection === "Details" && (
         <div className="bg-downy-100 min-h-screen flex flex-col items-center py-1">

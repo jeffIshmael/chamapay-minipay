@@ -2,7 +2,7 @@ import { createPublicClient, createWalletClient, custom, http } from "viem";
 import { celoAlfajores } from "viem/chains";
 import { toast } from "sonner";
 import ERC20Abi from "@/app/ChamaPayABI/ERC20.json";
-import {sdk} from "@farcaster/frame-sdk";
+import { sdk } from "@farcaster/frame-sdk";
 
 export const processCheckout = async (
   recepient: `0x${string}`,
@@ -10,7 +10,7 @@ export const processCheckout = async (
   currentConnector: string
 ) => {
   let provider;
-
+  console.log("current conecter", currentConnector);
   if (currentConnector === "farcaster") {
     if (sdk.wallet?.ethProvider) {
       provider = sdk.wallet.ethProvider;
