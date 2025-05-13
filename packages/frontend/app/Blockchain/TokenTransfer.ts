@@ -7,16 +7,21 @@ import { farcasterFrame as miniAppConnector } from "@farcaster/frame-wagmi-conne
 //transfer function
 export const processCheckout = async (
   recepient: `0x${string}`,
-  amount: bigint
+  amount: bigint,
+  currentConnector: string
 ) => {
+  let isFarcaster: boolean = false;
+  if (currentConnector === "farcaster") {
+    isFarcaster = true;
+  }
   const privateClient = createWalletClient({
     chain: celoAlfajores,
-    transport: custom(window.ethereum  ? window.ethereum : miniAppConnector()),
+    transport: custom(!isFarcaster ? window.ethereum : miniAppConnector()),
   });
 
   const publicClient = createPublicClient({
     chain: celoAlfajores,
-    transport: custom(window.ethereum ? window.ethereum : miniAppConnector()),
+    transport: custom(!isFarcaster ? window.ethereum : miniAppConnector()),
   });
 
   const [address] = await privateClient.getAddresses();

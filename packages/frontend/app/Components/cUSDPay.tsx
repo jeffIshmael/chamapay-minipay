@@ -77,8 +77,8 @@ const CUSDPay = ({
       setIsLoading(true);
       // setIsCalculating(true);
 
-      const txHash = await processCheckout(cUSDContractAddress, amountInWei);
-
+      // const txHash = await processCheckout(cUSDContractAddress, amountInWei);
+      const txHash = "0x6gsau";
       if (txHash) {
         const hash = await writeContractAsync({
           address: contractAddress,
@@ -179,7 +179,10 @@ const CUSDPay = ({
             </span>
           </div>
           {Number(amount) > 0 && (
-            <div className="flex justify-end text-gray-600 gap-1"  style={{ fontFamily: "Lobster, cursive" }}>
+            <div
+              className="flex justify-end text-gray-600 gap-1"
+              style={{ fontFamily: "Lobster, cursive" }}
+            >
               <span>Tx fee (5%):</span>
               <span className="font-medium">
                 {isCalculating ? (

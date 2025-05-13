@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { checkChama, createChama } from "../../lib/chama";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -9,9 +9,8 @@ import { FiAlertTriangle, FiGlobe } from "react-icons/fi";
 import { parseEther } from "viem";
 import { getLatestChamaId } from "@/lib/readFunctions";
 import { showToast } from "../Components/Toast";
-import { getConnectorClient, getConnections } from '@wagmi/core'
+import { getConnectorClient, getConnections } from "@wagmi/core";
 import { config } from "@/Providers/BlockchainProviders";
-
 
 interface Form {
   amount: string;
@@ -36,6 +35,7 @@ const CreatePublic = () => {
   const [startDateTime, setStartDateTime] = useState("");
   const router = useRouter();
   const { isConnected, address } = useAccount();
+  const [currentConnector, setCurrentConnector] = useState("");
   const { writeContractAsync } = useWriteContract();
   const [filledData, setFilledData] = useState<Form>({
     amount: "",
@@ -44,9 +44,11 @@ const CreatePublic = () => {
     name: "",
     startDate: "",
   });
-  const connections = getConnections(config);
 
-  console.log("connection without client", connections);
+  useEffect(() => {
+    const connections = getConnections(config);
+    setCurrentConnector(connections[0].connector?.id);
+  }, []);
 
   const openModal = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,7 +75,7 @@ const CreatePublic = () => {
       setErrorText("Name must be at least 3 characters long");
       return;
     }
-    if(startingDate < new Date().toISOString()) {
+    if (startingDate < new Date().toISOString()) {
       setErrorText("Start date must be in the future");
       return;
     }
@@ -108,7 +110,7 @@ const CreatePublic = () => {
     const amountInWei = parseEther(amount.toString());
     const blockchainId = await getLatestChamaId();
     console.log(`blockchainId: ${blockchainId}`);
-    const client = await getConnectorClient(config)
+    const client = await getConnectorClient(config);
     console.log("with clent", client);
 
     //function to send the lock amount
@@ -116,7 +118,7 @@ const CreatePublic = () => {
       setProcessing(true);
       const paid = await processCheckout(
         contractAddress as `0x${string}`,
-        amountInWei
+        amountInWei, currentConnector
       );
       if (paid) {
         setProcessing(false);
@@ -145,14 +147,21 @@ const CreatePublic = () => {
           formData.append("maxNumber", filledData.maxNumber);
           formData.append("startDate", startDate);
 
-          await createChama(formData, startDate, "Public", address, blockchainId, paid);
+          await createChama(
+            formData,
+            startDate,
+            "Public",
+            address,
+            blockchainId,
+            paid
+          );
 
           console.log("done");
-          showToast(`${filledData.name} created successfully.`,"success");
+          showToast(`${filledData.name} created successfully.`, "success");
           setLoading(false);
           router.push("/MyChamas");
         } else {
-          showToast("unable to create, please try again.","error");
+          showToast("unable to create, please try again.", "error");
           setErrorText("unable to create, please try again");
         }
       } else {
@@ -184,7 +193,7 @@ const CreatePublic = () => {
               Lock Amount
             </h2>
             <p className="text-gray-600 mb-6">
-              You need to lock {amount} cUSD before proceeding to create  
+              You need to lock {amount} cUSD before proceeding to create
               {filledData.name} chama.
             </p>
             <div className="flex justify-end space-x-4">

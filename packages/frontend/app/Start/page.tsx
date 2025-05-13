@@ -50,7 +50,7 @@ const Page = () => {
     if (window.ethereum && window.ethereum.isMiniPay) {
       connect({ connector: injected({ target: "metaMask" }) });
     } else {
-      connect({ connector: injected() });
+      connect({ connector: connectors[1] });
     }
   }, []);
 

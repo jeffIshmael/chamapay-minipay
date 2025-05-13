@@ -28,6 +28,8 @@ import { useRouter } from "next/navigation";
 import { formatEther } from "viem";
 import { FiAlertTriangle } from "react-icons/fi";
 import { showToast } from "@/app/Components/Toast";
+import { config } from "@/Providers/BlockchainProviders";
+import { getConnectorClient, getConnections } from "@wagmi/core";
 
 interface User {
   chamaId: number;
@@ -80,6 +82,7 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
   const [processing, setProcessing] = useState(false);
   const [hasRequest, setHasRequest] = useState(false);
   const router = useRouter();
+  const [currentConnector, setCurrentConnector] = useState("");
 
   const togglePayModal = () => {
     setIsOpen(!isOpen);
@@ -88,6 +91,8 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
   useEffect(() => {
     if (!isConnected) {
       connect({ connector: injected({ target: "metaMask" }) });
+      const connections = getConnections(config);
+      setCurrentConnector(connections[0].connector?.id);
     }
   }, [isConnected]);
 
@@ -149,7 +154,7 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
       setProcessing(true);
       const paid = await processCheckout(
         contractAddress,
-        chama?.amount ?? BigInt(0)
+        chama?.amount ?? BigInt(0), currentConnector
       );
       if (paid) {
         setProcessing(false);
@@ -295,7 +300,9 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
                       chama.canJoin ? "bg-purple-500" : "bg-yellow-500"
                     }`}
                   ></span>
-                  <span>{chama.canJoin ? "Open membership" : "Observer only"}</span>
+                  <span>
+                    {chama.canJoin ? "Open membership" : "Observer only"}
+                  </span>
                 </>
               )}
             </div>
