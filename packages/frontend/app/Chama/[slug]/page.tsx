@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Head from "next/head";
 import React, { useEffect, useState } from "react";
 import ChamaNavbar from "@/app/Components/ChamaNav";
 import Members from "@/app/Components/Members";
@@ -154,7 +155,8 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
       setProcessing(true);
       const paid = await processCheckout(
         contractAddress,
-        chama?.amount ?? BigInt(0), currentConnector
+        chama?.amount ?? BigInt(0),
+        currentConnector
       );
       if (paid) {
         setProcessing(false);
@@ -195,6 +197,21 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
     }
   };
 
+  const frameContent = {
+    version: "next",
+    imageUrl: `https://ipfs.io/ipfs/Qmd1VFua3zc65LT93Sv81VVu6BGa2QEuAakAFJexmRDGtX/${Number(chama?.id)}.jpg`,
+    button: {
+      title: "view chama",
+      action: {
+        type: "launch_frame",
+        url: `https://chamapay-minipay.vercel.app/Chama/${chama?.slug}`,
+        name: "ChamaApp",
+        splashImageUrl: "https://chamapay-minipay.vercel.app/images/logo.png",
+        splashBackgroundColor: "#f5f0ec"
+      }
+    }
+  };
+
   if (!chama || (chama === null && !isConnected)) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-downy-100">
@@ -209,6 +226,12 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
 
   return (
     <div>
+      <Head>
+        <meta
+          name="fc:frame"
+          content={JSON.stringify(frameContent)}
+        />
+      </Head>
       {activeSection === "Details" && (
         <div className="bg-downy-100 min-h-screen flex flex-col items-center py-1">
           {/* Main Content */}
