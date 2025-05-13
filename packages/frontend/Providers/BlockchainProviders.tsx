@@ -26,13 +26,13 @@ const connectors = connectorsForWallets(
 // const miniApp = miniAppConnector();
 
 export const config = createConfig({
-  connectors: [...connectors, miniAppConnector()],
   chains: [celoAlfajores],
   // chains: [celo],
   transports: {
     [celoAlfajores.id]: http(),
     // [celo.id]: http(),
   },
+  connectors: [...connectors, miniAppConnector()],
 });
 
 export function BlockchainProviders({
