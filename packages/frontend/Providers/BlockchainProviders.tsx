@@ -26,7 +26,7 @@ const connectors = connectorsForWallets(
 // const miniApp = miniAppConnector();
 
 export const config = createConfig({
-  connectors: [miniAppConnector()],
+  connectors: [...connectors, miniAppConnector()],
   chains: [celoAlfajores],
   // chains: [celo],
   transports: {
