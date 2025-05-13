@@ -121,7 +121,8 @@ const CreatePublic = () => {
         setProcessing(false);
         setLoading(true);
         const dateObject = new Date(startDate);
-        const dateInMilliseconds = dateObject.getTime();
+        const dateInSeconds = Math.floor(dateObject.getTime() / 1000); 
+
 
         const hash = await writeContractAsync({
           address: contractAddress,
@@ -130,7 +131,7 @@ const CreatePublic = () => {
           args: [
             amountInWei,
             BigInt(Number(filledData.cycleTime)),
-            BigInt(dateInMilliseconds),
+            BigInt(dateInSeconds),
             BigInt(Number(filledData.maxNumber)),
             true,
           ],
