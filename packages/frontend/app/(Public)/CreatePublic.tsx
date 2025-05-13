@@ -9,6 +9,9 @@ import { FiAlertTriangle, FiGlobe } from "react-icons/fi";
 import { parseEther } from "viem";
 import { getLatestChamaId } from "@/lib/readFunctions";
 import { showToast } from "../Components/Toast";
+import { getConnectorClient, getConnections } from '@wagmi/core'
+import { config } from "@/Providers/BlockchainProviders";
+
 
 interface Form {
   amount: string;
@@ -41,6 +44,9 @@ const CreatePublic = () => {
     name: "",
     startDate: "",
   });
+  const connections = getConnections(config);
+
+  console.log("connection without client", connections);
 
   const openModal = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -102,6 +108,8 @@ const CreatePublic = () => {
     const amountInWei = parseEther(amount.toString());
     const blockchainId = await getLatestChamaId();
     console.log(`blockchainId: ${blockchainId}`);
+    const client = await getConnectorClient(config)
+    console.log("with clent", client);
 
     //function to send the lock amount
     try {
