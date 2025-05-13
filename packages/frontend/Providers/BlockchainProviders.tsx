@@ -32,7 +32,7 @@ export const config = createConfig({
     [celoAlfajores.id]: http(),
     // [celo.id]: http(),
   },
-  connectors: [miniAppConnector()],
+  connectors: [...connectors, miniAppConnector()],
 });
 
 export function BlockchainProviders({

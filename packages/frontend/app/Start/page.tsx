@@ -47,11 +47,11 @@ const Page = () => {
   useEffect(() => {
     // if (isConnected) return;
 
-    // if (window.ethereum && window.ethereum.isMiniPay) {
-    //   connect({ connector: injected({ target: "metaMask" }) });
-    // } else {
-      connect({ connector: connectors[0] });
-    // }
+    if (window.ethereum && window.ethereum.isMiniPay) {
+      connect({ connector: injected({ target: "metaMask" }) });
+    } else {
+      connect({ connector: connectors[1] });
+    }
   }, []);
 
   useEffect(() => {
