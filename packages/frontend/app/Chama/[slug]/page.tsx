@@ -16,7 +16,13 @@ import {
 } from "@/lib/chama";
 import { duration } from "@/utils/duration";
 import Pay from "@/app/Components/Pay";
-import { useAccount, useConnect, useWriteContract } from "wagmi";
+import {
+  useAccount,
+  useConnect,
+  useWriteContract,
+  useChainId,
+  useSwitchChain,
+} from "wagmi";
 import {
   contractAbi,
   contractAddress,
@@ -31,6 +37,7 @@ import { FiAlertTriangle } from "react-icons/fi";
 import { showToast } from "@/app/Components/Toast";
 import { config } from "@/Providers/BlockchainProviders";
 import { getConnectorClient, getConnections } from "@wagmi/core";
+import { celoAlfajores } from "wagmi/chains";
 
 interface User {
   chamaId: number;
@@ -84,6 +91,8 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
   const [hasRequest, setHasRequest] = useState(false);
   const router = useRouter();
   const [currentConnector, setCurrentConnector] = useState("");
+  const chainId = useChainId();
+  const { switchChainAsync } = useSwitchChain();
 
   const togglePayModal = () => {
     setIsOpen(!isOpen);
@@ -116,6 +125,19 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
     };
     fetchChama();
   }, [address, params.slug]);
+
+  useEffect(() => {
+    const switchToAlfajores = async () => {
+      if (chainId !== celoAlfajores.id) {
+        try {
+          await switchChainAsync({ chainId: celoAlfajores.id });
+        } catch (error) {
+          console.error("Failed to switch to Base:", error);
+        }
+      }
+    };
+    switchToAlfajores();
+  }, [chainId, switchChainAsync]);
 
   // sending request to join private chama
   const joinChama = async () => {
