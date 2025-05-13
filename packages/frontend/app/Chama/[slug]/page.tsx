@@ -229,12 +229,12 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
                     <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
                       <p className="text-yellow-700 text-sm">
                         ⓘ This chama has completed its first round of cycle{" "}
-                        {chama.cycle}. You'll join in
+                        {chama.cycle}. You&apos;ll join in
                         <span className="font-semibold">
                           {" "}
                           incognito mode
                         </span>{" "}
-                        and won't be part of payouts until the next cycle
+                        and won&apos;t be part of payouts until the next cycle
                         starts.
                       </p>
                     </div>
