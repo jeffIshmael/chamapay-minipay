@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { createChama, checkChama } from "../../lib/chama";
-import { useAccount, useWriteContract } from "wagmi";
+import { useAccount, useChainId, useSwitchChain, useWriteContract } from "wagmi";
 import { toast } from "sonner";
 import { contractAddress, contractAbi } from "../ChamaPayABI/ChamaPayContract";
 import { useRouter } from "next/navigation";
@@ -10,6 +10,7 @@ import { getLatestChamaId } from "@/lib/readFunctions";
 import { parseEther } from "viem";
 import { FiAlertTriangle } from "react-icons/fi";
 import { showToast } from "../Components/Toast";
+import { celoAlfajores } from "wagmi/chains";
 
 const CreateFamily = () => {
   const [groupName, setGroupName] = useState("");
@@ -22,6 +23,23 @@ const CreateFamily = () => {
   const [startDateTime, setStartDateTime] = useState("");
   const { isConnected, address } = useAccount();
   const router = useRouter();
+  const chainId = useChainId();
+  const { switchChainAsync } = useSwitchChain();
+
+
+  useEffect(() => {
+    const switchToAlfajores = async () => {
+      if (chainId !== celoAlfajores.id) {
+        try {
+          await switchChainAsync({ chainId: celoAlfajores.id });
+        } catch (error) {
+          console.error("Failed to switch to Alfajores:", error);
+        }
+      }
+    };
+    switchToAlfajores();
+  }, [chainId, switchChainAsync]);
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

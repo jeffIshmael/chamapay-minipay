@@ -12,8 +12,9 @@
     "imageUrl": "https://chamapay-minipay.vercel.app/image.png",
     "buttonTitle": "Check this out",
     "splashImageUrl": "https://pbs.twimg.com/profile_images/1857302932217106433/AYnF5-fZ_400x400.jpg",
-    "splashBackgroundColor": "#ffffff",
-    "webhookUrl": "https://chamapay-minipay.vercel.app/api/webhook","subtitle": "Circular savings Made Easy",
+    "splashBackgroundColor": "#eeccff",
+    "webhookUrl": "https://chamapay-minipay.vercel.app/api/webhook",
+    "subtitle": "Circular savings Made Easy",
     "description": "Manage and track your circular group's seamlessly.",
     "tags": ["finance", "payments", "chama"]
   }
