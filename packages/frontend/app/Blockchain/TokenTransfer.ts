@@ -50,7 +50,7 @@ export const processCheckout = async (
                 decimals: 18,
               },
               rpcUrls: ["https://alfajores-forno.celo-testnet.org"],
-              blockExplorerUrls: ["https://alfajores.celoscan.io"],
+              blockExplorerUrls: ["https://celo-alfajores.blockscout.com"],
             },
           ],
         });
