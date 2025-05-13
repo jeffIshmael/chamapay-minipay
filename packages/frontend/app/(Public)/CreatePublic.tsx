@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { checkChama, createChama } from "../../lib/chama";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { useAccount, useWriteContract } from "wagmi";
+import { useAccount, useWriteContract, useSendTransaction } from "wagmi";
 import { contractAbi, contractAddress } from "../ChamaPayABI/ChamaPayContract";
 import { processCheckout } from "../Blockchain/TokenTransfer";
 import { FiAlertTriangle, FiGlobe } from "react-icons/fi";
@@ -32,6 +32,7 @@ const CreatePublic = () => {
   const [startDateDate, setStartDateDate] = useState("");
   const [startDateTime, setStartDateTime] = useState("");
   const router = useRouter();
+  const { data: hash, sendTransactionAsync } = useSendTransaction();
   const { isConnected, address } = useAccount();
   const { writeContractAsync } = useWriteContract();
   const [filledData, setFilledData] = useState<Form>({
@@ -67,7 +68,7 @@ const CreatePublic = () => {
       setErrorText("Name must be at least 3 characters long");
       return;
     }
-    if(startingDate < new Date().toISOString()) {
+    if (startingDate < new Date().toISOString()) {
       setErrorText("Start date must be in the future");
       return;
     }
@@ -106,11 +107,11 @@ const CreatePublic = () => {
     //function to send the lock amount
     try {
       setProcessing(true);
-      const paid = await processCheckout(
-        contractAddress as `0x${string}`,
-        amountInWei
-      );
-      if (paid) {
+      await sendTransactionAsync({
+        to: contractAddress as `0x${string}`,
+        value: amountInWei,
+      });
+      if (hash) {
         setProcessing(false);
         setLoading(true);
         const dateObject = new Date(startDate);
@@ -137,14 +138,21 @@ const CreatePublic = () => {
           formData.append("maxNumber", filledData.maxNumber);
           formData.append("startDate", startDate);
 
-          await createChama(formData, startDate, "Public", address, blockchainId, paid);
+          await createChama(
+            formData,
+            startDate,
+            "Public",
+            address,
+            blockchainId,
+            hash
+          );
 
           console.log("done");
-          showToast(`${filledData.name} created successfully.`,"success");
+          showToast(`${filledData.name} created successfully.`, "success");
           setLoading(false);
           router.push("/MyChamas");
         } else {
-          showToast("unable to create, please try again.","error");
+          showToast("unable to create, please try again.", "error");
           setErrorText("unable to create, please try again");
         }
       } else {
@@ -176,7 +184,7 @@ const CreatePublic = () => {
               Lock Amount
             </h2>
             <p className="text-gray-600 mb-6">
-              You need to lock {amount} cUSD before proceeding to create  
+              You need to lock {amount} cUSD before proceeding to create
               {filledData.name} chama.
             </p>
             <div className="flex justify-end space-x-4">
