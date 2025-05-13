@@ -7,7 +7,8 @@ import {
 import { injectedWallet } from "@rainbow-me/rainbowkit/wallets";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { WagmiProvider, createConfig, http } from "wagmi";
-import {  celo, celoAlfajores } from "wagmi/chains";
+import { celo, celoAlfajores } from "wagmi/chains";
+import { farcasterFrame as miniAppConnector } from "@farcaster/frame-wagmi-connector";
 
 const connectors = connectorsForWallets(
   [
@@ -19,12 +20,14 @@ const connectors = connectorsForWallets(
   {
     appName: "ChamaPay",
     projectId: "96d07018513129235d7af00f1cc9fcdb",
-  },
+  }
 );
 
+const miniApp = miniAppConnector();
+
 export const config = createConfig({
-  connectors,
-  chains: [ celoAlfajores],
+  connectors: [...connectors, miniApp],
+  chains: [celoAlfajores],
   // chains: [celo],
   transports: {
     [celoAlfajores.id]: http(),

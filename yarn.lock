@@ -555,6 +555,11 @@
     eventemitter3 "^5.0.1"
     ox "^0.4.4"
 
+"@farcaster/frame-wagmi-connector@^0.0.27":
+  version "0.0.27"
+  resolved "https://registry.npmjs.org/@farcaster/frame-wagmi-connector/-/frame-wagmi-connector-0.0.27.tgz"
+  integrity sha512-eck3ysY5FL0Kd418cQzxgOTcISCcOQa3flMOcFWdGESnulnlIlNGuysLrJynXb1dTNsz0oVnh6lTW8NNb6z7pw==
+
 "@fastify/busboy@^2.0.0":
   version "2.1.0"
   resolved "https://registry.npmjs.org/@fastify/busboy/-/busboy-2.1.0.tgz"
@@ -2255,7 +2260,7 @@
     "@walletconnect/ethereum-provider" "2.19.2"
     cbw-sdk "npm:@coinbase/wallet-sdk@3.9.3"
 
-"@wagmi/core@2.17.0":
+"@wagmi/core@^2.14.1", "@wagmi/core@2.17.0":
   version "2.17.0"
   resolved "https://registry.npmjs.org/@wagmi/core/-/core-2.17.0.tgz"
   integrity sha512-MykiuU0rZUKtgVBctnOM+53zJmtodTD7rA97e7lLhXUevZcm60hUSl1BcgEIDd2wVOLEi2Xfrx641xpjruZvSA==
@@ -4747,6 +4752,7 @@ framer-motion@^12.9.2:
   version "0.1.0"
   resolved "file:packages/frontend"
   dependencies:
+    "@farcaster/frame-sdk" "^0.0.39"
     "@headlessui/react" "^2.2.2"
     "@lottiefiles/dotlottie-react" "^0.9.0"
     "@openzeppelin/defender-relay-client" "^1.54.6"
@@ -8657,7 +8663,7 @@ vary@^1:
   resolved "https://registry.npmjs.org/vary/-/vary-1.1.2.tgz"
   integrity sha512-BNGbWLfd0eUPabhkXUVm0j8uuvREyTh5ovRa/dyow/BqAbZJyC+5fU+IzQOzmAKzYqYRAISoRhdQr3eIZ/PXqg==
 
-viem@^2.1.1, viem@^2.28.1, viem@2.x:
+viem@^2.1.1, viem@^2.21.55, viem@^2.28.1, viem@2.x:
   version "2.28.1"
   resolved "https://registry.npmjs.org/viem/-/viem-2.28.1.tgz"
   integrity sha512-7eqGfxAPlMW9u9aE3SMEFPzNYqqU7uFLKUQyd/GwccyW4OAdq7VqJkPIpdULUePN9m3XmfBunA9mswYFp9sUuQ==
