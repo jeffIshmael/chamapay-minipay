@@ -111,18 +111,18 @@ const CreatePublic = () => {
     //function to send the lock amount
     try {
       setProcessing(true);
-      const paid = await writeContractAsync({
-        address: cUSDContractAddress,
-        abi: ERC20Abi,
-        functionName: "transfer",
-        args: [contractAddress as `0x${string}`, amountInWei],
-      });
+      // const paid = await writeContractAsync({
+      //   address: cUSDContractAddress,
+      //   abi: ERC20Abi,
+      //   functionName: "transfer",
+      //   args: [contractAddress as `0x${string}`, amountInWei],
+      // });
+      const paid = true;
       if (paid) {
         setProcessing(false);
         setLoading(true);
         const dateObject = new Date(startDate);
-        const dateInSeconds = Math.floor(dateObject.getTime() / 1000); 
-
+        const dateInMilliseconds = dateObject.getTime();
 
         const hash = await writeContractAsync({
           address: contractAddress,
@@ -131,7 +131,7 @@ const CreatePublic = () => {
           args: [
             amountInWei,
             BigInt(Number(filledData.cycleTime)),
-            BigInt(dateInSeconds),
+            BigInt(dateInMilliseconds),
             BigInt(Number(filledData.maxNumber)),
             true,
           ],
