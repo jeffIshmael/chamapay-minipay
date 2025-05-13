@@ -10,9 +10,10 @@ import {
 } from "../ChamaPayABI/ChamaPayContract";
 import { processCheckout } from "../Blockchain/TokenTransfer";
 import { FiAlertTriangle, FiGlobe } from "react-icons/fi";
-import { erc20Abi, parseEther } from "viem";
+import { parseEther } from "viem";
 import { getLatestChamaId } from "@/lib/readFunctions";
 import { showToast } from "../Components/Toast";
+import ERC20Abi from "@/app/ChamaPayABI/ERC20.json"
 
 interface Form {
   amount: string;
@@ -112,7 +113,7 @@ const CreatePublic = () => {
       setProcessing(true);
       const paid = await writeContractAsync({
         address: cUSDContractAddress,
-        abi: erc20Abi,
+        abi: ERC20Abi,
         functionName: "transfer",
         args: [contractAddress as `0x${string}`, amountInWei],
       });
