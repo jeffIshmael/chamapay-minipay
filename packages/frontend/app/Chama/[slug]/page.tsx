@@ -227,7 +227,7 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
   }
 
   return (
-    <div>
+    <>
       <Head>
         <meta name="fc:frame" content={JSON.stringify(frameContent)} />
       </Head>
@@ -516,7 +516,7 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
           </div>
         </>
       )}
-    </div>
+    </>
   );
 };
 
