@@ -2,9 +2,10 @@ import { createPublicClient, createWalletClient, custom, http } from "viem";
 import { celoAlfajores } from "viem/chains";
 import { toast } from "sonner";
 import ERC20Abi from "@/app/ChamaPayABI/ERC20.json";
+import sdk from "@farcaster/frame-sdk";
 
 // Ensure that 'sdk' is available in the Farcaster Frame environment
-declare const sdk: any;
+// declare const sdk: any;
 
 export const processCheckout = async (
   recepient: `0x${string}`,
@@ -14,7 +15,8 @@ export const processCheckout = async (
   let transport;
 
   if (currentConnector === "farcaster") {
-    if (typeof sdk !== "undefined" && sdk.wallet?.ethProvider) {
+    console.log("the sdk", sdk);
+    if (sdk.wallet?.ethProvider) {
       transport = custom(sdk.wallet.ethProvider);
     } else {
       toast("Farcaster wallet provider not available.");
