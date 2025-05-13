@@ -1,10 +1,5 @@
 import { createPublicClient, createWalletClient, custom } from "viem";
 import { celoAlfajores, celo} from "viem/chains";
-// import {
-//   tokencUSDAbi,
-//   tokencUSDContractAddress,
-// } from "./cUSDToken"
-import { contractAddress } from "../ChamaPayABI/ChamaPayContract";
 import { toast } from "sonner";
 import ERC20Abi from "@/app/ChamaPayABI/ERC20.json"
 

@@ -2,11 +2,15 @@ import React, { useState } from "react";
 import { checkChama, createChama } from "../../lib/chama";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { useAccount, useWriteContract, useSendTransaction } from "wagmi";
-import { contractAbi, contractAddress } from "../ChamaPayABI/ChamaPayContract";
+import { useAccount, useWriteContract } from "wagmi";
+import {
+  contractAbi,
+  contractAddress,
+  cUSDContractAddress,
+} from "../ChamaPayABI/ChamaPayContract";
 import { processCheckout } from "../Blockchain/TokenTransfer";
 import { FiAlertTriangle, FiGlobe } from "react-icons/fi";
-import { parseEther } from "viem";
+import { erc20Abi, parseEther } from "viem";
 import { getLatestChamaId } from "@/lib/readFunctions";
 import { showToast } from "../Components/Toast";
 
@@ -32,7 +36,6 @@ const CreatePublic = () => {
   const [startDateDate, setStartDateDate] = useState("");
   const [startDateTime, setStartDateTime] = useState("");
   const router = useRouter();
-  const { data: hash, sendTransactionAsync } = useSendTransaction();
   const { isConnected, address } = useAccount();
   const { writeContractAsync } = useWriteContract();
   const [filledData, setFilledData] = useState<Form>({
@@ -107,11 +110,13 @@ const CreatePublic = () => {
     //function to send the lock amount
     try {
       setProcessing(true);
-      await sendTransactionAsync({
-        to: contractAddress as `0x${string}`,
-        value: amountInWei,
+      const paid = await writeContractAsync({
+        address: cUSDContractAddress,
+        abi: erc20Abi,
+        functionName: "transfer",
+        args: [contractAddress as `0x${string}`, amountInWei],
       });
-      if (hash) {
+      if (paid) {
         setProcessing(false);
         setLoading(true);
         const dateObject = new Date(startDate);
@@ -144,7 +149,7 @@ const CreatePublic = () => {
             "Public",
             address,
             blockchainId,
-            hash
+            paid
           );
 
           console.log("done");
