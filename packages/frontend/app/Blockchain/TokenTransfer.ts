@@ -1,5 +1,5 @@
 import { createPublicClient, createWalletClient, custom, http } from "viem";
-import { celoAlfajores } from "viem/chains";
+import { celoAlfajores, celo } from "viem/chains";
 import { toast } from "sonner";
 import ERC20Abi from "@/app/ChamaPayABI/ERC20.json";
 import { sdk } from "@farcaster/frame-sdk";
@@ -31,7 +31,7 @@ export const processCheckout = async (
     if (parseInt(currentChainId, 16) !== celoAlfajores.id) {
       await provider.request({
         method: "wallet_switchEthereumChain",
-        params: [{ chainId: "0xaef3" }], // 44787 in hex
+        params: [{ chainId: "0xa4ec" }], // 44787 in hex
       });
     }
   } catch (err: any) {
@@ -42,14 +42,14 @@ export const processCheckout = async (
           method: "wallet_addEthereumChain",
           params: [
             {
-              chainId: "0xaef3",
-              chainName: "Celo Alfajores",
+              chainId: "0xa4ec",
+              chainName: "Celo",
               nativeCurrency: {
                 name: "CELO",
                 symbol: "CELO",
                 decimals: 18,
               },
-              rpcUrls: ["https://alfajores-forno.celo-testnet.org"],
+              rpcUrls: ["https://forno.celo.org"],
               blockExplorerUrls: ["https://celo-alfajores.blockscout.com"],
             },
           ],
@@ -69,12 +69,12 @@ export const processCheckout = async (
   const transport = custom(provider);
 
   const privateClient = createWalletClient({
-    chain: celoAlfajores,
+    chain: celo,
     transport,
   });
 
   const publicClient = createPublicClient({
-    chain: celoAlfajores,
+    chain: celo,
     transport,
   });
 
