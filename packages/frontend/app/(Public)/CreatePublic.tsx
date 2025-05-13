@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { checkChama, createChama } from "../../lib/chama";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { useAccount, useWriteContract } from "wagmi";
+import { useAccount, useSwitchChain, useChainId, useWriteContract } from "wagmi";
 import { contractAbi, contractAddress } from "../ChamaPayABI/ChamaPayContract";
 import { processCheckout } from "../Blockchain/TokenTransfer";
 import { FiAlertTriangle, FiGlobe } from "react-icons/fi";
@@ -11,6 +11,7 @@ import { getLatestChamaId } from "@/lib/readFunctions";
 import { showToast } from "../Components/Toast";
 import { getConnectorClient, getConnections } from "@wagmi/core";
 import { config } from "@/Providers/BlockchainProviders";
+import { celoAlfajores } from "wagmi/chains";
 
 interface Form {
   amount: string;
@@ -44,11 +45,26 @@ const CreatePublic = () => {
     name: "",
     startDate: "",
   });
+  const chainId = useChainId();
+  const { switchChainAsync } = useSwitchChain();
 
   useEffect(() => {
     const connections = getConnections(config);
     setCurrentConnector(connections[0].connector?.id);
   }, []);
+
+  useEffect(() => {
+    const switchToAlfajores = async () => {
+      if (chainId !== celoAlfajores.id) {
+        try {
+          await switchChainAsync({ chainId: celoAlfajores.id });
+        } catch (error) {
+          console.error("Failed to switch to Alfajores:", error);
+        }
+      }
+    };
+    switchToAlfajores();
+  }, [chainId, switchChainAsync]);
 
   const openModal = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -132,7 +132,7 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
         try {
           await switchChainAsync({ chainId: celoAlfajores.id });
         } catch (error) {
-          console.error("Failed to switch to Base:", error);
+          console.error("Failed to switch to Alfajores:", error);
         }
       }
     };
