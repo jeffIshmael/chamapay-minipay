@@ -2,6 +2,7 @@ import { createPublicClient, createWalletClient, custom, http } from "viem";
 import { celoAlfajores, celo } from "viem/chains";
 import { toast } from "sonner";
 import ERC20Abi from "@/app/ChamaPayABI/ERC20.json";
+import { farcasterFrame as miniAppConnector } from "@farcaster/frame-wagmi-connector";
 
 //transfer function
 export const processCheckout = async (
@@ -10,12 +11,12 @@ export const processCheckout = async (
 ) => {
   const privateClient = createWalletClient({
     chain: celoAlfajores,
-    transport: http(),
+    transport: custom(window.ethereum  ? window.ethereum : miniAppConnector()),
   });
 
   const publicClient = createPublicClient({
     chain: celoAlfajores,
-    transport: http(),
+    transport: custom(window.ethereum ? window.ethereum : miniAppConnector()),
   });
 
   const [address] = await privateClient.getAddresses();
