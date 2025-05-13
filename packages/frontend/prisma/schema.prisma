@@ -37,6 +37,7 @@ model Chama {
   maxNo         Int
   blockchainId  String
   adminId       Int
+  canJoin       Boolean  @default(true)
   payOutOrder   String?  // Json string of payout order array.
   createdAt     DateTime      @default(now())
   admin         User          @relation("AdminChamas", fields: [adminId], references: [id])
@@ -52,6 +53,7 @@ model ChamaMember {
   id      Int   @id @default(autoincrement())
   userId  Int
   chamaId Int
+  incognito Boolean @default(false)
   chama   Chama @relation(fields: [chamaId], references: [id])
   user    User  @relation(fields: [userId], references: [id])
   payDate         DateTime // To track the payment rotation date

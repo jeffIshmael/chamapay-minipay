@@ -238,7 +238,8 @@ export async function addMemberToPublicChama(
   address: string,
   chamaId: number,
   amount: bigint,
-  txHash: string
+  txHash: string,
+  canJoin: boolean
 ) {
   await prisma.chamaMember.create({
     data: {
@@ -253,6 +254,7 @@ export async function addMemberToPublicChama(
         },
       },
       payDate: new Date(),
+      incognito: canJoin ? false : true,
     },
   });
   //get user
@@ -266,6 +268,72 @@ export async function addMemberToPublicChama(
       userId: user?.id || 0,
     },
   });
+}
+
+//function to set a chama can join
+export async function setChamaCanJoin(chamaId: number, value: boolean) {
+  const chama = await prisma.chama.update({
+    where: {
+      id: chamaId,
+    },
+    data: {
+      canJoin: value,
+    },
+  });
+}
+
+// function to change member from incognito
+export async function changeIncognitoMembers(chamaId: number) {
+  await prisma.chamaMember.updateMany({
+    where: {
+      chamaId: chamaId,
+    },
+    data: {
+      incognito: false,
+    },
+  });
+}
+
+// function to check if a chama cycle is over
+export async function checkIfChamaOver(
+  chamaId: number,
+  userAddress: string
+): Promise<boolean> {
+  const payoutOrder = await prisma.chama.findUnique({
+    where: {
+      id: chamaId,
+    },
+    select: {
+      payOutOrder: true,
+    },
+  });
+
+  if (!payoutOrder || !payoutOrder.payOutOrder) {
+    return false;
+  }
+  // Parse the JSON string if it's stored as string
+  let payOutArray;
+  try {
+    payOutArray =
+      typeof payoutOrder.payOutOrder === "string"
+        ? JSON.parse(payoutOrder.payOutOrder)
+        : payoutOrder.payOutOrder;
+  } catch (err) {
+    console.error("Invalid payoutOrder format", err);
+    return false;
+  }
+
+  if (!Array.isArray(payOutArray) || payOutArray.length === 0) {
+    return false;
+  }
+
+  // Normalize address casing
+  const normalizedAddress = userAddress.toLowerCase();
+
+  const lastUser = payOutArray[payOutArray.length - 1];
+  const lastUserAddress = lastUser.user?.address?.toLowerCase();
+
+  return lastUserAddress === normalizedAddress;
 }
 
 //function to get public chamas that user is not member
@@ -473,12 +541,13 @@ export async function checkRequest(address: string, chamaId: number) {
   return false;
 }
 
-//confirming join request
+//confirming join request (adding member to private chama)
 export async function handleJoinRequest(
   requestId: number,
   action: "approve" | "reject",
   adminId: number,
-  chamaId: number
+  chamaId: number,
+  canJoin: boolean
 ) {
   // Find the request
   const request = await prisma.chamaRequest.findUnique({
@@ -497,6 +566,7 @@ export async function handleJoinRequest(
         user: { connect: { id: request.userId } },
         chama: { connect: { id: request.chamaId } },
         payDate: new Date(),
+        incognito: canJoin ? false : true,
       },
     });
 
@@ -563,9 +633,9 @@ export async function getUserNotifications(userId: number) {
   const notifications = await prisma.notification.findMany({
     where: { userId },
     orderBy: { createdAt: "desc" }, // Sort by newest first
-    include:{
-      chama:true
-    }
+    include: {
+      chama: true,
+    },
   });
   return notifications;
 }

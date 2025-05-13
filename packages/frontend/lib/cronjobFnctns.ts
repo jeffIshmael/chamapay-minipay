@@ -5,7 +5,12 @@
 "use server";
 
 import { PrismaClient } from "@prisma/client";
-import { getUser, sendNotificationToAllMembers } from "./chama";
+import {
+  getUser,
+  sendNotificationToAllMembers,
+  checkIfChamaOver,
+  changeIncognitoMembers,
+} from "./chama";
 import { getAgentWalletBalance, performPayout } from "./PayOut";
 import { getFundsDisbursedEventLogs } from "./readFunctions";
 import { formatEther } from "viem";
@@ -25,6 +30,7 @@ interface Chama {
   amount: bigint;
   round: number;
   cycle: number;
+  canJoin: boolean;
   maxNo: number;
   blockchainId: string;
   adminId: number;
@@ -171,6 +177,10 @@ export async function checkChamaPaydate() {
         const user = await getUser(recipient);
         if (!user) throw new Error("User not found");
 
+        // check recipient's position in  the payOut order
+        let cycleOver: boolean = false;
+        cycleOver = await checkIfChamaOver(chama.id, recipient.toString());
+
         await prisma.$transaction([
           prisma.payOut.create({
             data: {
@@ -187,19 +197,41 @@ export async function checkChamaPaydate() {
               payDate: new Date(
                 chama.payDate.getTime() + chama.cycleTime * 86_400_000 // 1 day in ms
               ),
-              round: chama.round + 1,
+              round: cycleOver ? 1 : chama.round + 1,
+              cycle: cycleOver ? chama.cycle + 1 : chama.cycle,
+              startDate: cycleOver
+                ? new Date(
+                    chama.startDate.getTime() + chama.cycleTime * 86_400_000 // 1 day in ms
+                  )
+                : chama.startDate,
+              canJoin: cycleOver ? true : false,
               // lastPayoutAt: new Date(),
             },
           }),
         ]);
 
-        await sendNotificationToAllMembers(
-          chama.id,
-          `💰 Payout Complete!\n\n` +
-            `${user.name} received ${formatEther(logs.args.totalPay)} cUSD\n` +
-            `Round: ${chama.round + 1} • Cycle: ${chama.cycle}\n` +
-            `TX: ${txHash.slice(0, 12)}...`
-        );
+        // add the incognito members
+        if (cycleOver) {
+          await changeIncognitoMembers(chama.id);
+        }
+
+        // if chama round is 1, set canJoin true
+        await prisma.chama.update({
+          where: { id: chama.id },
+          data: {
+            canJoin: chama.round > 1 ? false : true,
+            // lastPayoutAt: new Date(),
+          },
+        }),
+          await sendNotificationToAllMembers(
+            chama.id,
+            `💰 Payout Complete!\n\n` +
+              `${user.name} received ${formatEther(
+                logs.args.totalPay
+              )} cUSD\n` +
+              `Round: ${chama.round + 1} • Cycle: ${chama.cycle}\n` +
+              `TX: ${txHash.slice(0, 12)}...`
+          );
 
         success = true;
       } catch (error) {

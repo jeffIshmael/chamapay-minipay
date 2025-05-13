@@ -26,7 +26,7 @@ contract ChamaPay is Ownable,ReentrancyGuard {
     constructor() Ownable(msg.sender) {
 
     aiAgent = msg.sender;
-    cUSDToken = IERC20(0x456a3D042C0DbD3db53D5489e98dFb038553B0d0);
+    cUSDToken = IERC20(0x874069Fa1Eb16D44d622F2e0Ca25eeA172369bC1);
     
     }
 
@@ -119,7 +119,7 @@ contract ChamaPay is Ownable,ReentrancyGuard {
             _isPublic,  
             msg.sender
         );
-        }
+    }
     
     
     // Add a member to the chama(Private)
@@ -166,8 +166,7 @@ contract ChamaPay is Ownable,ReentrancyGuard {
         }
         // Emit an event for the cash deposit
         emit CashDeposited(_chamaId, msg.sender, _amount);
-   
-}
+    }
 
     // Check if all members have contributed
     function allMembersContributed(uint _chamaId) internal view returns (bool) {
@@ -238,7 +237,7 @@ contract ChamaPay is Ownable,ReentrancyGuard {
         emit FundsDisbursed(_chamaId, recipient, totalPay);
     }
 
-       // Function to delete a member (admin or self)
+    // Function to delete a member (admin or self)
     function deleteMember(uint _chamaId, address _member) public onlyMembers(_chamaId) {
         Chama storage chama = chamas[_chamaId];
         require(msg.sender == chama.admin || msg.sender == _member, "Only admin or the member can delete");
@@ -450,9 +449,10 @@ contract ChamaPay is Ownable,ReentrancyGuard {
         startDates[i] = chama.startDate;
         durations[i] = chama.duration;        
         admins[i] = chama.admin;
-    }
+        }
 
     return (chamaIds, amounts, startDates, durations, admins);
+    
 }
 
     //function to get chama by id
@@ -467,19 +467,9 @@ contract ChamaPay is Ownable,ReentrancyGuard {
     address[] memory,
     bool
     ) {
-    Chama storage chama = chamas[_chamaId];
-    return (
-        chama.chamaId,
-        chama.amount,
-        chama.startDate,
-        chama.duration,
-        chama.round,
-        chama.cycle,
-        chama.admin,
-        chama.members,
-        chama.isPublic
-    );
-}
+        Chama storage chama = chamas[_chamaId];
+        return (chama.chamaId,chama.amount,chama.startDate,chama.duration,chama.round,chama.cycle,chama.admin,chama.members,chama.isPublic);
+    }
 
     //function to get a chama payout order
     function getChamaPayoutOrder(uint _chamaId) public view returns (address[] memory) {

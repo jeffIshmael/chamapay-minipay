@@ -5,18 +5,14 @@ import React, { useEffect, useState } from "react";
 import { useAccount } from "wagmi";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
-import {
-  FiUser,
-  FiUsers,
-  FiShare2,
-  FiChevronRight,
-} from "react-icons/fi";
+import { FiUser, FiUsers, FiShare2, FiChevronRight } from "react-icons/fi";
 import { showToast } from "./Toast";
 
 interface User {
   chamaId: number;
   id: number;
   payDate: Date;
+  incognito: boolean;
   user: {
     id: number;
     address: string;
@@ -46,7 +42,6 @@ const Members = ({
   // Generate invite link
   useEffect(() => {
     setGroupLink(`${window.location.origin}/Chama/${slug}`);
-
   }, [slug]);
 
   // Copy invite link to clipboard
@@ -105,7 +100,8 @@ const Members = ({
           {members.map((member, index) => {
             const isCurrentUser =
               isConnected && member.user.address === address;
-            const isAdmin =  member.user.address === adminWallet;
+            const isAdmin = member.user.address === adminWallet;
+            const isIncognito = member.incognito;
             const truncatedAddress = `${member.user.address.slice(
               0,
               6
@@ -117,44 +113,68 @@ const Members = ({
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
-                className="bg-white p-4 rounded-xl shadow-sm border border-gray-100"
+                className={`bg-white p-4 rounded-xl shadow-sm border ${
+                  isIncognito
+                    ? "border-gray-200 border-dashed"
+                    : "border-gray-100"
+                }`}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
                     <div
                       className={`p-2 rounded-full ${
-                        isAdmin ? "bg-downy-100" : "bg-gray-100"
+                        isAdmin
+                          ? "bg-downy-100"
+                          : isIncognito
+                          ? "bg-gray-50"
+                          : "bg-gray-100"
                       }`}
                     >
                       <FiUser
                         className={`text-lg ${
-                          isAdmin ? "text-downy-600" : "text-gray-500"
+                          isAdmin
+                            ? "text-downy-600"
+                            : isIncognito
+                            ? "text-gray-400"
+                            : "text-gray-500"
                         }`}
                       />
                     </div>
                     <div>
                       <h3 className="font-medium text-gray-800">
-                        {isCurrentUser ? "You" : member.user?.name || "Member"}
-                        {isAdmin && (
-                          <span className="ml-2 bg-downy-100 text-downy-600 text-xs px-2 py-0.5 rounded-full">
-                            Admin
+                        {isIncognito ? (
+                          <span className="text-gray-500 italic">
+                            Incognito Member
                           </span>
+                        ) : (
+                          <>
+                            {isCurrentUser
+                              ? "You"
+                              : member.user?.name || "Member"}
+                            {isAdmin && (
+                              <span className="ml-2 bg-downy-100 text-downy-600 text-xs px-2 py-0.5 rounded-full">
+                                Admin
+                              </span>
+                            )}
+                          </>
                         )}
                       </h3>
-                      <button
-                        onClick={() => {
-                          navigator.clipboard.writeText(member.user.address);
-                          toast("Address copied to clipboard");
-                        }}
-                        className="bg-transparent hover:bg-transparent"
-                      >
-                        <p className="text-gray-500 text-xs">
-                          {truncatedAddress}
-                        </p>
-                      </button>
+                      {!isIncognito && (
+                        <button
+                          onClick={() => {
+                            navigator.clipboard.writeText(member.user.address);
+                            toast("Address copied to clipboard");
+                          }}
+                          className="bg-transparent hover:bg-transparent"
+                        >
+                          <p className="text-gray-500 text-xs">
+                            {truncatedAddress}
+                          </p>
+                        </button>
+                      )}
                     </div>
                   </div>
-                  <FiChevronRight className="text-gray-400" />
+                  {!isIncognito && <FiChevronRight className="text-gray-400" />}
                 </div>
               </motion.div>
             );

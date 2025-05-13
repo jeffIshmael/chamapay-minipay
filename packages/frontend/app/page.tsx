@@ -2,15 +2,28 @@
 import Image from "next/image";
 import Link from "next/link";
 import { allFunctions } from "../lib/functions";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { sdk } from "@farcaster/frame-sdk";
 
 export default function Home() {
+  const [isInterfaceReady, setIsInterfaceReady] = useState(false);
+
   useEffect(() => {
-    const runFunctions = async () => {
+    const initializeApp = async () => {
       await allFunctions();
+      setIsInterfaceReady(true);
     };
-    runFunctions();
+    initializeApp();
   }, []);
+
+  useEffect(() => {
+    const setReady = async () => {
+      if (isInterfaceReady) {
+        await sdk.actions.ready();
+      }
+    };
+    setReady();
+  }, [isInterfaceReady]);
 
   return (
     <main className="bg-gradient-to-b from-downy-100 to-gray-50 min-h-screen rounded-md p-6">

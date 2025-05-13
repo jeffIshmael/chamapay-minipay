@@ -33,6 +33,7 @@ interface User {
   chamaId: number;
   id: number;
   payDate: Date;
+  incognito: boolean;
   user: {
     id: number;
     address: string;
@@ -54,6 +55,7 @@ interface Chama {
   name: string;
   round: number;
   cycle: number;
+  canJoin: boolean;
   payDate: Date;
   slug: string;
   startDate: Date;
@@ -87,7 +89,7 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
     if (!isConnected) {
       connect({ connector: injected({ target: "metaMask" }) });
     }
-  }, [isConnected, connect]);
+  }, [isConnected]);
 
   useEffect(() => {
     const fetchChama = async () => {
@@ -99,9 +101,11 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
         const time = await duration(data.chama?.cycleTime || 0);
         setCycle(time);
         setChamaType(data.chama?.type || "");
-        const result = await checkRequest(address as string ,data.chama?.id ?? 0)
+        const result = await checkRequest(
+          address as string,
+          data.chama?.id ?? 0
+        );
         setHasRequest(result);
-        
       }
     };
     fetchChama();
@@ -164,9 +168,10 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
             address as string,
             chama?.id ?? 0,
             chama?.amount ?? BigInt(0),
-            hash
+            hash,
+            chama?.canJoin ?? true
           );
-          showToast(`successfully joined ${chama?.name}`,"success");
+          showToast(`successfully joined ${chama?.name}`, "success");
           setLoading(false);
           router.push("/MyChamas");
         } else {
@@ -174,7 +179,6 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
           setError("Something happened, please try again.");
         }
       } else {
-
         setError("Ensure you have enough funds in your wallet.");
       }
     } catch (error) {
@@ -216,11 +220,25 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
                   </div>
                 )}
                 <h2 className="text-xl font-semibold text-gray-800 mb-4">
-                  Lock Amount
+                  {!chama.canJoin ? "Join in Incognito Mode" : "Lock Amount"}
                 </h2>
                 <p className="text-gray-600 mb-6">
-                  You need to lock {formatEther(chama.amount)} cUSD before
-                  joining {chama.name} chama.
+                  You need to lock {formatEther(chama.amount)} cUSD to join{" "}
+                  {chama.name}.
+                  {!chama.canJoin && (
+                    <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                      <p className="text-yellow-700 text-sm">
+                        ⓘ This chama has completed its first round of cycle{" "}
+                        {chama.cycle}. You'll join in
+                        <span className="font-semibold">
+                          {" "}
+                          incognito mode
+                        </span>{" "}
+                        and won't be part of payouts until the next cycle
+                        starts.
+                      </p>
+                    </div>
+                  )}
                 </p>
                 <div className="flex justify-end space-x-4">
                   <button
@@ -230,7 +248,7 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
                         : () => setShowModal(false)
                     }
                     disabled={loading || processing}
-                    className={`px-4 py-2 bg-gray-300 text-gray-700 rounded-md  ${
+                    className={`px-4 py-2 bg-gray-300 text-gray-700 rounded-md ${
                       loading || processing
                         ? "hover:cursor-not-allowed hover:bg-current"
                         : "hover:bg-gray-400"
@@ -241,7 +259,7 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
                   <button
                     onClick={joinPublicChama}
                     disabled={loading || processing}
-                    className={`px-4 py-2  text-white rounded-md  ${
+                    className={`px-4 py-2 text-white rounded-md ${
                       processing || loading
                         ? "opacity-50 cursor-not-allowed"
                         : "bg-downy-500 hover:bg-downy-600"
@@ -251,25 +269,38 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
                       ? "Joining..."
                       : processing
                       ? "Processing..."
+                      : !chama.canJoin
+                      ? "Join Incognito"
                       : "Proceed"}
                   </button>
                 </div>
               </div>
             </div>
           )}
-          <div className="flex justify-end">
-            {chama.started == true ? (
-              <div className="flex items-center">
-                <span className="block w-3 h-3 bg-green-500 rounded-full mr-2"></span>
-                <h2>Started</h2>
-              </div>
-            ) : (
-              <div className="flex items-center">
-                <span className="block w-3 h-3 bg-gray-400 rounded-full mr-2"></span>
-                <h2>Not Started</h2>
-              </div>
-            )}
+          <div className="flex justify-end gap-2 mb-1 mt-2">
+            {/* Combined Status Indicator */}
+            <div className="flex items-center bg-gray-50 px-2.5 py-1 rounded-lg border border-gray-200 text-xs">
+              <span
+                className={`w-1.5 h-1.5 rounded-full mr-1.5 ${
+                  chama.started ? "bg-green-500" : "bg-gray-400"
+                }`}
+              ></span>
+              <span>{chama.started ? "Started" : "Not started"}</span>
+
+              {chama.started && (
+                <>
+                  <span className="mx-1.5 text-gray-300">|</span>
+                  <span
+                    className={`w-1.5 h-1.5 rounded-full mr-1.5 ${
+                      chama.canJoin ? "bg-purple-500" : "bg-yellow-500"
+                    }`}
+                  ></span>
+                  <span>{chama.canJoin ? "Open membership" : "Observer only"}</span>
+                </>
+              )}
+            </div>
           </div>
+
           <div className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full">
             {/* Image */}
             <div className="flex justify-center mb-2">
@@ -326,9 +357,13 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
                       : joinChama
                   }
                   disabled={hasRequest}
-                  className={`bg-downy-500 px-16 rounded-md py-2 text-white font-semibold text-center  transition-all ${hasRequest ? "bg-opacity-50 cursor-not-allowed " :"hover:bg-downy-700"}`}
+                  className={`bg-downy-500 px-16 rounded-md py-2 text-white font-semibold text-center  transition-all ${
+                    hasRequest
+                      ? "bg-opacity-50 cursor-not-allowed "
+                      : "hover:bg-downy-700"
+                  }`}
                 >
-                 {hasRequest ? "Request sent" : "Join" }
+                  {hasRequest ? "Request sent" : "Join"}
                 </button>
               ) : (
                 <button
