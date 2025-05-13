@@ -26,8 +26,8 @@ const Page = () => {
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState("Home");
   const [showRegister, setShowRegister] = useState(false);
-  const { connect } = useConnect();
-  const { address} = useAccount();
+  const { connect, connectors } = useConnect();
+  const { address } = useAccount();
   const [error, setError] = useState("");
   const [userName, setUserName] = useState("");
   const [isRegistering, setIsRegistering] = useState(false);
@@ -49,6 +49,8 @@ const Page = () => {
 
     if (window.ethereum && window.ethereum.isMiniPay) {
       connect({ connector: injected({ target: "metaMask" }) });
+    } else {
+      connect({ connector: connectors[0] });
     }
   }, []);
 
@@ -80,7 +82,7 @@ const Page = () => {
     try {
       if (address) {
         await createUser(userName.trim(), address);
-        showToast("Username set successfully!","success");
+        showToast("Username set successfully!", "success");
         setShowRegister(false);
       }
     } catch (error) {
