@@ -3,10 +3,10 @@ import {
   contractAddress,
 } from "@/app/ChamaPayABI/ChamaPayContract";
 import { createPublicClient, http, Log, parseAbiItem } from "viem";
-import { celoAlfajores } from "viem/chains";
+import { celo } from "viem/chains";
 
 export const publicClient = createPublicClient({
-  chain: celoAlfajores,
+  chain: celo,
   transport: http(),
 });
 
