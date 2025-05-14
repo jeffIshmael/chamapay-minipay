@@ -38,6 +38,7 @@ import { showToast } from "@/app/Components/Toast";
 import { config } from "@/Providers/BlockchainProviders";
 import { getConnectorClient, getConnections } from "@wagmi/core";
 import { celoAlfajores } from "wagmi/chains";
+import { sdk } from "@farcaster/frame-sdk";
 
 interface User {
   chamaId: number;
@@ -139,6 +140,12 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
     switchToAlfajores();
   }, [chainId, switchChainAsync]);
 
+  useEffect(() => {
+    const connections = getConnections(config);
+    console.log("connections", connections);
+    setCurrentConnector(connections[0].connector?.id);
+  }, []);
+
   // sending request to join private chama
   const joinChama = async () => {
     if (!isConnected) {
@@ -226,21 +233,46 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
     }
   };
 
-  const frameContent = {
-    version: "next",
-    imageUrl: `https://ipfs.io/ipfs/Qmd1VFua3zc65LT93Sv81VVu6BGa2QEuAakAFJexmRDGtX/${Number(
-      chama?.id
-    )}.jpg`,
-    button: {
-      title: "view chama",
-      action: {
-        type: "launch_frame",
-        url: `https://chamapay-minipay.vercel.app/Chama/${chama?.slug}`,
-        name: "ChamaApp",
-        splashImageUrl: "https://chamapay-minipay.vercel.app/images/logo.png",
-        splashBackgroundColor: "#f5f0ec",
-      },
-    },
+  const handleShareCast = async () => {
+    if (!chama) return;
+
+    // Construct the cast text
+    const message =
+      `🔔 Join "${chama.name}" on ChamaPay!\n` +
+      `💰 Contribution: ${formatEther(chama.amount)} cUSD/${cycle}\n` +
+      `👥 Members: ${chama.members?.length}\n` +
+      `⏰ Next Pay Date: ${
+        chama.started
+          ? chama.payDate.toLocaleDateString("en-GB", {
+              day: "numeric",
+              month: "short",
+              year: "numeric",
+            })
+          : chama.startDate.toLocaleDateString("en-GB", {
+              day: "numeric",
+              month: "short",
+              year: "numeric",
+            })
+      }\n\n` +
+      `🔗 Join here: https://chamapay-minipay.vercel.app/Chama/${chama.slug}`;
+
+    // Suggest an embed (e.g., link to the Chama's page or image)
+    const embeds: [string, string] = [
+      `https://chamapay-minipay.vercel.app/Chama/${chama.slug}`,
+      `https://ipfs.io/ipfs/Qmd1VFua3zc65LT93Sv81VVu6BGa2QEuAakAFJexmRDGtX/${chama.id}.jpg`,
+    ];
+
+    try {
+      const result = await sdk.actions.composeCast({
+        text: message,
+        embeds,
+        // close: true, // Uncomment if you want to auto-close the mini app
+      });
+
+      console.log("Cast posted:", result?.cast.hash);
+    } catch (err) {
+      console.error("ComposeCast failed:", err);
+    }
   };
 
   if (!chama || (chama === null && !isConnected)) {
@@ -256,10 +288,7 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
   }
 
   return (
-    <>
-      <Head>
-        <meta name="fc:frame" content={JSON.stringify(frameContent)} />
-      </Head>
+    <div>
       {activeSection === "Details" && (
         <div className="bg-downy-100 min-h-screen flex flex-col items-center py-1">
           {/* Main Content */}
@@ -434,24 +463,43 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
             </div>
             {/* SVG/Icon */}
 
-            {included && (
-              <div
-                onClick={() => {
-                  setActiveSection("Chats");
-                }}
-                className="flex justify-center hover:cursor-pointer"
+            <div className="flex justify-center space-x-4 mt-4">
+              {included && (
+                <div
+                  onClick={() => {
+                    setActiveSection("Chats");
+                  }}
+                  className="flex justify-center hover:cursor-pointer"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    className="w-8 h-8 text-downy-500 hover:text-downy-700"
+                  >
+                    <path d="M4.913 2.658c2.075-.27 4.19-.408 6.337-.408 2.147 0 4.262.139 6.337.408 1.922.25 3.291 1.861 3.405 3.727a4.403 4.403 0 0 0-1.032-.211 50.89 50.89 0 0 0-8.42 0c-2.358.196-4.04 2.19-4.04 4.434v4.286a4.47 4.47 0 0 0 2.433 3.984L7.28 21.53A.75.75 0 0 1 6 21v-4.03a48.527 48.527 0 0 1-1.087-.128C2.905 16.58 1.5 14.833 1.5 12.862V6.638c0-1.97 1.405-3.718 3.413-3.979Z" />
+                    <path d="M15.75 7.5c-1.376 0-2.739.057-4.086.169C10.124 7.797 9 9.103 9 10.609v4.285c0 1.507 1.128 2.814 2.67 2.94 1.243.102 2.5.157 3.768.165l2.782 2.781a.75.75 0 0 0 1.28-.53v-2.39l.33-.026c1.542-.125 2.67-1.433 2.67-2.94v-4.286c0-1.505-1.125-2.811-2.664-2.94A49.392 49.392 0 0 0 15.75 7.5Z" />
+                  </svg>
+                </div>
+              )}
+              <button
+                onClick={handleShareCast}
+                className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
+                  width="200"
+                  height="200"
                   viewBox="0 0 24 24"
-                  fill="currentColor"
-                  className="w-8 h-8 text-downy-500 hover:text-downy-700"
                 >
-                  <path d="M4.913 2.658c2.075-.27 4.19-.408 6.337-.408 2.147 0 4.262.139 6.337.408 1.922.25 3.291 1.861 3.405 3.727a4.403 4.403 0 0 0-1.032-.211 50.89 50.89 0 0 0-8.42 0c-2.358.196-4.04 2.19-4.04 4.434v4.286a4.47 4.47 0 0 0 2.433 3.984L7.28 21.53A.75.75 0 0 1 6 21v-4.03a48.527 48.527 0 0 1-1.087-.128C2.905 16.58 1.5 14.833 1.5 12.862V6.638c0-1.97 1.405-3.718 3.413-3.979Z" />
-                  <path d="M15.75 7.5c-1.376 0-2.739.057-4.086.169C10.124 7.797 9 9.103 9 10.609v4.285c0 1.507 1.128 2.814 2.67 2.94 1.243.102 2.5.157 3.768.165l2.782 2.781a.75.75 0 0 0 1.28-.53v-2.39l.33-.026c1.542-.125 2.67-1.433 2.67-2.94v-4.286c0-1.505-1.125-2.811-2.664-2.94A49.392 49.392 0 0 0 15.75 7.5Z" />
+                  <path
+                    fill="currentColor"
+                    d="M18.24.24H5.76A5.76 5.76 0 0 0 0 6v12a5.76 5.76 0 0 0 5.76 5.76h12.48A5.76 5.76 0 0 0 24 18V6A5.76 5.76 0 0 0 18.24.24m.816 17.166v.504a.49.49 0 0 1 .543.48v.568h-5.143v-.569A.49.49 0 0 1 15 17.91v-.504c0-.22.153-.402.358-.458l-.01-4.364c-.158-1.737-1.64-3.098-3.443-3.098s-3.285 1.361-3.443 3.098l-.01 4.358c.228.042.532.208.54.464v.504a.49.49 0 0 1 .543.48v.568H4.392v-.569a.49.49 0 0 1 .543-.479v-.504c0-.253.201-.454.454-.472V9.039h-.49l-.61-2.031H6.93V5.042h9.95v1.966h2.822l-.61 2.03h-.49v7.896c.252.017.453.22.453.472"
+                  />
                 </svg>
-              </div>
-            )}
+                Share to Farcaster
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -545,7 +593,7 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
           </div>
         </>
       )}
-    </>
+    </div>
   );
 };
 
