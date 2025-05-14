@@ -39,15 +39,20 @@ const Page = () => {
     const checkUserRegistered = async () => {
       if (address) {
         const user = await checkUser(address as string);
-        if (!user) {
-          //check if user is connected via farcaster
-          if (currentConnector === "farcaster") {
-            console.log("the current connector is", currentConnector);
-            // get farcaster user details
-            const fcDetails = await getFarcasterUser(address as string);
-            console.log("the fcDetails are", fcDetails);
+        if (!user && currentConnector === "farcaster") {
+          try {
+            const res = await fetch("/api/fc-user", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ address }),
+            });
 
-            if (fcDetails) {
+            const data = await res.json();
+
+            if (res.ok && data.user) {
+              const fcDetails = data.user;
               await createUser(
                 fcDetails.userName,
                 address,
@@ -55,13 +60,20 @@ const Page = () => {
                 true
               );
               return;
+            } else {
+              console.error("Error getting Farcaster user:", data.error);
+              setShowRegister(true);
             }
-            return;
+          } catch (err) {
+            console.error("Fetch error:", err);
+            setShowRegister(true);
           }
+        } else if (!user) {
           setShowRegister(true);
         }
       }
     };
+
     checkUserRegistered();
   }, [address, currentConnector]);
 
