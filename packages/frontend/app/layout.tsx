@@ -5,6 +5,7 @@ import "./globals.css";
 import "@rainbow-me/rainbowkit/styles.css";
 import { BlockchainProviders } from "@/Providers/BlockchainProviders";
 import { Toaster } from "sonner";
+import { fcEmbed } from "@/lib/fcMetadata";
 
 
 const inter = Inter({ subsets: ["latin"] });
@@ -12,6 +13,10 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "ChamaPay",
   description: "Digital rotary group chama",
+  other:{
+    'fc:frame': JSON.stringify(fcEmbed),
+  },
+  
 };
 
 export default function RootLayout({
