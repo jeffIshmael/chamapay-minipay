@@ -46,7 +46,7 @@ const Page = () => {
               headers: {
                 "Content-Type": "application/json",
               },
-              body: JSON.stringify({ address }),
+              body: JSON.stringify({ address: address as string }),
             });
 
             const data = await res.json();
