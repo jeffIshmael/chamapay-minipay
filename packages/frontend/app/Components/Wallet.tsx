@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useReadContract, useAccount, useConnect, useDisconnect } from "wagmi";
-import { celoAlfajores } from "viem/chains";
+import { celoAlfajores, celo } from "viem/chains";
 import { cUSDContractAddress } from "@/app/ChamaPayABI/ChamaPayContract";
 import erc20Abi from "@/app/ChamaPayABI/ERC20.json";
 import Link from "next/link";
@@ -55,7 +55,7 @@ const Wallet = () => {
   const router = useRouter();
   const [currentConnector, setCurrentConnector] = useState<string | null>(null);
   const { data: balanceData } = useReadContract({
-    chainId: celoAlfajores.id,
+    chainId: celo.id,
     address: cUSDContractAddress,
     functionName: "balanceOf",
     abi: erc20Abi,
