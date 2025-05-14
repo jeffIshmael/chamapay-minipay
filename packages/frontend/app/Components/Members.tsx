@@ -8,6 +8,9 @@ import { motion } from "framer-motion";
 import { FiUser, FiUsers, FiShare2, FiChevronRight } from "react-icons/fi";
 import { showToast } from "./Toast";
 import { FiCast } from "react-icons/fi";
+import { getConnections } from "@wagmi/core";
+import { config } from "@/Providers/BlockchainProviders";
+import { sdk } from "@farcaster/frame-sdk";
 
 interface User {
   chamaId: number;
@@ -41,10 +44,17 @@ const Members = ({
   const { isConnected, address } = useAccount();
   const [copied, setCopied] = useState(false);
 
+  const [currentConnector, setCurrentConnector] = useState<string | null>(null);
+
   // Generate invite link
   useEffect(() => {
     setGroupLink(`${window.location.origin}/Chama/${slug}`);
   }, [slug]);
+
+  useEffect(() => {
+    const connections = getConnections(config);
+    setCurrentConnector(connections[0].connector?.id);
+  }, []);
 
   // Copy invite link to clipboard
   const copyToClipboard = async () => {
@@ -177,22 +187,22 @@ const Members = ({
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    {member.user.isFarcaster && (
-                      <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() =>
-                          window.open(
-                            `https://warpcast.com/${member.user.fid}`,
-                            "_blank"
-                          )
-                        }
-                        className="flex items-center gap-1 px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-medium"
-                      >
-                        <FiCast className="text-purple-600" />
-                        <span>Profile</span>
-                      </motion.button>
-                    )}
+                    {member.user.isFarcaster &&
+                      currentConnector === "farcaster" && (
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={async () =>
+                            await sdk.actions.viewProfile({
+                              fid: member.user.fid ?? 0,
+                            })
+                          }
+                          className="flex items-center gap-1 px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-medium"
+                        >
+                          <FiCast className="text-purple-600" />
+                          <span>Profile</span>
+                        </motion.button>
+                      )}
                     {!isIncognito && (
                       <FiChevronRight className="text-gray-400" />
                     )}
