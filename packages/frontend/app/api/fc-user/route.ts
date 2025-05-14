@@ -7,6 +7,7 @@ export async function POST(req: Request) {
     const { address } = await req.json();
 
     if (!address) return NextResponse.json({ error: "Missing address" }, { status: 400 });
+    if (address) return NextResponse.json({address }, { status: 200 });
 
     const user = await getFarcasterUser(address);
     return NextResponse.json({ user });
