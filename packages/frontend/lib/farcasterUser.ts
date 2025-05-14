@@ -1,5 +1,5 @@
 // this file handles getting farcaster user details from address i.e fid, username
-
+"use server";
 import farcasterClient from "./neynarClient";
 
 let userDetails: {

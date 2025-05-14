@@ -44,11 +44,16 @@ const Page = () => {
           if (currentConnector === "farcaster") {
             // get farcaster user details
             const fcDetails = await getFarcasterUser(address as string);
-            if(fcDetails){
-              await createUser(fcDetails.userName, address, fcDetails.fid, true);
+
+            if (fcDetails) {
+              await createUser(
+                fcDetails.userName,
+                address,
+                fcDetails.fid,
+                true
+              );
               return;
             }
-
           }
           setShowRegister(true);
         }
@@ -68,9 +73,18 @@ const Page = () => {
   }, []);
 
   useEffect(() => {
-    const connections = getConnections(config);
-    console.log("connections", connections);
-    setCurrentConnector(connections[0].connector?.id);
+    const init = async () => {
+      try {
+        const connections = getConnections(config);
+        console.log("connections", connections);
+        if (connections[0]?.connector?.id) {
+          setCurrentConnector(connections[0].connector.id);
+        }
+      } catch (error) {
+        console.error("Connection error:", error);
+      }
+    };
+    init();
   }, [address]);
 
   useEffect(() => {
