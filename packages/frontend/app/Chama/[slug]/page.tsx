@@ -172,6 +172,13 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
       setError("Please connect your wallet");
       return;
     }
+    if (chainId !== celoAlfajores.id) {
+      try {
+        await switchChainAsync({ chainId: celoAlfajores.id });
+      } catch (error) {
+        console.error("Failed to switch to Alfajores:", error);
+      }
+    }
 
     try {
       setProcessing(true);

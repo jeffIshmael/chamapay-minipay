@@ -4,6 +4,7 @@ import Link from "next/link";
 import { allFunctions } from "../lib/functions";
 import { useEffect, useState } from "react";
 import { sdk } from "@farcaster/frame-sdk";
+import Head from "next/head";
 
 export default function Home() {
   const [isInterfaceReady, setIsInterfaceReady] = useState(false);
@@ -25,9 +26,28 @@ export default function Home() {
     setReady();
   }, [isInterfaceReady]);
 
+  const frameContent = {
+    version: "next",
+    imageUrl:
+      "https://ipfs.io/ipfs/Qmd1VFua3zc65LT93Sv81VVu6BGa2QEuAakAFJexmRDGtX/1.jpg",
+    button: {
+      title: "view chama",
+      action: {
+        type: "launch_frame",
+        url: "https://chamapay-minipay.vercel.app/myChamas",
+        name: "ChamaApp",
+        splashImageUrl: "https://chamapay-minipay.vercel.app/images/logo.png",
+        splashBackgroundColor: "#f5f0ec",
+      },
+    },
+  };
+
   return (
     <main className="bg-gradient-to-b from-downy-100 to-gray-50 min-h-screen rounded-md p-6">
       {/* Header Section */}
+      <Head>
+        <meta name="fc:frame" content={JSON.stringify(frameContent)} />
+      </Head>
       <div className="text-center mt-8">
         <h1
           className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-downy-700 to-downy-500 animate__animated animate__fadeInDown"
