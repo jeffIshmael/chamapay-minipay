@@ -391,7 +391,7 @@ const Wallet = () => {
         />
       )}
       {activeModal === "send" && (
-        <SendModal isOpen={true} onClose={closeModal} balance={balance} />
+        <SendModal isOpen={true} onClose={closeModal} balance={balance} currentConnector={currentConnector ?? ""} />
       )}
       {activeModal === "withdraw" && (
         <WithdrawModal isOpen={true} onClose={closeModal} balance={balance} />

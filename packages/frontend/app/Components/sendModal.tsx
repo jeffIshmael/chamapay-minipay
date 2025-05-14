@@ -11,10 +11,12 @@ export default function SendModal({
   isOpen,
   onClose,
   balance,
+  currentConnector
 }: {
   isOpen: boolean;
   onClose: () => void;
   balance: number;
+  currentConnector:string;
 }) {
   const [recipient, setRecipient] = useState("");
   const [amount, setAmount] = useState("");
@@ -50,8 +52,8 @@ export default function SendModal({
     try {
       setIsSending(true);
       const parsedAmount = parseEther(amount);
-      // const sent = await processCheckout(recipient as `0x${string}`, parsedAmount);
-      const sent = true;
+      const sent = await processCheckout(recipient as `0x${string}`, parsedAmount,currentConnector);
+     
       
       if (!sent) {
         showToast("Unable to send payment. Please try again.", "error");
