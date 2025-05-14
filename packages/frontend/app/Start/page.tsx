@@ -42,8 +42,10 @@ const Page = () => {
         if (!user) {
           //check if user is connected via farcaster
           if (currentConnector === "farcaster") {
+            console.log("the current connector is", currentConnector);
             // get farcaster user details
             const fcDetails = await getFarcasterUser(address as string);
+            console.log("the fcDetails are", fcDetails);
 
             if (fcDetails) {
               await createUser(
@@ -54,6 +56,7 @@ const Page = () => {
               );
               return;
             }
+            return:
           }
           setShowRegister(true);
         }
