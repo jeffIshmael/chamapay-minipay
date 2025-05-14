@@ -16,7 +16,7 @@ import { contractAbi, contractAddress } from "../ChamaPayABI/ChamaPayContract";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { FiCheck, FiX, FiBell, FiClock, FiUserPlus } from "react-icons/fi";
 import { showToast } from "../Components/Toast";
-import { sdk } from "@farcaster/frame-sdk";
+import  sdk  from "@farcaster/frame-sdk";
 import { getConnections } from "@wagmi/core";
 import { config } from "@/Providers/BlockchainProviders";
 
