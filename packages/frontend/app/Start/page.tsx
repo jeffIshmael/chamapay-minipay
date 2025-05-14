@@ -50,6 +50,7 @@ const Page = () => {
             });
 
             const data = await res.json();
+            console.log("brought data",data);
 
             if (res.ok && data.user) {
               const fcDetails = data.user;
