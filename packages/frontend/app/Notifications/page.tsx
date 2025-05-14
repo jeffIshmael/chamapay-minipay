@@ -16,6 +16,9 @@ import { contractAbi, contractAddress } from "../ChamaPayABI/ChamaPayContract";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { FiCheck, FiX, FiBell, FiClock, FiUserPlus } from "react-icons/fi";
 import { showToast } from "../Components/Toast";
+import { sdk } from "@farcaster/frame-sdk";
+import { getConnections } from "@wagmi/core";
+import { config } from "@/Providers/BlockchainProviders";
 
 interface Chama {
   adminId: number;
@@ -73,7 +76,7 @@ const Page = () => {
   const [fetching, setFetching] = useState<boolean>(false);
   const { writeContractAsync } = useWriteContract();
   const { isConnected, address } = useAccount();
-  // const [senderDetails, setSenderDetails] = useState<User | null>(null);
+  const [currentConnector, setCurrentConnector] = useState("");
 
   // Fetch user details
   useEffect(() => {
@@ -115,6 +118,11 @@ const Page = () => {
     fetchData();
   }, [userId]);
 
+  useEffect(() => {
+    const connections = getConnections(config);
+    setCurrentConnector(connections[0].connector?.id);
+  }, []);
+
   const handleJoin = async (
     action: "approve" | "reject",
     chamaBlockchainId: number,
@@ -122,7 +130,7 @@ const Page = () => {
     chamaName: string,
     senderId: number,
     requestId: number,
-    canJoin: boolean,
+    canJoin: boolean
   ) => {
     if (!isConnected) {
       toast.error("Please connect your wallet");
@@ -184,6 +192,17 @@ const Page = () => {
     }
   };
 
+  //function to add frame to farcaster in order to receive live notifictions
+  const addFrameToWarpcast = async () => {
+    try {
+      const result = await sdk.actions.addFrame();
+      console.log("notification result", result);
+    } catch (error) {
+      showToast("Oops: something occured.", "error");
+      console.log(error);
+    }
+  };
+
   const pendingRequestIds = new Set(pendingRequests.map((req) => req.id));
 
   return (
@@ -195,11 +214,21 @@ const Page = () => {
             <FiBell className="mr-2 text-downy-600" />
             Notifications
           </h1>
-          {notifications.length > 0 && (
-            <span className="bg-downy-100 text-downy-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
-              {notifications.length} new
-            </span>
-          )}
+          <div className="flex items-center space-x-2">
+            {notifications.length > 0 && (
+              <span className="bg-downy-100 text-downy-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                {notifications.length} new
+              </span>
+            )}
+            {currentConnector === "farcaster" && (
+              <button
+                onClick={() => addFrameToWarpcast()}
+                className="px-3 py-1.5 bg-downy-600 text-white rounded-lg hover:bg-downy-700 transition-colors"
+              >
+                Add to Farcaster
+              </button>
+            )}
+          </div>
         </div>
 
         {fetching ? (
@@ -284,12 +313,18 @@ const Page = () => {
                               onClick={() =>
                                 handleJoin(
                                   "approve",
-                                  notification.chama ? Number(notification.chama.blockchainId) : 0,
+                                  notification.chama
+                                    ? Number(notification.chama.blockchainId)
+                                    : 0,
                                   notification.chamaId ?? 0,
-                                  notification.chama ? notification.chama.name : "",
+                                  notification.chama
+                                    ? notification.chama.name
+                                    : "",
                                   notification.senderId ?? 0,
                                   notification.requestId ?? 0,
-                                  notification.chama ? notification.chama.canJoin : false,
+                                  notification.chama
+                                    ? notification.chama.canJoin
+                                    : false
                                 )
                               }
                               disabled={loading}
@@ -304,12 +339,18 @@ const Page = () => {
                               onClick={() =>
                                 handleJoin(
                                   "reject",
-                                  notification.chama ? Number(notification.chama.blockchainId) : 0,
+                                  notification.chama
+                                    ? Number(notification.chama.blockchainId)
+                                    : 0,
                                   notification.chamaId ?? 0,
-                                  notification.chama ? notification.chama.name : "",
+                                  notification.chama
+                                    ? notification.chama.name
+                                    : "",
                                   notification.senderId ?? 0,
                                   notification.requestId ?? 0,
-                                  notification.chama ? notification.chama.canJoin : false,
+                                  notification.chama
+                                    ? notification.chama.canJoin
+                                    : false
                                 )
                               }
                               disabled={loading}

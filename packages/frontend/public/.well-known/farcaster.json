@@ -13,7 +13,7 @@
     "buttonTitle": "Check this out",
     "splashImageUrl": "https://chamapay-minipay.vercel.app/logo.png",
     "splashBackgroundColor": "#d1f6f1",
-    "webhookUrl": "https://chamapay-minipay.vercel.app/api/webhook",
+    "webhookUrl": "https://api.neynar.com/f/app/d99795a5-172e-44be-a4a8-328a85bc224e/event",
     "subtitle": "Circular savings Made Easy",
     "description": "Manage and track your circular group's seamlessly.",
     "tags": ["finance", "payments", "chama"]

@@ -47,6 +47,7 @@ const CreatePublic = () => {
   });
   const chainId = useChainId();
   const { switchChainAsync } = useSwitchChain();
+  
 
   useEffect(() => {
     const connections = getConnections(config);
