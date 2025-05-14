@@ -56,7 +56,7 @@ const Page = () => {
               );
               return;
             }
-            return:
+            return;
           }
           setShowRegister(true);
         }
