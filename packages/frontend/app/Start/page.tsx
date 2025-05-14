@@ -19,8 +19,10 @@ import { RiHandCoinLine } from "react-icons/ri";
 import { IoMdPeople } from "react-icons/io";
 import { TbPigMoney } from "react-icons/tb";
 import { checkUser, createUser } from "@/lib/chama";
-import { toast } from "sonner";
+import { getConnections } from "@wagmi/core";
 import { showToast } from "../Components/Toast";
+import { config } from "@/Providers/BlockchainProviders";
+import { getFarcasterUser } from "@/lib/farcasterUser";
 
 const Page = () => {
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
@@ -31,18 +33,29 @@ const Page = () => {
   const [error, setError] = useState("");
   const [userName, setUserName] = useState("");
   const [isRegistering, setIsRegistering] = useState(false);
+  const [currentConnector, setCurrentConnector] = useState<string | null>(null);
 
   useEffect(() => {
     const checkUserRegistered = async () => {
       if (address) {
         const user = await checkUser(address as string);
         if (!user) {
+          //check if user is connected via farcaster
+          if (currentConnector === "farcaster") {
+            // get farcaster user details
+            const fcDetails = await getFarcasterUser(address as string);
+            if(fcDetails){
+              await createUser(fcDetails.userName, address, fcDetails.fid, true);
+              return;
+            }
+
+          }
           setShowRegister(true);
         }
       }
     };
     checkUserRegistered();
-  }, [address]);
+  }, [address, currentConnector]);
 
   useEffect(() => {
     // if (isConnected) return;
@@ -53,6 +66,12 @@ const Page = () => {
       connect({ connector: connectors[1] });
     }
   }, []);
+
+  useEffect(() => {
+    const connections = getConnections(config);
+    console.log("connections", connections);
+    setCurrentConnector(connections[0].connector?.id);
+  }, [address]);
 
   useEffect(() => {
     if (showRegister) {
@@ -81,7 +100,7 @@ const Page = () => {
     setIsRegistering(true);
     try {
       if (address) {
-        await createUser(userName.trim(), address);
+        await createUser(userName.trim(), address, 1, false);
         showToast("Username set successfully!", "success");
         setShowRegister(false);
       }

@@ -12,7 +12,10 @@ model User {
   id            Int            @id @default(autoincrement())
   address       String         @unique
   name          String?
-  role          String
+  isFarcaster   Boolean        @default(false)
+  fid           Int?
+  token         String?
+  url           String?
   createdChamas Chama[]        @relation("AdminChamas")
   chamas        ChamaMember[]
   joinRequests  ChamaRequest[]

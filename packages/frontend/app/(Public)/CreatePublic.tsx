@@ -2,7 +2,12 @@ import React, { useEffect, useState } from "react";
 import { checkChama, createChama } from "../../lib/chama";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { useAccount, useSwitchChain, useChainId, useWriteContract } from "wagmi";
+import {
+  useAccount,
+  useSwitchChain,
+  useChainId,
+  useWriteContract,
+} from "wagmi";
 import { contractAbi, contractAddress } from "../ChamaPayABI/ChamaPayContract";
 import { processCheckout } from "../Blockchain/TokenTransfer";
 import { FiAlertTriangle, FiGlobe } from "react-icons/fi";
@@ -11,7 +16,7 @@ import { getLatestChamaId } from "@/lib/readFunctions";
 import { showToast } from "../Components/Toast";
 import { getConnectorClient, getConnections } from "@wagmi/core";
 import { config } from "@/Providers/BlockchainProviders";
-import { celoAlfajores } from "wagmi/chains";
+import { celo, celoAlfajores } from "wagmi/chains";
 
 interface Form {
   amount: string;
@@ -47,7 +52,6 @@ const CreatePublic = () => {
   });
   const chainId = useChainId();
   const { switchChainAsync } = useSwitchChain();
-  
 
   useEffect(() => {
     const connections = getConnections(config);
@@ -55,16 +59,16 @@ const CreatePublic = () => {
   }, []);
 
   useEffect(() => {
-    const switchToAlfajores = async () => {
-      if (chainId !== celoAlfajores.id) {
+    const switchToCelo = async () => {
+      if (chainId !== celo.id) {
         try {
-          await switchChainAsync({ chainId: celoAlfajores.id });
+          await switchChainAsync({ chainId: celo.id });
         } catch (error) {
-          console.error("Failed to switch to Alfajores:", error);
+          console.error("Failed to switch to celo:", error);
         }
       }
     };
-    switchToAlfajores();
+    switchToCelo();
   }, [chainId, switchChainAsync]);
 
   const openModal = async (e: React.FormEvent) => {
@@ -135,7 +139,8 @@ const CreatePublic = () => {
       setProcessing(true);
       const paid = await processCheckout(
         contractAddress as `0x${string}`,
-        amountInWei, currentConnector
+        amountInWei,
+        currentConnector
       );
       if (paid) {
         setProcessing(false);

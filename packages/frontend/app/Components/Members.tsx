@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { FiUser, FiUsers, FiShare2, FiChevronRight } from "react-icons/fi";
 import { showToast } from "./Toast";
+import { FiCast } from "react-icons/fi";
 
 interface User {
   chamaId: number;
@@ -17,7 +18,8 @@ interface User {
     id: number;
     address: string;
     name: string | null;
-    role: string;
+    isFarcaster: boolean;
+    fid: number | null;
   };
   userId: number;
 }
@@ -174,7 +176,27 @@ const Members = ({
                       )}
                     </div>
                   </div>
-                  {!isIncognito && <FiChevronRight className="text-gray-400" />}
+                  <div className="flex items-center gap-2">
+                    {member.user.isFarcaster && (
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() =>
+                          window.open(
+                            `https://warpcast.com/${member.user.fid}`,
+                            "_blank"
+                          )
+                        }
+                        className="flex items-center gap-1 px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-medium"
+                      >
+                        <FiCast className="text-purple-600" />
+                        <span>Profile</span>
+                      </motion.button>
+                    )}
+                    {!isIncognito && (
+                      <FiChevronRight className="text-gray-400" />
+                    )}
+                  </div>
                 </div>
               </motion.div>
             );

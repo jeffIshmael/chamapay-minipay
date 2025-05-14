@@ -29,15 +29,14 @@ import {
 } from "@/app/ChamaPayABI/ChamaPayContract";
 import { injected } from "wagmi/connectors";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
-import { toast } from "sonner";
 import { processCheckout } from "@/app/Blockchain/TokenTransfer";
 import { useRouter } from "next/navigation";
 import { formatEther } from "viem";
 import { FiAlertTriangle } from "react-icons/fi";
 import { showToast } from "@/app/Components/Toast";
 import { config } from "@/Providers/BlockchainProviders";
-import { getConnectorClient, getConnections } from "@wagmi/core";
-import { celoAlfajores } from "wagmi/chains";
+import { getConnections } from "@wagmi/core";
+import { celo, celoAlfajores } from "wagmi/chains";
 import { sdk } from "@farcaster/frame-sdk";
 
 interface User {
@@ -49,7 +48,8 @@ interface User {
     id: number;
     address: string;
     name: string | null;
-    role: string;
+    isFarcaster: boolean;
+    fid: number| null;
   };
   userId: number;
 }
@@ -128,16 +128,18 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
   }, [address, params.slug]);
 
   useEffect(() => {
-    const switchToAlfajores = async () => {
-      if (chainId !== celoAlfajores.id) {
+    const switchToCelo = async () => {
+      if (chainId !== celo.id) {
+        console.log("connected chain", chainId);
+        console.log("celo chain", celo.id);
         try {
-          await switchChainAsync({ chainId: celoAlfajores.id });
+          await switchChainAsync({ chainId: celo.id });
         } catch (error) {
-          console.error("Failed to switch to Alfajores:", error);
+          console.error("Failed to switch to celo:", error);
         }
       }
     };
-    switchToAlfajores();
+    switchToCelo();
   }, [chainId, switchChainAsync]);
 
   useEffect(() => {
@@ -179,11 +181,11 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
       setError("Please connect your wallet");
       return;
     }
-    if (chainId !== celoAlfajores.id) {
+    if (chainId !== celo.id) {
       try {
-        await switchChainAsync({ chainId: celoAlfajores.id });
+        await switchChainAsync({ chainId: celo.id });
       } catch (error) {
-        console.error("Failed to switch to Alfajores:", error);
+        console.error("Failed to switch to celo:", error);
       }
     }
 
@@ -487,7 +489,7 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
                   onClick={handleShareCast}
                   className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition"
                 >
-                  Share to 
+                  Share to
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     width="30"

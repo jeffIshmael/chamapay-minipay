@@ -28,6 +28,9 @@ import DepositModal from "./DepositModal";
 import SendModal from "./sendModal";
 import WithdrawModal from "./WithdrawModal";
 import QRCodeModal from "./QRCodeModal";
+import { getConnections } from "@wagmi/core";
+import { sdk } from "@farcaster/frame-sdk";
+import { config } from "@/Providers/BlockchainProviders";
 
 interface Payment {
   amount: bigint;
@@ -50,6 +53,7 @@ const Wallet = () => {
   const [chamaNames, setChamaNames] = useState<{ [key: number]: string }>({});
   const [hideButton, setHideButton] = useState(false);
   const router = useRouter();
+  const [currentConnector, setCurrentConnector] = useState<string | null>(null);
   const { data: balanceData } = useReadContract({
     chainId: celoAlfajores.id,
     address: cUSDContractAddress,
@@ -71,6 +75,12 @@ const Wallet = () => {
   const truncatedAddress = address
     ? `${address.slice(0, 6)}...${address.slice(-4)}`
     : "";
+
+  useEffect(() => {
+    const connections = getConnections(config);
+    console.log("connections", connections);
+    setCurrentConnector(connections[0].connector?.id);
+  }, []);
 
   const copyToClipboard = async () => {
     if (!address) return;
@@ -94,11 +104,14 @@ const Wallet = () => {
   //useeffect to check if user is connected to minipay
   useEffect(() => {
     if (isConnected) {
-      if (window.ethereum && window.ethereum.isMiniPay) {
+      if (
+        (window.ethereum && window.ethereum.isMiniPay) ||
+        currentConnector === "farcaster"
+      ) {
         setHideButton(true);
       }
     }
-  }, [isConnected]);
+  }, [isConnected, currentConnector]);
 
   // Fetch user ID based on address
   useEffect(() => {
@@ -335,13 +348,26 @@ const Wallet = () => {
                     <span className="font-semibold text-downy-600">
                       {formatEther(payment.amount)} cUSD
                     </span>
-                    <Link
-                      href={`https://alfajores.celoscan.io/tx/${payment.txHash}`}
-                      target="_blank"
-                      className="text-gray-400 hover:text-downy-500"
-                    >
-                      <TbReceiptFilled className="text-gray-600" size={20} />
-                    </Link>
+                    {currentConnector === "farcaster" ? (
+                      <button
+                        onClick={async () =>
+                          await sdk.actions.openUrl(
+                            `https://alfajores.celoscan.io/tx/${payment.txHash}`
+                          )
+                        }
+                        className="text-gray-400 hover:text-downy-500 bg-transparent hover:bg-transparent"
+                      >
+                        <TbReceiptFilled className="text-gray-600" size={20} />
+                      </button>
+                    ) : (
+                      <Link
+                        href={`https://alfajores.celoscan.io/tx/${payment.txHash}`}
+                        target="_blank"
+                        className="text-gray-400 hover:text-downy-500"
+                      >
+                        <TbReceiptFilled className="text-gray-600" size={20} />
+                      </Link>
+                    )}
                   </div>
                 </div>
               </motion.div>

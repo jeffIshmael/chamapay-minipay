@@ -1,6 +1,7 @@
 import { createPublicClient, createWalletClient, custom, http } from "viem";
-import { celoAlfajores } from "viem/chains";
+import { celo } from "viem/chains";
 import { toast } from "sonner";
+import { cUSDContractAddress } from "../ChamaPayABI/ChamaPayContract";
 import ERC20Abi from "@/app/ChamaPayABI/ERC20.json";
 import { sdk } from "@farcaster/frame-sdk";
 
@@ -10,7 +11,7 @@ export const processCheckout = async (
   currentConnector: string
 ) => {
   let provider;
-  console.log("current conecter", currentConnector);
+  console.log("current connector", currentConnector);
   if (currentConnector === "farcaster") {
     if (sdk.wallet?.ethProvider) {
       provider = sdk.wallet.ethProvider;
@@ -25,43 +26,43 @@ export const processCheckout = async (
     return false;
   }
 
-  // 🟡 Step 1: Switch chain if needed
+  // Switch chain if needed
   try {
     const currentChainId = await provider.request({ method: "eth_chainId" });
-    if (parseInt(currentChainId, 16) !== celoAlfajores.id) {
+    if (parseInt(currentChainId, 16) !== celo.id) {
       await provider.request({
         method: "wallet_switchEthereumChain",
-        params: [{ chainId: "0xaef3" }], // 44787 in hex
+        params: [{ chainId: "0xa4ec" }], // 42220 in hex for Celo mainnet
       });
     }
   } catch (err: any) {
-    // If Alfajores isn't added to the wallet, add it
+    // If Celo mainnet isn't added to the wallet, add it
     if (err.code === 4902) {
       try {
         await provider.request({
           method: "wallet_addEthereumChain",
           params: [
             {
-              chainId: "0xaef3",
-              chainName: "Celo Alfajores",
+              chainId: "0xa4ec",
+              chainName: "Celo",
               nativeCurrency: {
                 name: "CELO",
                 symbol: "CELO",
                 decimals: 18,
               },
-              rpcUrls: ["https://alfajores-forno.celo-testnet.org"],
-              blockExplorerUrls: ["https://celo-alfajores.blockscout.com"],
+              rpcUrls: ["https://forno.celo.org"],
+              blockExplorerUrls: ["https://explorer.celo.org"],
             },
           ],
         });
       } catch (addError) {
-        console.error("Failed to add Alfajores chain:", addError);
-        toast("Please add the Alfajores network to your wallet.");
+        console.error("Failed to add Celo mainnet:", addError);
+        toast("Please add the Celo network to your wallet.");
         return false;
       }
     } else {
       console.error("Failed to switch chain:", err);
-      toast("Please switch to the Celo Alfajores network.");
+      toast("Please switch to the Celo network.");
       return false;
     }
   }
@@ -69,12 +70,12 @@ export const processCheckout = async (
   const transport = custom(provider);
 
   const privateClient = createWalletClient({
-    chain: celoAlfajores,
+    chain: celo,
     transport,
   });
 
   const publicClient = createPublicClient({
-    chain: celoAlfajores,
+    chain: celo,
     transport,
   });
 
@@ -83,7 +84,7 @@ export const processCheckout = async (
   try {
     const checkoutTxnHash = await privateClient.writeContract({
       account: address,
-      address: "0x874069Fa1Eb16D44d622F2e0Ca25eeA172369bC1",
+      address: cUSDContractAddress,
       abi: ERC20Abi,
       functionName: "transfer",
       args: [recepient, amount],

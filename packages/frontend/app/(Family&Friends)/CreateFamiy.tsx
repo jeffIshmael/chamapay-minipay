@@ -10,7 +10,7 @@ import { getLatestChamaId } from "@/lib/readFunctions";
 import { parseEther } from "viem";
 import { FiAlertTriangle } from "react-icons/fi";
 import { showToast } from "../Components/Toast";
-import { celoAlfajores } from "wagmi/chains";
+import { celo, celoAlfajores } from "wagmi/chains";
 
 const CreateFamily = () => {
   const [groupName, setGroupName] = useState("");
@@ -28,16 +28,16 @@ const CreateFamily = () => {
 
 
   useEffect(() => {
-    const switchToAlfajores = async () => {
-      if (chainId !== celoAlfajores.id) {
+    const switchToCelo = async () => {
+      if (chainId !== celo.id) {
         try {
-          await switchChainAsync({ chainId: celoAlfajores.id });
+          await switchChainAsync({ chainId: celo.id });
         } catch (error) {
-          console.error("Failed to switch to Alfajores:", error);
+          console.error("Failed to switch to Celo:", error);
         }
       }
     };
-    switchToAlfajores();
+    switchToCelo();
   }, [chainId, switchChainAsync]);
 
 

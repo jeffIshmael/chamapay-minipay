@@ -92,7 +92,7 @@ export async function getChamaById(chamaId: number) {
 }
 
 //create a user
-export async function createUser(userName: string | null, address: string) {
+export async function createUser(userName: string | null, address: string,fid: number, farcaster:boolean) {
   // Check if the address already exists
   let user = await prisma.user.findUnique({
     where: {
@@ -106,7 +106,8 @@ export async function createUser(userName: string | null, address: string) {
       data: {
         name: userName,
         address: address,
-        role: "nonr", // Assuming "nonr" is the default role
+        isFarcaster: farcaster,
+        fid: fid,
       },
     });
   }

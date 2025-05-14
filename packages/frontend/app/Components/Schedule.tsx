@@ -26,7 +26,8 @@ interface User {
     id: number;
     address: string;
     name: string | null;
-    role: string;
+    isFarcaster: boolean;
+    fid: number| null;
   };
   userId: number;
 }
