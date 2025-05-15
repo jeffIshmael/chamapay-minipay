@@ -43,7 +43,7 @@ const Page = () => {
           try {
             const context = await sdk.context;
             console.log("this is the context", context);
-            if (context) {
+            if (context.user) {
               console.log("FID:", context.user.fid);
               console.log("Username:", context.user.username);
               await createUser(
@@ -73,8 +73,7 @@ const Page = () => {
   }, [address, currentConnector]);
 
   useEffect(() => {
-    // if (isConnected) return;
-
+  
     if (window.ethereum && window.ethereum.isMiniPay) {
       connect({ connector: injected({ target: "metaMask" }) });
     } else {
@@ -86,7 +85,7 @@ const Page = () => {
     const getContext = async () => {
       if (currentConnector === "farcaster") {
         const context = await sdk.context;
-        console.log("this is the context", context);
+        console.log("this is the context from usestate", context);
       }
     };
     getContext();
