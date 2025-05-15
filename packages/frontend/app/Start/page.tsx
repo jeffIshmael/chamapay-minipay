@@ -43,22 +43,19 @@ const Page = () => {
           try {
             const context = await sdk.context;
             console.log("this is the context", context);
-            if (context.user) {
-              console.log("FID:", context.user.fid);
-              console.log("Username:", context.user.username);
-              await createUser(
-                context.user.username
-                  ? context.user.username
-                  : context.user.displayName
-                  ? context.user.displayName
-                  : "anonymous",
-                address,
-                context.user.fid,
-                true
-              );
-              return;
-            }
-            showToast("cannot find user", "error");
+            console.log("FID:", context.user.fid);
+            console.log("Username:", context.user.username);
+            await createUser(
+              context.user.username
+                ? context.user.username
+                : context.user.displayName
+                ? context.user.displayName
+                : "anonymous",
+              address,
+              context.user.fid,
+              true
+            );
+            return;
           } catch (err) {
             console.error("Fetch error:", err);
             setShowRegister(true);
@@ -73,22 +70,11 @@ const Page = () => {
   }, [address, currentConnector]);
 
   useEffect(() => {
-  
     if (window.ethereum && window.ethereum.isMiniPay) {
       connect({ connector: injected({ target: "metaMask" }) });
     } else {
       connect({ connector: connectors[1] });
     }
-  }, []);
-
-  useEffect(() => {
-    const getContext = async () => {
-      if (currentConnector === "farcaster") {
-        const context = await sdk.context;
-        console.log("this is the context from usestate", context);
-      }
-    };
-    getContext();
   }, []);
 
   useEffect(() => {
