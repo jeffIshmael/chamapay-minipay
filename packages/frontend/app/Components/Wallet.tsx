@@ -105,10 +105,10 @@ const Wallet = () => {
 
   const handleConnect = async () => {
     try {
-      if (currentConnector === "farcaster") {
-        await connect({ connector: connectors[1] });
+      if (window.ethereum && window.ethereum.isMiniPay) {
+        connect({ connector: injected({ target: "metaMask" }) });
       } else {
-        await connect({ connector: injected({ target: "metaMask" }) });
+        connect({ connector: connectors[1] });
       }
     } catch (error) {
       console.error(error);
