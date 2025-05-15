@@ -43,7 +43,7 @@ const Page = () => {
           try {
             console.log("The current connector",currentConnector);
             const context = await sdk.context;
-            console.log("this is the context", context);
+            console.log("this is the context in check user", context);
             console.log("FID:", context.user.fid);
             console.log("Username:", context.user.username);
             await createUser(
