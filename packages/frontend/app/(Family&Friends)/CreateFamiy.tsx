@@ -34,11 +34,7 @@ const CreateFamily = () => {
   useEffect(() => {
     const switchToCelo = async () => {
       if (chainId !== celo.id) {
-        try {
-          await switchChainAsync({ chainId: celo.id });
-        } catch (error) {
-          console.error("Failed to switch to Celo:", error);
-        }
+        await switchChainAsync({ chainId: celo.id });
       }
     };
     switchToCelo();
@@ -89,14 +85,14 @@ const CreateFamily = () => {
         const dateObject = new Date(startDate as string);
 
         const dateInMilliseconds = dateObject.getTime();
+        console.log("the connected chain Id is", chainId);
+        console.log("the required chain id is", celo.id);
 
         if (chainId !== celo.id) {
-          try {
-            await switchChainAsync({ chainId: celo.id });
-          } catch (error) {
-            console.error("Failed to switch to Celo:", error);
-          }
+          await switchChainAsync({ chainId: celo.id });
         }
+        console.log("After connected chain Id is", chainId);
+        console.log("After required chain id is", celo.id);
 
         // get the current blockchain id from the blockchain
         const chamaIdToUse = await getLatestChamaId();
