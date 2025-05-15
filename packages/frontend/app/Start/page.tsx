@@ -22,77 +22,70 @@ import { checkUser, createUser } from "@/lib/chama";
 import { getConnections } from "@wagmi/core";
 import { showToast } from "../Components/Toast";
 import { config } from "@/Providers/BlockchainProviders";
-import { sdk } from "@farcaster/frame-sdk";
+import { FrameNotificationDetails, sdk } from "@farcaster/frame-sdk";
+
+interface User {
+  fid: number;
+  username?: string;
+  displayName?: string;
+  pfpUrl?: string;
+}
 
 const Page = () => {
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState("Home");
   const [showRegister, setShowRegister] = useState(false);
-  const { connect, connectors } = useConnect();
-  const { address } = useAccount();
   const [error, setError] = useState("");
   const [userName, setUserName] = useState("");
   const [isRegistering, setIsRegistering] = useState(false);
   const [currentConnector, setCurrentConnector] = useState<string | null>(null);
+  const [fcDetails, setFcDetails] = useState<User | null>(null);
 
+  const { connect, connectors } = useConnect();
+  const { address } = useAccount();
+
+  // Detect and set current connector
   useEffect(() => {
-    const checkUserRegistered = async () => {
-      if (address) {
-        const user = await checkUser(address as string);
-        if (!user && currentConnector === "farcaster") {
-          try {
-            console.log("The current connector",currentConnector);
-            const context = await sdk.context;
-            console.log("this is the context in check user", context);
-            console.log("FID:", context.user.fid);
-            console.log("Username:", context.user.username);
-            await createUser(
-              context.user.username
-                ? context.user.username
-                : context.user.displayName
-                ? context.user.displayName
-                : "anonymous",
-              address,
-              context.user.fid,
-              true
-            );
-            return;
-          } catch (err) {
-            console.error("Fetch error:", err);
-            setShowRegister(true);
-          }
-        } else if (!user) {
-          setShowRegister(true);
+    const initConnection = async () => {
+      try {
+        const connections = getConnections(config);
+        if (connections?.[0]?.connector?.id) {
+          setCurrentConnector(connections[0].connector.id);
         }
+      } catch (err) {
+        console.error("Connection fetch error:", err);
       }
     };
+    initConnection();
+  }, []);
 
-    checkUserRegistered();
-  }, [address, currentConnector]);
-
+  // Fetch Farcaster context
   useEffect(() => {
+    const getContext = async () => {
+      try {
+        const context = await sdk.context;
+        if (context?.user) {
+          setFcDetails(context.user);
+        }
+      } catch (err) {
+        console.error("Failed to get Farcaster context", err);
+      }
+    };
+    getContext();
+  }, []);
+
+  // Wallet connect logic
+  useEffect(() => {
+    if (!connectors || connectors.length === 0) return;
+
     if (window.ethereum && window.ethereum.isMiniPay) {
       connect({ connector: injected({ target: "metaMask" }) });
     } else {
       connect({ connector: connectors[1] });
     }
-  }, []);
+  }, [connect, connectors]);
 
-  useEffect(() => {
-    const init = async () => {
-      try {
-        const connections = getConnections(config);
-        console.log("connections", connections);
-        if (connections[0]?.connector?.id) {
-          setCurrentConnector(connections[0].connector.id);
-        }
-      } catch (error) {
-        console.error("Connection error:", error);
-      }
-    };
-    init();
-  }, [address]);
-
+  // Handle modal body class toggle
   useEffect(() => {
     if (showRegister) {
       document.body.classList.add("modal-open");
@@ -100,10 +93,34 @@ const Page = () => {
       document.body.classList.remove("modal-open");
     }
 
-    return () => {
-      document.body.classList.remove("modal-open");
-    };
+    return () => document.body.classList.remove("modal-open");
   }, [showRegister]);
+
+  // Check if user is registered and trigger createUser if needed
+  useEffect(() => {
+    const checkUserRegistered = async () => {
+      if (!address || !currentConnector) return;
+
+      const user = await checkUser(address);
+      if (!user) {
+        if (currentConnector === "farcaster" && fcDetails) {
+          const name =
+            fcDetails.username || fcDetails.displayName || "anonymous";
+          try {
+            console.log("Registering Farcaster user:", fcDetails);
+            await createUser(name, address, fcDetails.fid, true);
+          } catch (err) {
+            console.error("Error creating user:", err);
+            setShowRegister(true);
+          }
+        } else {
+          setShowRegister(true);
+        }
+      }
+    };
+
+    checkUserRegistered();
+  }, [address, currentConnector, fcDetails]);
 
   const toggleSection = (section: string) => {
     setExpandedSection(expandedSection === section ? null : section);
