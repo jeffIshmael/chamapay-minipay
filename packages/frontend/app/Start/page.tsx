@@ -108,9 +108,11 @@ const Page = () => {
           try {
             console.log("Registering Farcaster user:", fcDetails);
             await createUser(name, address, fcDetails.fid, true);
+            return;
           } catch (err) {
             console.error("Error creating user:", err);
-            setShowRegister(true);
+            showToast("error occurred when registering.")
+            // setShowRegister(true);
           }
         } else {
           setShowRegister(true);
