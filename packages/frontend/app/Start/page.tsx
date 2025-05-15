@@ -35,36 +35,57 @@ const Page = () => {
   const [isRegistering, setIsRegistering] = useState(false);
   const [currentConnector, setCurrentConnector] = useState<string | null>(null);
 
+  // function to get farcaster user from address
+  async function fetchFarcasterUser(address: string) {
+    try {
+      const response = await fetch("/api/fc-user", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ address }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+
+      const data = await response.json();
+
+      // Extract user details from the full response
+      if (data && data[address] && data[address].length > 0) {
+        const user = data[address][0];
+        return {
+          fid: user.fid,
+          userName: user.username,
+        };
+      }
+      return null;
+    } catch (error) {
+      console.error("Error:", error);
+      return null;
+    }
+  }
+
   useEffect(() => {
     const checkUserRegistered = async () => {
       if (address) {
         const user = await checkUser(address as string);
         if (!user && currentConnector === "farcaster") {
           try {
-            const res = await fetch("/api/fc-user", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({ address: address as string }),
-            });
-
-            const data = await res.json();
-            console.log("brought data",data);
-
-            if (res.ok && data.user) {
-              const fcDetails = data.user;
+            const farcasterUser = await fetchFarcasterUser(address as string);
+            if (farcasterUser) {
+              console.log("FID:", farcasterUser.fid);
+              console.log("Username:", farcasterUser.userName);
               await createUser(
-                fcDetails.userName,
+                farcasterUser.userName,
                 address,
-                fcDetails.fid,
+                farcasterUser.fid,
                 true
               );
               return;
-            } else {
-              console.error("Error getting Farcaster user:", data.error);
-              setShowRegister(true);
             }
+            showToast("cannot find user", "error");
           } catch (err) {
             console.error("Fetch error:", err);
             setShowRegister(true);
