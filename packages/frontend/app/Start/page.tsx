@@ -35,7 +35,6 @@ const Page = () => {
   const [isRegistering, setIsRegistering] = useState(false);
   const [currentConnector, setCurrentConnector] = useState<string | null>(null);
 
-
   useEffect(() => {
     const checkUserRegistered = async () => {
       if (address) {
@@ -85,11 +84,13 @@ const Page = () => {
 
   useEffect(() => {
     const getContext = async () => {
-      const context = await sdk.context;
-      console.log("this is the context", context);
+      if (currentConnector === "farcaster") {
+        const context = await sdk.context;
+        console.log("this is the context", context);
+      }
     };
     getContext();
-  });
+  }, []);
 
   useEffect(() => {
     const init = async () => {
