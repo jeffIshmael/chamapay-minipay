@@ -1,7 +1,7 @@
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
 import { useReadContract, useAccount, useWriteContract } from "wagmi";
-import { celoAlfajores } from "viem/chains";
+import { celo, celoAlfajores } from "viem/chains";
 import erc20Abi from "@/app/ChamaPayABI/ERC20.json";
 import { processCheckout } from "../Blockchain/TokenTransfer";
 import {
@@ -41,7 +41,7 @@ const CUSDPay = ({
     isLoading: isBalanceLoading,
     isError: isBalanceError,
   } = useReadContract({
-    chainId: celoAlfajores.id,
+    chainId: celo.id,
     address: cUSDContractAddress,
     functionName: "balanceOf",
     abi: erc20Abi,
@@ -118,6 +118,16 @@ const CUSDPay = ({
         txHash = paid;
       }
       if (txHash) {
+        const hash = await writeContractAsync({
+          address: contractAddress,
+          abi: contractAbi,
+          functionName: "depositCash",
+          args: [BigInt(chamaBlockchainId), amountInWei],
+        });
+        if (!hash) {
+          showToast("unable to write to bc. try again.", "error");
+          return;
+        }
         await makePayment(
           amountInWei,
           txHash,

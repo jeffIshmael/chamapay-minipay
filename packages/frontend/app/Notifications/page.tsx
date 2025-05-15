@@ -119,9 +119,20 @@ const Page = () => {
   }, [userId]);
 
   useEffect(() => {
-    const connections = getConnections(config);
-    setCurrentConnector(connections[0].connector?.id);
-  }, []);
+    const initConnection = async () => {
+      if (address) {
+        try {
+          const connections = getConnections(config);
+          if (connections?.[0]?.connector?.id) {
+            setCurrentConnector(connections[0].connector.id);
+          }
+        } catch (err) {
+          console.error("Connection fetch error:", err);
+        }
+      }
+    };
+    initConnection();
+  }, [address]);
 
   const handleJoin = async (
     action: "approve" | "reject",
@@ -215,12 +226,7 @@ const Page = () => {
             Notifications
           </h1>
           <div className="flex items-center space-x-2">
-            {notifications.length > 0 && (
-              <span className="bg-downy-100 text-downy-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
-                {notifications.length} new
-              </span>
-            )}
-            {currentConnector === "farcaster" && (
+            {currentConnector === "farcaster" ? (
               <button
                 onClick={() => addFrameToWarpcast()}
                 className="flex items-center gap-2 p-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition"
@@ -238,6 +244,12 @@ const Page = () => {
                   />
                 </svg>
               </button>
+            ) : (
+              notifications.length > 0 && (
+                <span className="bg-downy-100 text-downy-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                  {notifications.length} new
+                </span>
+              )
             )}
           </div>
         </div>
