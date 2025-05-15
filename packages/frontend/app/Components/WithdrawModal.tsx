@@ -6,20 +6,26 @@ import { FiX, FiDollarSign } from "react-icons/fi";
 import { showToast } from "./Toast";
 import { parseEther } from "viem";
 import { processCheckout } from "../Blockchain/TokenTransfer";
+import { cUSDContractAddress } from "../ChamaPayABI/ChamaPayContract";
+import erc20Abi from "@/app/ChamaPayABI/ERC20.json";
+import { useWriteContract } from "wagmi";
 
 export default function WithdrawModal({
   isOpen,
   onClose,
   balance,
+  currentConnector,
 }: {
   isOpen: boolean;
   onClose: () => void;
   balance: number;
+  currentConnector:string;
 }) {
   const [amount, setAmount] = useState("");
   const [isWithdrawing, setIsWithdrawing] = useState(false);
   const [receiver, setReceiver] = useState("");
   const [destination, setDestination] = useState("mpesa"); // 'bank' or 'crypto'
+  const { writeContractAsync } = useWriteContract();
 
   const handleWithdraw = async () => {
     // Validate inputs
@@ -51,11 +57,28 @@ export default function WithdrawModal({
     try {
       setIsWithdrawing(true);
       const parsedAmount = parseEther(amount);
-      // const sent = await processCheckout(
-      //   receiver as `0x${string}`,
-      //   parsedAmount
-      // );
-      const sent = true;
+      let sent: string | boolean = false;
+      if (currentConnector === "farcaster") {
+        const sendHash = await writeContractAsync({
+          address: cUSDContractAddress,
+          abi: erc20Abi,
+          functionName: "transfer",
+          args: [receiver, parsedAmount],
+        });
+        if (sendHash) {
+          sent = sendHash;
+        } else {
+          sent = false;
+          showToast("unable to send", "warning");
+        }
+      } else {
+        const paid = await processCheckout(
+          receiver as `0x${string}`,
+          parsedAmount,
+          currentConnector
+        );
+        sent = paid;
+      }
 
       if (!sent) {
         showToast("Unable to withdraw. Please try again.", "error");

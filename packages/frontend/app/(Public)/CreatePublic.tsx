@@ -148,7 +148,7 @@ const CreatePublic = () => {
           address: cUSDContractAddress,
           abi: ERC2OAbi,
           functionName: "transfer",
-          args: [cUSDContractAddress, amountInWei],
+          args: [contractAddress, amountInWei],
         });
         if (sendHash) {
           txHash = sendHash;

@@ -410,7 +410,7 @@ const Wallet = () => {
         />
       )}
       {activeModal === "withdraw" && (
-        <WithdrawModal isOpen={true} onClose={closeModal} balance={balance} />
+        <WithdrawModal isOpen={true} onClose={closeModal} balance={balance} currentConnector={currentConnector ?? ""} />
       )}
       {activeModal === "qr" && (
         <QRCodeModal

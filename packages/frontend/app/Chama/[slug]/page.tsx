@@ -259,7 +259,7 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
 
     // Construct the cast text
     const message =
-      `🔔 Join "${chama.name}" on ChamaPay!\n` +
+      `🔔 Join "${chama.name}" saving group on ChamaPay!\n` +
       `💰 Contribution: ${formatEther(chama.amount)} cUSD/${cycle}\n` +
       `👥 Members: ${chama.members?.length}\n` +
       `⏰ Next Pay Date: ${
