@@ -107,11 +107,20 @@ const Page = () => {
             fcDetails.username || fcDetails.displayName || "anonymous";
           try {
             console.log("Registering Farcaster user:", fcDetails);
-            await createUser(name, address, fcDetails.fid, true);
-            return;
+            const createdUser = await createUser(
+              name,
+              address,
+              fcDetails.fid,
+              true
+            );
+            if (createdUser) {
+              setShowRegister(false);
+            } else {
+              setShowRegister(true);
+            }
           } catch (err) {
             console.error("Error creating user:", err);
-            showToast("error occurred when registering.")
+            showToast("error occurred when registering.");
             // setShowRegister(true);
           }
         } else {
