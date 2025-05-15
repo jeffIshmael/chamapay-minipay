@@ -1,5 +1,5 @@
 import Image from "next/image";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useReadContract, useAccount, useWriteContract } from "wagmi";
 import { celoAlfajores } from "viem/chains";
 import erc20Abi from "@/app/ChamaPayABI/ERC20.json";
@@ -12,6 +12,8 @@ import {
 import { makePayment } from "../../lib/chama";
 import { parseEther } from "viem";
 import { showToast } from "./Toast";
+import { config } from "@/Providers/BlockchainProviders";
+import { getConnectorClient, getConnections } from "@wagmi/core";
 
 const CUSDPay = ({
   chamaId,
@@ -32,6 +34,7 @@ const CUSDPay = ({
   const { writeContractAsync } = useWriteContract();
   const [amount, setAmount] = useState("");
   const [isCalculating, setIsCalculating] = useState(false);
+  const [currentConnector, setCurrentConnector] = useState("");
 
   const {
     data: balanceData,
@@ -44,6 +47,22 @@ const CUSDPay = ({
     abi: erc20Abi,
     args: [address],
   });
+
+  useEffect(() => {
+    const initConnection = async () => {
+      if (address) {
+        try {
+          const connections = getConnections(config);
+          if (connections?.[0]?.connector?.id) {
+            setCurrentConnector(connections[0].connector.id);
+          }
+        } catch (err) {
+          console.error("Connection fetch error:", err);
+        }
+      }
+    };
+    initConnection();
+  }, [address]);
 
   const handlePayment = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,36 +95,41 @@ const CUSDPay = ({
     try {
       setIsLoading(true);
       // setIsCalculating(true);
-
-      // const txHash = await processCheckout(cUSDContractAddress, amountInWei);
-      const txHash = "0x6gsau";
-      if (txHash) {
-        const hash = await writeContractAsync({
-          address: contractAddress,
-          abi: contractAbi,
-          functionName: "depositCash",
-          args: [BigInt(chamaBlockchainId), amountInWei],
+      let txHash: string | boolean = false;
+      if (currentConnector === "farcaster") {
+        const sendHash = await writeContractAsync({
+          address: cUSDContractAddress,
+          abi: erc20Abi,
+          functionName: "transfer",
+          args: [contractAddress, amountInWei],
         });
-
-        if (hash) {
-          await makePayment(
-            amountInWei,
-            txHash,
-            chamaId,
-            address as string,
-            "You deposited"
-          );
-
-          showToast(`${amount} cUSD paid to ${name}`, "success");
-          onClose();
+        if (sendHash) {
+          txHash = sendHash;
         } else {
-          showToast("Unable to complete payment, please try again", "error");
+          txHash = false;
+          showToast("unable to send", "warning");
         }
       } else {
-        showToast(
-          "Transaction failed. Ensure you have enough cUSD and try again.",
-          "error"
+        const paid = await processCheckout(
+          contractAddress as `0x${string}`,
+          amountInWei,
+          currentConnector
         );
+        txHash = paid;
+      }
+      if (txHash) {
+        await makePayment(
+          amountInWei,
+          txHash,
+          chamaId,
+          address as string,
+          "You deposited"
+        );
+
+        showToast(`${amount} cUSD paid to ${name}`, "success");
+        onClose();
+      } else {
+        showToast("Unable to complete payment, please try again", "error");
       }
     } catch (error: any) {
       console.error("Payment error:", error);
