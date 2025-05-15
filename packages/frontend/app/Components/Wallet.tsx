@@ -76,11 +76,22 @@ const Wallet = () => {
     ? `${address.slice(0, 6)}...${address.slice(-4)}`
     : "";
 
+  // Detect and set current connector
   useEffect(() => {
-    const connections = getConnections(config);
-    console.log("connections", connections);
-    setCurrentConnector(connections[0].connector?.id);
-  }, []);
+    const initConnection = async () => {
+      if (address) {
+        try {
+          const connections = getConnections(config);
+          if (connections?.[0]?.connector?.id) {
+            setCurrentConnector(connections[0].connector.id);
+          }
+        } catch (err) {
+          console.error("Connection fetch error:", err);
+        }
+      }
+    };
+    initConnection();
+  }, [address]);
 
   const copyToClipboard = async () => {
     if (!address) return;
@@ -391,7 +402,12 @@ const Wallet = () => {
         />
       )}
       {activeModal === "send" && (
-        <SendModal isOpen={true} onClose={closeModal} balance={balance} currentConnector={currentConnector ?? ""} />
+        <SendModal
+          isOpen={true}
+          onClose={closeModal}
+          balance={balance}
+          currentConnector={currentConnector ?? ""}
+        />
       )}
       {activeModal === "withdraw" && (
         <WithdrawModal isOpen={true} onClose={closeModal} balance={balance} />
