@@ -23,6 +23,7 @@ import { getConnections } from "@wagmi/core";
 import { showToast } from "../Components/Toast";
 import { config } from "@/Providers/BlockchainProviders";
 import { getFarcasterUser } from "@/lib/farcasterUser";
+import { sdk } from "@farcaster/frame-sdk";
 
 const Page = () => {
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
@@ -108,6 +109,14 @@ const Page = () => {
       connect({ connector: connectors[1] });
     }
   }, []);
+
+  useEffect(() => {
+    const getContext = async () => {
+      const context = await sdk.context;
+      console.log("this is the context", context);
+    };
+    getContext();
+  });
 
   useEffect(() => {
     const init = async () => {
