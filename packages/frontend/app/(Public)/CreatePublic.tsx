@@ -8,7 +8,12 @@ import {
   useChainId,
   useWriteContract,
 } from "wagmi";
-import { contractAbi, contractAddress } from "../ChamaPayABI/ChamaPayContract";
+import {
+  contractAbi,
+  contractAddress,
+  cUSDContractAddress,
+} from "../ChamaPayABI/ChamaPayContract";
+import ERC2OAbi from "@/app/ChamaPayABI/ERC20.json";
 import { processCheckout } from "../Blockchain/TokenTransfer";
 import { FiAlertTriangle, FiGlobe } from "react-icons/fi";
 import { parseEther } from "viem";
@@ -137,12 +142,29 @@ const CreatePublic = () => {
     //function to send the lock amount
     try {
       setProcessing(true);
-      const paid = await processCheckout(
-        contractAddress as `0x${string}`,
-        amountInWei,
-        currentConnector
-      );
-      if (paid) {
+      let txHash: string | boolean = false;
+      if (currentConnector === "farcaster") {
+        const sendHash = await writeContractAsync({
+          address: cUSDContractAddress,
+          abi: ERC2OAbi,
+          functionName: "transfer",
+          args: [cUSDContractAddress, amountInWei],
+        });
+        if (sendHash) {
+          txHash = sendHash;
+        } else {
+          txHash = false;
+          showToast("unable to send", "warning");
+        }
+      } else {
+        const paid = await processCheckout(
+          contractAddress as `0x${string}`,
+          amountInWei,
+          currentConnector
+        );
+        txHash = paid;
+      }
+      if (txHash) {
         setProcessing(false);
         setLoading(true);
         const dateObject = new Date(startDate);
@@ -175,7 +197,7 @@ const CreatePublic = () => {
             "Public",
             address,
             blockchainId,
-            paid
+            txHash
           );
 
           console.log("done");
