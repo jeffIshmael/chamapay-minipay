@@ -22,7 +22,6 @@ import { checkUser, createUser } from "@/lib/chama";
 import { getConnections } from "@wagmi/core";
 import { showToast } from "../Components/Toast";
 import { config } from "@/Providers/BlockchainProviders";
-import { getFarcasterUser } from "@/lib/farcasterUser";
 import { sdk } from "@farcaster/frame-sdk";
 
 const Page = () => {
@@ -36,37 +35,6 @@ const Page = () => {
   const [isRegistering, setIsRegistering] = useState(false);
   const [currentConnector, setCurrentConnector] = useState<string | null>(null);
 
-  // function to get farcaster user from address
-  async function fetchFarcasterUser(address: string) {
-    try {
-      const response = await fetch("/api/fc-user", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ address }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Network response was not ok");
-      }
-
-      const data = await response.json();
-
-      // Extract user details from the full response
-      if (data && data[address] && data[address].length > 0) {
-        const user = data[address][0];
-        return {
-          fid: user.fid,
-          userName: user.username,
-        };
-      }
-      return null;
-    } catch (error) {
-      console.error("Error:", error);
-      return null;
-    }
-  }
 
   useEffect(() => {
     const checkUserRegistered = async () => {
@@ -74,14 +42,19 @@ const Page = () => {
         const user = await checkUser(address as string);
         if (!user && currentConnector === "farcaster") {
           try {
-            const farcasterUser = await fetchFarcasterUser(address as string);
-            if (farcasterUser) {
-              console.log("FID:", farcasterUser.fid);
-              console.log("Username:", farcasterUser.userName);
+            const context = await sdk.context;
+            console.log("this is the context", context);
+            if (context) {
+              console.log("FID:", context.user.fid);
+              console.log("Username:", context.user.username);
               await createUser(
-                farcasterUser.userName,
+                context.user.username
+                  ? context.user.username
+                  : context.user.displayName
+                  ? context.user.displayName
+                  : "anonymous",
                 address,
-                farcasterUser.fid,
+                context.user.fid,
                 true
               );
               return;
