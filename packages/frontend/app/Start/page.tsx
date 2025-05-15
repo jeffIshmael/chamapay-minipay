@@ -40,24 +40,25 @@ const Page = () => {
   const [isRegistering, setIsRegistering] = useState(false);
   const [currentConnector, setCurrentConnector] = useState<string | null>(null);
   const [fcDetails, setFcDetails] = useState<User | null>(null);
-
   const { connect, connectors } = useConnect();
   const { address } = useAccount();
 
   // Detect and set current connector
   useEffect(() => {
     const initConnection = async () => {
-      try {
-        const connections = getConnections(config);
-        if (connections?.[0]?.connector?.id) {
-          setCurrentConnector(connections[0].connector.id);
+      if (address) {
+        try {
+          const connections = getConnections(config);
+          if (connections?.[0]?.connector?.id) {
+            setCurrentConnector(connections[0].connector.id);
+          }
+        } catch (err) {
+          console.error("Connection fetch error:", err);
         }
-      } catch (err) {
-        console.error("Connection fetch error:", err);
       }
     };
     initConnection();
-  }, []);
+  }, [address]);
 
   // Fetch Farcaster context
   useEffect(() => {
@@ -76,14 +77,12 @@ const Page = () => {
 
   // Wallet connect logic
   useEffect(() => {
-    if (!connectors || connectors.length === 0) return;
-
     if (window.ethereum && window.ethereum.isMiniPay) {
       connect({ connector: injected({ target: "metaMask" }) });
-    } else {
+    } else if (fcDetails) {
       connect({ connector: connectors[1] });
     }
-  }, [connect, connectors]);
+  }, []);
 
   // Handle modal body class toggle
   useEffect(() => {

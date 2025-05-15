@@ -2,7 +2,12 @@
 
 import React, { useEffect, useState } from "react";
 import { createChama, checkChama } from "../../lib/chama";
-import { useAccount, useChainId, useSwitchChain, useWriteContract } from "wagmi";
+import {
+  useAccount,
+  useChainId,
+  useSwitchChain,
+  useWriteContract,
+} from "wagmi";
 import { toast } from "sonner";
 import { contractAddress, contractAbi } from "../ChamaPayABI/ChamaPayContract";
 import { useRouter } from "next/navigation";
@@ -26,7 +31,6 @@ const CreateFamily = () => {
   const chainId = useChainId();
   const { switchChainAsync } = useSwitchChain();
 
-
   useEffect(() => {
     const switchToCelo = async () => {
       if (chainId !== celo.id) {
@@ -39,7 +43,6 @@ const CreateFamily = () => {
     };
     switchToCelo();
   }, [chainId, switchChainAsync]);
-
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,7 +73,7 @@ const CreateFamily = () => {
       setIsPending(false);
       return;
     }
-    if(new Date(startDate) < new Date()) {
+    if (new Date(startDate) < new Date()) {
       setErrorText("Start date must be in the future");
       setIsPending(false);
       return;
@@ -87,6 +90,13 @@ const CreateFamily = () => {
 
         const dateInMilliseconds = dateObject.getTime();
 
+        if (chainId !== celo.id) {
+          try {
+            await switchChainAsync({ chainId: celo.id });
+          } catch (error) {
+            console.error("Failed to switch to Celo:", error);
+          }
+        }
 
         // get the current blockchain id from the blockchain
         const chamaIdToUse = await getLatestChamaId();
@@ -105,7 +115,14 @@ const CreateFamily = () => {
         });
 
         if (hash) {
-          await createChama(formData, startDate, "Private", address, chamaIdToUse, hash);
+          await createChama(
+            formData,
+            startDate,
+            "Private",
+            address,
+            chamaIdToUse,
+            hash
+          );
 
           showToast(`${data.name} created successfully.`, "success");
           router.push("/MyChamas");
