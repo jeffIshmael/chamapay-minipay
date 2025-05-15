@@ -26,7 +26,9 @@ import {
 import {
   contractAbi,
   contractAddress,
+  cUSDContractAddress,
 } from "@/app/ChamaPayABI/ChamaPayContract";
+import ERC2OAbi from "@/app/ChamaPayABI/ERC20.json";
 import { injected } from "wagmi/connectors";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { processCheckout } from "@/app/Blockchain/TokenTransfer";
@@ -191,12 +193,29 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
 
     try {
       setProcessing(true);
-      const paid = await processCheckout(
-        contractAddress,
-        chama?.amount ?? BigInt(0),
-        currentConnector
-      );
-      if (paid) {
+      let txHash: string | boolean = false;
+      if (currentConnector === "farcaster") {
+        const sendHash = await writeContractAsync({
+          address: cUSDContractAddress,
+          abi: ERC2OAbi,
+          functionName: "transfer",
+          args: [cUSDContractAddress, chama?.amount],
+        });
+        if (sendHash) {
+          txHash = sendHash;
+        } else {
+          txHash = false;
+          showToast("unable to send", "warning");
+        }
+      } else {
+        const paid = await processCheckout(
+          contractAddress as `0x${string}`,
+          chama?.amount ?? BigInt(0),
+          currentConnector
+        );
+        txHash = paid;
+      }
+      if (txHash) {
         setProcessing(false);
         setLoading(true);
         const hash = await writeContractAsync({
