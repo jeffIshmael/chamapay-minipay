@@ -46,7 +46,7 @@ const Wallet = () => {
   const [loadingPayments, setLoadingPayments] = useState<boolean>(false);
   const [loadingUser, setLoadingUser] = useState<boolean>(false);
   const [balanceVisible, setBalanceVisible] = useState(true);
-  const { connect } = useConnect();
+  const { connect, connectors } = useConnect();
   const { disconnect } = useDisconnect();
   const [userId, setUserId] = useState<number | null>(null);
   const [payments, setPayments] = useState<Payment[]>([]);
@@ -105,7 +105,11 @@ const Wallet = () => {
 
   const handleConnect = async () => {
     try {
-      await connect({ connector: injected({ target: "metaMask" }) });
+      if (currentConnector === "farcaster") {
+        await connect({ connector: connectors[1] });
+      } else {
+        await connect({ connector: injected({ target: "metaMask" }) });
+      }
     } catch (error) {
       console.error(error);
       toast.error("Connection failed");
@@ -236,9 +240,29 @@ const Wallet = () => {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={handleConnect}
-              className="w-full mt-4 bg-white text-downy-600 font-bold py-3 px-4 rounded-lg shadow-md"
+              className={`w-full mt-4 bg-white text-downy-600 font-bold py-3 px-4 rounded-lg shadow-md ${
+                currentConnector === "farcaster" && "border border-purple-300"
+              }`}
             >
-              Connect Wallet
+              {currentConnector === "farcaster" ? (
+                <>
+                  connect{" "}
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="30"
+                    height="30"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      fill="currentColor"
+                      d="M18.24.24H5.76A5.76 5.76 0 0 0 0 6v12a5.76 5.76 0 0 0 5.76 5.76h12.48A5.76 5.76 0 0 0 24 18V6A5.76 5.76 0 0 0 18.24.24m.816 17.166v.504a.49.49 0 0 1 .543.48v.568h-5.143v-.569A.49.49 0 0 1 15 17.91v-.504c0-.22.153-.402.358-.458l-.01-4.364c-.158-1.737-1.64-3.098-3.443-3.098s-3.285 1.361-3.443 3.098l-.01 4.358c.228.042.532.208.54.464v.504a.49.49 0 0 1 .543.48v.568H4.392v-.569a.49.49 0 0 1 .543-.479v-.504c0-.253.201-.454.454-.472V9.039h-.49l-.61-2.031H6.93V5.042h9.95v1.966h2.822l-.61 2.03h-.49v7.896c.252.017.453.22.453.472"
+                    />
+                  </svg>
+                  wallet
+                </>
+              ) : (
+                "Connect Wallet"
+              )}
             </motion.button>
           )}
         </motion.div>
@@ -410,7 +434,12 @@ const Wallet = () => {
         />
       )}
       {activeModal === "withdraw" && (
-        <WithdrawModal isOpen={true} onClose={closeModal} balance={balance} currentConnector={currentConnector ?? ""} />
+        <WithdrawModal
+          isOpen={true}
+          onClose={closeModal}
+          balance={balance}
+          currentConnector={currentConnector ?? ""}
+        />
       )}
       {activeModal === "qr" && (
         <QRCodeModal
