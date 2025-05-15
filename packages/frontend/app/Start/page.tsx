@@ -41,6 +41,7 @@ const Page = () => {
         const user = await checkUser(address as string);
         if (!user && currentConnector === "farcaster") {
           try {
+            console.log("The current connector",currentConnector);
             const context = await sdk.context;
             console.log("this is the context", context);
             console.log("FID:", context.user.fid);
