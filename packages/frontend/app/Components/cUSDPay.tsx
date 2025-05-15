@@ -1,6 +1,6 @@
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
-import { useReadContract, useAccount, useWriteContract } from "wagmi";
+import { useReadContract, useAccount, useWriteContract, useSwitchChain, useChainId } from "wagmi";
 import { celo, celoAlfajores } from "viem/chains";
 import erc20Abi from "@/app/ChamaPayABI/ERC20.json";
 import { processCheckout } from "../Blockchain/TokenTransfer";
@@ -35,6 +35,8 @@ const CUSDPay = ({
   const [amount, setAmount] = useState("");
   const [isCalculating, setIsCalculating] = useState(false);
   const [currentConnector, setCurrentConnector] = useState("");
+  const { switchChainAsync } = useSwitchChain();
+  const chainId = useChainId();
 
   const {
     data: balanceData,
@@ -89,12 +91,23 @@ const CUSDPay = ({
       showToast("Insufficient cUSD balance", "error");
       return;
     }
+    console.log("the connected chain Id is", chainId);
+    console.log("the required chain id is", celo.id);
 
     const amountInWei = parseEther(totalAmount.toString());
+    if (chainId !== celo.id) {
+      try {
+        await switchChainAsync({ chainId: celo.id });
+      } catch (error) {
+        console.error("Failed to switch to celo:", error);
+      }
+    }
 
     try {
       setIsLoading(true);
       // setIsCalculating(true);
+      console.log("After connected chain Id is", chainId);
+      console.log("After required chain id is", celo.id);
       let txHash: string | boolean = false;
       if (currentConnector === "farcaster") {
         const sendHash = await writeContractAsync({
