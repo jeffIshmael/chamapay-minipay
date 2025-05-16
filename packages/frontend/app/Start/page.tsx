@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import BottomNavbar from "../Components/BottomNavbar";
 import { useAccount, useConnect, useSwitchChain, useChainId } from "wagmi";
 import { injected } from "wagmi/connectors";
@@ -19,7 +19,8 @@ import { RiHandCoinLine } from "react-icons/ri";
 import { IoMdPeople } from "react-icons/io";
 import { TbPigMoney } from "react-icons/tb";
 import { checkUser, createUser } from "@/lib/chama";
-import { getConnections } from "@wagmi/core";
+import { getConnections, switchChain } from "@wagmi/core";
+import { getChainId } from '@wagmi/core'
 import { showToast } from "../Components/Toast";
 import { config } from "@/Providers/BlockchainProviders";
 import { sdk } from "@farcaster/frame-sdk";
@@ -43,8 +44,8 @@ const Page = () => {
   const [fcDetails, setFcDetails] = useState<User | null>(null);
   const { connect, connectors } = useConnect();
   const { address } = useAccount();
-  const chainId = useChainId();
-  const { switchChain } = useSwitchChain();
+  const chainId = getChainId(config);
+  const { switchChain, isPending, chains } = useSwitchChain();
   const [showNetworkSwitch, setShowNetworkSwitch] = useState(false);
 
   // Detect and set current connector
@@ -101,6 +102,7 @@ const Page = () => {
 
   useEffect(() => {
     setShowNetworkSwitch(chainId !== celo.id);
+    console.log("the chainId is", chainId);
   }, [chainId]);
 
   // Check if user is registered and trigger createUser if needed
@@ -140,16 +142,16 @@ const Page = () => {
     checkUserRegistered();
   }, [address, currentConnector, fcDetails]);
 
-  const handleSwitchToCelo = async () => {
+  const handleSwitchToCelo = useCallback(() => {
     try {
-      await switchChain({ chainId: celo.id });
-      setShowNetworkSwitch(false);
-      showToast("Switched to Celo network", "success");
+      switchChain({ chainId: celo.id });
     } catch (error) {
-      console.error("Error switching network:", error);
-      showToast("Failed to switch network", "error");
+      console.error("Chain switch failed:", error, {
+        targetChainId: celo.id,
+      });
+      showToast(`Failed to switch to ${celo.name}. Please try again.`, "error");
     }
-  };
+  }, [switchChain]);
 
   const toggleSection = (section: string) => {
     setExpandedSection(expandedSection === section ? null : section);
