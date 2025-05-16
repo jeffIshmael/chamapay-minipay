@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import BottomNavbar from "../Components/BottomNavbar";
-import { useAccount, useConnect } from "wagmi";
+import { useAccount, useConnect, useSwitchChain, useChainId } from "wagmi";
 import { injected } from "wagmi/connectors";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
@@ -22,7 +22,8 @@ import { checkUser, createUser } from "@/lib/chama";
 import { getConnections } from "@wagmi/core";
 import { showToast } from "../Components/Toast";
 import { config } from "@/Providers/BlockchainProviders";
-import { FrameNotificationDetails, sdk } from "@farcaster/frame-sdk";
+import { sdk } from "@farcaster/frame-sdk";
+import { celo } from "wagmi/chains";
 
 interface User {
   fid: number;
@@ -42,6 +43,9 @@ const Page = () => {
   const [fcDetails, setFcDetails] = useState<User | null>(null);
   const { connect, connectors } = useConnect();
   const { address } = useAccount();
+  const chainId = useChainId();
+  const { switchChain } = useSwitchChain();
+  const [showNetworkSwitch, setShowNetworkSwitch] = useState(false);
 
   // Detect and set current connector
   useEffect(() => {
@@ -95,6 +99,10 @@ const Page = () => {
     return () => document.body.classList.remove("modal-open");
   }, [showRegister]);
 
+  useEffect(() => {
+    setShowNetworkSwitch(chainId !== celo.id);
+  }, [chainId]);
+
   // Check if user is registered and trigger createUser if needed
   useEffect(() => {
     const checkUserRegistered = async () => {
@@ -132,6 +140,17 @@ const Page = () => {
     checkUserRegistered();
   }, [address, currentConnector, fcDetails]);
 
+  const handleSwitchToCelo = async () => {
+    try {
+      await switchChain({ chainId: celo.id });
+      setShowNetworkSwitch(false);
+      showToast("Switched to Celo network", "success");
+    } catch (error) {
+      console.error("Error switching network:", error);
+      showToast("Failed to switch network", "error");
+    }
+  };
+
   const toggleSection = (section: string) => {
     setExpandedSection(expandedSection === section ? null : section);
   };
@@ -165,7 +184,23 @@ const Page = () => {
       <div className="relative bg-gradient-to-br from-downy-600 to-downy-800 px-6 pt-10 pb-20 text-center rounded-b-3xl shadow-2xl overflow-hidden">
         {/* Decorative Waves */}
         <div className="absolute bottom-0 left-0 right-0 h-20 bg-[url('/wave-pattern.svg')] bg-repeat-x opacity-10"></div>
-
+        {/* Floating network switch button */}
+        <AnimatePresence>
+          {showNetworkSwitch && (
+            <motion.button
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleSwitchToCelo}
+              className="fixed top-4 right-4 z-40 bg-yellow-500 hover:bg-yellow-600 text-white font-medium py-2 px-4 rounded-full shadow-lg flex items-center space-x-2"
+            >
+              <FiZap className="text-white" />
+              <span>Switch to Celo</span>
+            </motion.button>
+          )}
+        </AnimatePresence>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
