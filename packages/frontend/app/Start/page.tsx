@@ -102,7 +102,7 @@ const Page = () => {
 
   useEffect(() => {
     setShowNetworkSwitch(chainId !== celo.id);
-    console.log("the chainId is", chainId);
+    console.log("the chainId in use  is", chainId);
   }, [chainId]);
 
   // Check if user is registered and trigger createUser if needed
