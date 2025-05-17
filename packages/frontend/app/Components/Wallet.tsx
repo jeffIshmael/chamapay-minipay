@@ -393,7 +393,7 @@ const Wallet = () => {
                       </button>
                     ) : (
                       <Link
-                        href={`https://alfajores.celoscan.io/tx/${payment.txHash}`}
+                        href={`https://celoscan.io/tx/${payment.txHash}`}
                         target="_blank"
                         className="text-gray-400 hover:text-downy-500"
                       >
