@@ -105,11 +105,8 @@ const Wallet = () => {
 
   const handleConnect = async () => {
     try {
-      if (window.ethereum && window.ethereum.isMiniPay) {
-        connect({ connector: injected({ target: "metaMask" }) });
-      } else {
-        connect({ connector: connectors[1] });
-      }
+      console.log("connectors", connectors);
+      connect({ connector: injected({ target: "metaMask" }) });
     } catch (error) {
       console.error(error);
       toast.error("Connection failed");
