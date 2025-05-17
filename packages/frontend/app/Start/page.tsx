@@ -49,19 +49,18 @@ const Page = () => {
   const [currentConnector, setCurrentConnector] = useState<string | null>(null);
   const [fcDetails, setFcDetails] = useState<User | null>(null);
   const { connect, connectors } = useConnect();
-  const { address, isConnected } = useAccount();
+  const { address, isConnected, chain } = useAccount();
   const chainId = useChainId();
-  const { switchChain, isPending, chains } = useSwitchChain();
+  const { switchChain, isPending } = useSwitchChain();
   const [showNetworkSwitch, setShowNetworkSwitch] = useState(false);
 
-
-   async function isConnectedToCelo() {
+  async function isConnectedToCelo() {
     try {
-      const chainId = await getChainId(config)
-      return chainId === celo.id
+      const chainId = await getChainId(config);
+      return chainId === celo.id;
     } catch (error) {
-      console.error('Error checking network:', error)
-      return false
+      console.error("Error checking network:", error);
+      return false;
     }
   }
   // Detect and set current connector
@@ -69,9 +68,6 @@ const Page = () => {
     const initConnection = async () => {
       if (address && isConnected) {
         try {
-          const onCelo = await isConnectedToCelo();
-          console.log("the current connected is celo?",onCelo);
-          setShowNetworkSwitch(onCelo);
           const connections = getConnections(config);
           if (connections?.[0]?.connector?.id) {
             setCurrentConnector(connections[0].connector.id);
@@ -126,12 +122,17 @@ const Page = () => {
   }, [showRegister]);
 
   useEffect(() => {
-    setShowNetworkSwitch(chainId !== celo.id);
-    console.log("the chainId in use  is", chainId);
-    if(!isConnected){
-      showToast("please connect wallet","warning");
+    if (chain) {
+      setShowNetworkSwitch(chain.id !== celo.id);
+      console.log("Current chain:", chain.name, chain.id);
+    } else if (isConnected) {
+      // Connected but no chain info (unlikely but possible)
+      setShowNetworkSwitch(true);
+    } else {
+      // Not connected
+      setShowNetworkSwitch(false);
     }
-  }, [chainId]);
+  }, [chain, isConnected]);
 
   // Check if user is registered and trigger createUser if needed
   useEffect(() => {
@@ -170,16 +171,15 @@ const Page = () => {
     checkUserRegistered();
   }, [address, currentConnector, fcDetails]);
 
-  const handleSwitchToCelo = useCallback(() => {
+  const handleSwitchToCelo = useCallback(async () => {
     try {
-      switchChain({ chainId: celo.id });
+      await switchChain({ chainId: celo.id })
+      showToast(`Switched to Celo network`, 'success')
     } catch (error) {
-      console.error("Chain switch failed:", error, {
-        targetChainId: celo.id,
-      });
-      showToast(`Failed to switch to ${celo.name}. Please try again.`, "error");
+      console.error("Chain switch failed:", error)
+      showToast(`Failed to switch to Celo. Please try again.`, "error")
     }
-  }, [switchChain]);
+  }, [switchChain])
 
   const toggleSection = (section: string) => {
     setExpandedSection(expandedSection === section ? null : section);
@@ -216,7 +216,7 @@ const Page = () => {
         <div className="absolute bottom-0 left-0 right-0 h-20 bg-[url('/wave-pattern.svg')] bg-repeat-x opacity-10"></div>
         {/* Floating network switch button */}
         <AnimatePresence>
-          {!showNetworkSwitch && (
+          {showNetworkSwitch && (
             <motion.button
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
