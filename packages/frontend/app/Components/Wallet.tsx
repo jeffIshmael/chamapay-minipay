@@ -179,7 +179,7 @@ const Wallet = () => {
       {/* Header */}
       <div className="bg-gradient-to-br from-downy-600 to-downy-700 px-4  pb-8 rounded-b-3xl shadow-lg">
         <div className="flex justify-between items-start">
-          {isConnected && !hideButton && (
+          {isConnected && hideButton && (
             <button
               onClick={() => {
                 disconnect();
@@ -393,7 +393,7 @@ const Wallet = () => {
                       </button>
                     ) : (
                       <Link
-                        href={`https://alfajores.celoscan.io/tx/${payment.txHash}`}
+                        href={`https://celoscan.io/tx/${payment.txHash}`}
                         target="_blank"
                         className="text-gray-400 hover:text-downy-500"
                       >
