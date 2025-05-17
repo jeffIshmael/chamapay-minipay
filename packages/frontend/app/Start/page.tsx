@@ -54,11 +54,24 @@ const Page = () => {
   const { switchChain, isPending, chains } = useSwitchChain();
   const [showNetworkSwitch, setShowNetworkSwitch] = useState(false);
 
+
+   async function isConnectedToCelo() {
+    try {
+      const chainId = await getChainId(config)
+      return chainId === celo.id
+    } catch (error) {
+      console.error('Error checking network:', error)
+      return false
+    }
+  }
   // Detect and set current connector
   useEffect(() => {
     const initConnection = async () => {
-      if (address) {
+      if (address && isConnected) {
         try {
+          const onCelo = await isConnectedToCelo();
+          console.log("the current connected is celo?",onCelo);
+          setShowNetworkSwitch(onCelo);
           const connections = getConnections(config);
           if (connections?.[0]?.connector?.id) {
             setCurrentConnector(connections[0].connector.id);
@@ -69,7 +82,7 @@ const Page = () => {
       }
     };
     initConnection();
-  }, [address]);
+  }, [address, isConnected]);
 
   // Fetch Farcaster context
   useEffect(() => {
@@ -211,7 +224,7 @@ const Page = () => {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={handleSwitchToCelo}
-              className="fixed top-2  z-40 bg-yellow-500 hover:bg-yellow-600 text-white font-medium p-2 rounded-full shadow-lg flex items-center space-x-2"
+              className="fixed top-2 z-40 bg-yellow-500 hover:bg-yellow-600 text-white font-medium p-2 rounded-full shadow-lg flex items-center space-x-2"
             >
               <FiZap className="text-white" />
               <span>Switch to Celo</span>
