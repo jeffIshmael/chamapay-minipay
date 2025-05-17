@@ -2,7 +2,13 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 import BottomNavbar from "../Components/BottomNavbar";
-import { useAccount, useConnect, useSwitchChain, useChainId } from "wagmi";
+import {
+  useAccount,
+  useConnect,
+  useSwitchChain,
+  useChainId,
+  useChains,
+} from "wagmi";
 import { injected } from "wagmi/connectors";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
@@ -20,7 +26,7 @@ import { IoMdPeople } from "react-icons/io";
 import { TbPigMoney } from "react-icons/tb";
 import { checkUser, createUser } from "@/lib/chama";
 import { getConnections, switchChain } from "@wagmi/core";
-import { getChainId } from '@wagmi/core'
+import { getChainId } from "@wagmi/core";
 import { showToast } from "../Components/Toast";
 import { config } from "@/Providers/BlockchainProviders";
 import { sdk } from "@farcaster/frame-sdk";
@@ -43,8 +49,8 @@ const Page = () => {
   const [currentConnector, setCurrentConnector] = useState<string | null>(null);
   const [fcDetails, setFcDetails] = useState<User | null>(null);
   const { connect, connectors } = useConnect();
-  const { address } = useAccount();
-  const chainId = getChainId(config);
+  const { address, isConnected } = useAccount();
+  const chainId = useChainId();
   const { switchChain, isPending, chains } = useSwitchChain();
   const [showNetworkSwitch, setShowNetworkSwitch] = useState(false);
 
@@ -89,6 +95,12 @@ const Page = () => {
     }
   }, []);
 
+  useEffect(() => {
+    if (fcDetails) {
+      connect({ connector: connectors[1] });
+    }
+  }, [fcDetails]);
+
   // Handle modal body class toggle
   useEffect(() => {
     if (showRegister) {
@@ -103,6 +115,9 @@ const Page = () => {
   useEffect(() => {
     setShowNetworkSwitch(chainId !== celo.id);
     console.log("the chainId in use  is", chainId);
+    if(!isConnected){
+      showToast("please connect wallet","warning");
+    }
   }, [chainId]);
 
   // Check if user is registered and trigger createUser if needed
@@ -188,7 +203,7 @@ const Page = () => {
         <div className="absolute bottom-0 left-0 right-0 h-20 bg-[url('/wave-pattern.svg')] bg-repeat-x opacity-10"></div>
         {/* Floating network switch button */}
         <AnimatePresence>
-          {showNetworkSwitch && (
+          {!showNetworkSwitch && (
             <motion.button
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -196,7 +211,7 @@ const Page = () => {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={handleSwitchToCelo}
-              className="fixed top-4 right-4 z-40 bg-yellow-500 hover:bg-yellow-600 text-white font-medium py-2 px-4 rounded-full shadow-lg flex items-center space-x-2"
+              className="fixed top-2  z-40 bg-yellow-500 hover:bg-yellow-600 text-white font-medium p-2 rounded-full shadow-lg flex items-center space-x-2"
             >
               <FiZap className="text-white" />
               <span>Switch to Celo</span>
