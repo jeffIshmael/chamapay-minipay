@@ -20,6 +20,8 @@ import {
   FiPieChart,
   FiZap,
   FiDollarSign,
+  FiArrowRight,
+  FiAlertTriangle,
 } from "react-icons/fi";
 import { RiHandCoinLine } from "react-icons/ri";
 import { IoMdPeople } from "react-icons/io";
@@ -173,13 +175,13 @@ const Page = () => {
 
   const handleSwitchToCelo = useCallback(async () => {
     try {
-      await switchChain({ chainId: celo.id })
-      showToast(`Switched to Celo network`, 'success')
+      await switchChain({ chainId: celo.id });
+      showToast(`Switched to Celo network`, "success");
     } catch (error) {
-      console.error("Chain switch failed:", error)
-      showToast(`Failed to switch to Celo. Please try again.`, "error")
+      console.error("Chain switch failed:", error);
+      showToast(`Failed to switch to Celo. Please try again.`, "error");
     }
-  }, [switchChain])
+  }, [switchChain]);
 
   const toggleSection = (section: string) => {
     setExpandedSection(expandedSection === section ? null : section);
@@ -217,18 +219,31 @@ const Page = () => {
         {/* Floating network switch button */}
         <AnimatePresence>
           {showNetworkSwitch && (
+            <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            className="fixed top-2 z-50"
+          >
             <motion.button
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 20 }}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              whileHover={{ 
+                scale: 1.02,
+                backgroundColor: "#f59e0b",
+              }}
+              whileTap={{ scale: 0.98 }}
               onClick={handleSwitchToCelo}
-              className="fixed top-2 z-40 bg-yellow-500 hover:bg-yellow-600 text-white font-medium p-2 rounded-full shadow-lg flex items-center space-x-2"
+              className="bg-yellow-400 hover:bg-yellow-500 border-2 border-yellow-600 text-white font-medium py-2 px-4 rounded-full shadow-lg flex items-center space-x-3 backdrop-blur-sm"
             >
-              <FiZap className="text-white" />
-              <span>Switch to Celo</span>
+              <div className="flex flex-col items-start">
+                <span className="text-xs font-medium text-yellow-100">Currently on: {chain?.name || 'Unknown'}</span>
+                <span className="text-sm font-semibold flex items-center gap-2">
+                  <FiAlertTriangle   className="inline" />
+                  Switch to Celo
+                </span>
+              </div>
+              <FiArrowRight className="text-lg" />
             </motion.button>
+          </motion.div>
           )}
         </AnimatePresence>
         <motion.div
