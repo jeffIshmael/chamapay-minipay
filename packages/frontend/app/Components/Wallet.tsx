@@ -54,6 +54,7 @@ const Wallet = () => {
   const [hideButton, setHideButton] = useState(false);
   const router = useRouter();
   const [currentConnector, setCurrentConnector] = useState<string | null>(null);
+  const [isFarcasterWallet, setIsFarcasterWallet] = useState(false);
   const { data: balanceData } = useReadContract({
     chainId: celo.id,
     address: cUSDContractAddress,
@@ -75,6 +76,24 @@ const Wallet = () => {
   const truncatedAddress = address
     ? `${address.slice(0, 6)}...${address.slice(-4)}`
     : "";
+
+  // Update your useEffect for Farcaster context
+  useEffect(() => {
+    const getContext = async () => {
+      try {
+        const context = await sdk.context;
+        if (context?.user) {
+          setIsFarcasterWallet(true);
+        } else {
+          setIsFarcasterWallet(false);
+        }
+      } catch (err) {
+        console.error("Failed to get Farcaster context", err);
+        setIsFarcasterWallet(false);
+      }
+    };
+    getContext();
+  }, []);
 
   // Detect and set current connector
   useEffect(() => {
@@ -105,8 +124,13 @@ const Wallet = () => {
 
   const handleConnect = async () => {
     try {
-      console.log("connectors", connectors);
-      connect({ connector: injected({ target: "metaMask" }) });
+      if (isFarcasterWallet) {
+        // Handle Farcaster wallet connection
+        connect({ connector: connectors[1] });
+      } else {
+        // Handle regular wallet connection
+        connect({ connector: injected({ target: "metaMask" }) });
+      }
     } catch (error) {
       console.error(error);
       toast.error("Connection failed");
@@ -174,12 +198,17 @@ const Wallet = () => {
     fetchData();
   }, [userId]);
 
+  //function to open farcaster link
+  async function openFarcasterLink(txHash: string) {
+    await sdk.actions.openUrl(`https://celoscan.io/tx/${txHash}`);
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 pb-24">
       {/* Header */}
       <div className="bg-gradient-to-br from-downy-600 to-downy-700 px-4  pb-8 rounded-b-3xl shadow-lg">
         <div className="flex justify-between items-start">
-          {isConnected && hideButton && (
+          {isConnected && !hideButton && (
             <button
               onClick={() => {
                 disconnect();
@@ -238,16 +267,16 @@ const Wallet = () => {
               whileTap={{ scale: 0.98 }}
               onClick={handleConnect}
               className={`w-full mt-4 bg-white text-downy-600 font-bold py-3 px-4 rounded-lg shadow-md ${
-                currentConnector === "farcaster" && "border border-purple-300"
+                isFarcasterWallet && "border border-purple-300"
               }`}
             >
-              {currentConnector === "farcaster" ? (
+              {isFarcasterWallet ? (
                 <>
                   connect{" "}
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    width="30"
-                    height="30"
+                    width="10"
+                    height="10"
                     viewBox="0 0 24 24"
                   >
                     <path
@@ -382,11 +411,7 @@ const Wallet = () => {
                     </span>
                     {currentConnector === "farcaster" ? (
                       <button
-                        onClick={async () =>
-                          await sdk.actions.openUrl(
-                            `https://alfajores.celoscan.io/tx/${payment.txHash}`
-                          )
-                        }
+                        onClick={() => openFarcasterLink(payment.txHash)}
                         className="text-gray-400 hover:text-downy-500 bg-transparent hover:bg-transparent"
                       >
                         <TbReceiptFilled className="text-gray-600" size={20} />
