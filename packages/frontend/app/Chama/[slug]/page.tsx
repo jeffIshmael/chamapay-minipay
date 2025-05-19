@@ -333,10 +333,12 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
             </div>
           )}
           {/* Back icon */}
-          <HiArrowLeft
-            className="flex justify-start text-gray-700 cursor-pointer"
+          <button
+            className="px-2 py-1 bg-downy-300 flex justify-start"
             onClick={() => router.push("/MyChamas")}
-          />
+          >
+            <HiArrowLeft className="flex justify-start text-gray-700 cursor-pointer" />
+          </button>
           <div className="flex justify-end gap-2 mb-1 mt-2">
             {/* Combined Status Indicator */}
             <div className="flex items-center bg-gray-50 px-2.5 py-1 rounded-lg border border-gray-200 text-xs">
@@ -465,8 +467,8 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
                   Share to
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    width="30"
-                    height="30"
+                    width="28"
+                    height="28"
                     viewBox="0 0 24 24"
                   >
                     <path
