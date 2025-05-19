@@ -83,7 +83,6 @@ const CreatePublic = () => {
     const data = Object.fromEntries(formData.entries());
     const startingDate = `${startDateDate}T${startDateTime}`;
     setStartDate(startingDate);
-    console.log(data);
 
     if (isNaN(Number(data.amount)) || Number(data.amount) <= 0) {
       setErrorText("Amount must be greater than 0");
@@ -91,6 +90,10 @@ const CreatePublic = () => {
     }
     if (isNaN(Number(data.maxNumber)) || Number(data.maxNumber) <= 1) {
       setErrorText("Max number must be greater than 1");
+      return;
+    }
+    if (isNaN(Number(data.maxNumber)) || Number(data.maxNumber) > 15) {
+      setErrorText("Max number of members is 15");
       return;
     }
     if (isNaN(Number(data.cycleTime)) || Number(data.cycleTime) <= 0) {
@@ -148,7 +151,7 @@ const CreatePublic = () => {
           address: cUSDContractAddress,
           abi: ERC2OAbi,
           functionName: "transfer",
-          args: [cUSDContractAddress, amountInWei],
+          args: [contractAddress, amountInWei],
         });
         if (sendHash) {
           txHash = sendHash;
@@ -310,13 +313,16 @@ const CreatePublic = () => {
             htmlFor="amount"
             className="block text-sm font-medium text-gray-700"
           >
-            Max No. of people(min 2)
+            Max No. of people(2 - 15 pple)
           </label>
           <input
             type="number"
             id="maxPeople"
             name="maxNumber"
             value={maxPeople}
+            min={2}
+            step={1}
+            max={15}
             onChange={(e) => setMaxPeople(e.target.value)}
             required
             placeholder="Enter Max No. of people"
@@ -393,6 +399,8 @@ const CreatePublic = () => {
             id="duration"
             name="cycleTime"
             value={duration}
+            min={1}
+            step={1}
             onChange={(e) => setDuration(e.target.value)}
             required
             placeholder="Enter Cycle Time (in days)"

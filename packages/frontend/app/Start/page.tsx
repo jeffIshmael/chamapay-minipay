@@ -1,8 +1,14 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import BottomNavbar from "../Components/BottomNavbar";
-import { useAccount, useConnect } from "wagmi";
+import {
+  useAccount,
+  useConnect,
+  useSwitchChain,
+  useChainId,
+  useChains,
+} from "wagmi";
 import { injected } from "wagmi/connectors";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
@@ -14,12 +20,15 @@ import {
   FiPieChart,
   FiZap,
   FiDollarSign,
+  FiArrowRight,
+  FiAlertTriangle,
 } from "react-icons/fi";
 import { RiHandCoinLine } from "react-icons/ri";
 import { IoMdPeople } from "react-icons/io";
 import { TbPigMoney } from "react-icons/tb";
 import { checkUser, createUser } from "@/lib/chama";
-import { getConnections } from "@wagmi/core";
+import { getConnections, switchChain } from "@wagmi/core";
+import { getChainId } from "@wagmi/core";
 import { showToast } from "../Components/Toast";
 import { config } from "@/Providers/BlockchainProviders";
 import { sdk } from "@farcaster/frame-sdk";
@@ -29,8 +38,6 @@ const Page = () => {
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState("Home");
   const [showRegister, setShowRegister] = useState(false);
-  const { connect, connectors } = useConnect();
-  const { address } = useAccount();
   const [error, setError] = useState("");
   const [userName, setUserName] = useState("");
   const [isRegistering, setIsRegistering] = useState(false);
@@ -83,26 +90,18 @@ const Page = () => {
   useEffect(() => {
     if (window.ethereum && window.ethereum.isMiniPay) {
       connect({ connector: injected({ target: "metaMask" }) });
-    } else {
+    } else if (fcDetails) {
       connect({ connector: connectors[1] });
     }
   }, []);
 
   useEffect(() => {
-    const init = async () => {
-      try {
-        const connections = getConnections(config);
-        console.log("connections", connections);
-        if (connections[0]?.connector?.id) {
-          setCurrentConnector(connections[0].connector.id);
-        }
-      } catch (error) {
-        console.error("Connection error:", error);
-      }
-    };
-    init();
-  }, [address]);
+    if (fcDetails) {
+      connect({ connector: connectors[1] });
+    }
+  }, [fcDetails]);
 
+  // Handle modal body class toggle
   useEffect(() => {
     if (showRegister) {
       document.body.classList.add("modal-open");
@@ -110,10 +109,68 @@ const Page = () => {
       document.body.classList.remove("modal-open");
     }
 
-    return () => {
-      document.body.classList.remove("modal-open");
-    };
+    return () => document.body.classList.remove("modal-open");
   }, [showRegister]);
+
+  useEffect(() => {
+    if (chain) {
+      setShowNetworkSwitch(chain.id !== celo.id);
+      console.log("Current chain:", chain.name, chain.id);
+    } else if (isConnected) {
+      // Connected but no chain info (unlikely but possible)
+      setShowNetworkSwitch(true);
+    } else {
+      // Not connected
+      setShowNetworkSwitch(false);
+    }
+  }, [chain, isConnected]);
+
+  // Check if user is registered and trigger createUser if needed
+  useEffect(() => {
+    const checkUserRegistered = async () => {
+      if (!address || !currentConnector) return;
+
+      const user = await checkUser(address);
+      if (!user) {
+        if (currentConnector === "farcaster" && fcDetails) {
+          const name =
+            fcDetails.username || fcDetails.displayName || "anonymous";
+          try {
+            console.log("Registering Farcaster user:", fcDetails);
+            const createdUser = await createUser(
+              name,
+              address,
+              fcDetails.fid,
+              true
+            );
+            if (createdUser) {
+              setShowRegister(false);
+            } else {
+              setShowRegister(true);
+            }
+          } catch (err) {
+            console.error("Error creating user:", err);
+            showToast("error occurred when registering.");
+            // setShowRegister(true);
+          }
+        } else {
+          setShowRegister(true);
+        }
+      }
+    };
+
+    checkUserRegistered();
+  }, [address, currentConnector, fcDetails]);
+
+  const handleSwitchToCelo = useCallback(async () => {
+    try {
+      await switchChain({ chainId: celo.id });
+      showToast(`Switched to Celo network`, "success");
+    } catch (error) {
+      console.error("Chain switch failed:", error);
+      showToast(`Failed to switch to Celo. Please try again.`, "error");
+    }
+  }, [switchChain]);
 
   const toggleSection = (section: string) => {
     setExpandedSection(expandedSection === section ? null : section);
@@ -148,7 +205,36 @@ const Page = () => {
       <div className="relative bg-gradient-to-br from-downy-600 to-downy-800 px-6 pt-10 pb-20 text-center rounded-b-3xl shadow-2xl overflow-hidden">
         {/* Decorative Waves */}
         <div className="absolute bottom-0 left-0 right-0 h-20 bg-[url('/wave-pattern.svg')] bg-repeat-x opacity-10"></div>
-
+        {/* Floating network switch button */}
+        <AnimatePresence>
+          {showNetworkSwitch && (
+            <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            className="fixed top-2 z-50"
+          >
+            <motion.button
+              whileHover={{ 
+                scale: 1.02,
+                backgroundColor: "#f59e0b",
+              }}
+              whileTap={{ scale: 0.98 }}
+              onClick={handleSwitchToCelo}
+              className="bg-yellow-400 hover:bg-yellow-500 border-2 border-yellow-600 text-white font-medium py-2 px-4 rounded-full shadow-lg flex items-center space-x-3 backdrop-blur-sm"
+            >
+              <div className="flex flex-col items-start">
+                <span className="text-xs font-medium text-yellow-100">Currently on: {chain?.name || 'Unknown'}</span>
+                <span className="text-sm font-semibold flex items-center gap-2">
+                  <FiAlertTriangle   className="inline" />
+                  Switch to Celo
+                </span>
+              </div>
+              <FiArrowRight className="text-lg" />
+            </motion.button>
+          </motion.div>
+          )}
+        </AnimatePresence>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

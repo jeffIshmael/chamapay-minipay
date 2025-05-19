@@ -2,7 +2,12 @@
 
 import React, { useEffect, useState } from "react";
 import { createChama, checkChama } from "../../lib/chama";
-import { useAccount, useChainId, useSwitchChain, useWriteContract } from "wagmi";
+import {
+  useAccount,
+  useChainId,
+  useSwitchChain,
+  useWriteContract,
+} from "wagmi";
 import { toast } from "sonner";
 import { contractAddress, contractAbi } from "../ChamaPayABI/ChamaPayContract";
 import { useRouter } from "next/navigation";
@@ -26,20 +31,14 @@ const CreateFamily = () => {
   const chainId = useChainId();
   const { switchChainAsync } = useSwitchChain();
 
-
   useEffect(() => {
     const switchToCelo = async () => {
       if (chainId !== celo.id) {
-        try {
-          await switchChainAsync({ chainId: celo.id });
-        } catch (error) {
-          console.error("Failed to switch to Celo:", error);
-        }
+        await switchChainAsync({ chainId: celo.id });
       }
     };
     switchToCelo();
   }, [chainId, switchChainAsync]);
-
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,7 +69,7 @@ const CreateFamily = () => {
       setIsPending(false);
       return;
     }
-    if(new Date(startDate) < new Date()) {
+    if (new Date(startDate) < new Date()) {
       setErrorText("Start date must be in the future");
       setIsPending(false);
       return;
@@ -86,7 +85,14 @@ const CreateFamily = () => {
         const dateObject = new Date(startDate as string);
 
         const dateInMilliseconds = dateObject.getTime();
+        console.log("the connected chain Id is", chainId);
+        console.log("the required chain id is", celo.id);
 
+        if (chainId !== celo.id) {
+          await switchChainAsync({ chainId: celo.id });
+        }
+        console.log("After connected chain Id is", chainId);
+        console.log("After required chain id is", celo.id);
 
         // get the current blockchain id from the blockchain
         const chamaIdToUse = await getLatestChamaId();
@@ -105,7 +111,14 @@ const CreateFamily = () => {
         });
 
         if (hash) {
-          await createChama(formData, startDate, "Private", address, chamaIdToUse, hash);
+          await createChama(
+            formData,
+            startDate,
+            "Private",
+            address,
+            chamaIdToUse,
+            hash
+          );
 
           showToast(`${data.name} created successfully.`, "success");
           router.push("/MyChamas");
@@ -229,7 +242,7 @@ const CreateFamily = () => {
             htmlFor="duration"
             className="block text-sm font-medium text-gray-700"
           >
-            Cycle Time (in days) (min 1)
+            Cycle Time (in days) (min 1dy)
           </label>
           <input
             type="number"

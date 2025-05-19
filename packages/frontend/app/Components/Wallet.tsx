@@ -29,7 +29,7 @@ import SendModal from "./sendModal";
 import WithdrawModal from "./WithdrawModal";
 import QRCodeModal from "./QRCodeModal";
 import { getConnections } from "@wagmi/core";
-import { sdk } from "@farcaster/frame-sdk";
+import  {sdk}  from "@farcaster/frame-sdk";
 import { config } from "@/Providers/BlockchainProviders";
 
 interface Payment {
@@ -46,7 +46,7 @@ const Wallet = () => {
   const [loadingPayments, setLoadingPayments] = useState<boolean>(false);
   const [loadingUser, setLoadingUser] = useState<boolean>(false);
   const [balanceVisible, setBalanceVisible] = useState(true);
-  const { connect } = useConnect();
+  const { connect, connectors } = useConnect();
   const { disconnect } = useDisconnect();
   const [userId, setUserId] = useState<number | null>(null);
   const [payments, setPayments] = useState<Payment[]>([]);
@@ -54,6 +54,7 @@ const Wallet = () => {
   const [hideButton, setHideButton] = useState(false);
   const router = useRouter();
   const [currentConnector, setCurrentConnector] = useState<string | null>(null);
+  const [isFarcasterWallet, setIsFarcasterWallet] = useState(false);
   const { data: balanceData } = useReadContract({
     chainId: celo.id,
     address: cUSDContractAddress,
@@ -76,11 +77,41 @@ const Wallet = () => {
     ? `${address.slice(0, 6)}...${address.slice(-4)}`
     : "";
 
+  // Update your useEffect for Farcaster context
   useEffect(() => {
-    const connections = getConnections(config);
-    console.log("connections", connections);
-    setCurrentConnector(connections[0].connector?.id);
+    const getContext = async () => {
+      try {
+        const context = await sdk.context;
+        console.log("we are setting context", context);
+        if (context?.user) {
+          setIsFarcasterWallet(true);
+        } else {
+          setIsFarcasterWallet(false);
+        }
+      } catch (err) {
+        console.error("Failed to get Farcaster context", err);
+        setIsFarcasterWallet(false);
+      }
+    };
+    getContext();
   }, []);
+
+  // Detect and set current connector
+  useEffect(() => {
+    const initConnection = async () => {
+      if (address) {
+        try {
+          const connections = getConnections(config);
+          if (connections?.[0]?.connector?.id) {
+            setCurrentConnector(connections[0].connector.id);
+          }
+        } catch (err) {
+          console.error("Connection fetch error:", err);
+        }
+      }
+    };
+    initConnection();
+  }, [address]);
 
   const copyToClipboard = async () => {
     if (!address) return;
@@ -94,7 +125,13 @@ const Wallet = () => {
 
   const handleConnect = async () => {
     try {
-      await connect({ connector: injected({ target: "metaMask" }) });
+      if (isFarcasterWallet) {
+        // Handle Farcaster wallet connection
+        connect({ connector: connectors[1] });
+      } else {
+        // Handle regular wallet connection
+        connect({ connector: injected({ target: "metaMask" }) });
+      }
     } catch (error) {
       console.error(error);
       toast.error("Connection failed");
@@ -162,12 +199,17 @@ const Wallet = () => {
     fetchData();
   }, [userId]);
 
+  //function to open farcaster link
+  async function openFarcasterLink(txHash: string) {
+    await sdk.actions.openUrl(`https://celoscan.io/tx/${txHash}`);
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 pb-24">
       {/* Header */}
       <div className="bg-gradient-to-br from-downy-600 to-downy-700 px-4  pb-8 rounded-b-3xl shadow-lg">
         <div className="flex justify-between items-start">
-          {isConnected && !hideButton && (
+          {isConnected && hideButton && (
             <button
               onClick={() => {
                 disconnect();
@@ -225,9 +267,29 @@ const Wallet = () => {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={handleConnect}
-              className="w-full mt-4 bg-white text-downy-600 font-bold py-3 px-4 rounded-lg shadow-md"
+              className={`w-full mt-4 bg-white text-downy-600 font-bold py-3 px-4 rounded-lg shadow-md ${
+                isFarcasterWallet && "border border-purple-300"
+              }`}
             >
-              Connect Wallet
+              {isFarcasterWallet ? (
+                <>
+                  connect{" "}
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="10"
+                    height="10"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      fill="currentColor"
+                      d="M18.24.24H5.76A5.76 5.76 0 0 0 0 6v12a5.76 5.76 0 0 0 5.76 5.76h12.48A5.76 5.76 0 0 0 24 18V6A5.76 5.76 0 0 0 18.24.24m.816 17.166v.504a.49.49 0 0 1 .543.48v.568h-5.143v-.569A.49.49 0 0 1 15 17.91v-.504c0-.22.153-.402.358-.458l-.01-4.364c-.158-1.737-1.64-3.098-3.443-3.098s-3.285 1.361-3.443 3.098l-.01 4.358c.228.042.532.208.54.464v.504a.49.49 0 0 1 .543.48v.568H4.392v-.569a.49.49 0 0 1 .543-.479v-.504c0-.253.201-.454.454-.472V9.039h-.49l-.61-2.031H6.93V5.042h9.95v1.966h2.822l-.61 2.03h-.49v7.896c.252.017.453.22.453.472"
+                    />
+                  </svg>
+                  wallet
+                </>
+              ) : (
+                "Connect Wallet"
+              )}
             </motion.button>
           )}
         </motion.div>
@@ -350,18 +412,14 @@ const Wallet = () => {
                     </span>
                     {currentConnector === "farcaster" ? (
                       <button
-                        onClick={async () =>
-                          await sdk.actions.openUrl(
-                            `https://alfajores.celoscan.io/tx/${payment.txHash}`
-                          )
-                        }
+                        onClick={() => openFarcasterLink(payment.txHash)}
                         className="text-gray-400 hover:text-downy-500 bg-transparent hover:bg-transparent"
                       >
                         <TbReceiptFilled className="text-gray-600" size={20} />
                       </button>
                     ) : (
                       <Link
-                        href={`https://alfajores.celoscan.io/tx/${payment.txHash}`}
+                        href={`https://celoscan.io/tx/${payment.txHash}`}
                         target="_blank"
                         className="text-gray-400 hover:text-downy-500"
                       >
@@ -391,10 +449,20 @@ const Wallet = () => {
         />
       )}
       {activeModal === "send" && (
-        <SendModal isOpen={true} onClose={closeModal} balance={balance} currentConnector={currentConnector ?? ""} />
+        <SendModal
+          isOpen={true}
+          onClose={closeModal}
+          balance={balance}
+          currentConnector={currentConnector ?? ""}
+        />
       )}
       {activeModal === "withdraw" && (
-        <WithdrawModal isOpen={true} onClose={closeModal} balance={balance} />
+        <WithdrawModal
+          isOpen={true}
+          onClose={closeModal}
+          balance={balance}
+          currentConnector={currentConnector ?? ""}
+        />
       )}
       {activeModal === "qr" && (
         <QRCodeModal

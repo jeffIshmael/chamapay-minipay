@@ -1,7 +1,7 @@
 import Image from "next/image";
-import React, { useState } from "react";
-import { useReadContract, useAccount, useWriteContract } from "wagmi";
-import { celoAlfajores } from "viem/chains";
+import React, { useEffect, useState } from "react";
+import { useReadContract, useAccount, useWriteContract, useSwitchChain, useChainId } from "wagmi";
+import { celo, celoAlfajores } from "viem/chains";
 import erc20Abi from "@/app/ChamaPayABI/ERC20.json";
 import { processCheckout } from "../Blockchain/TokenTransfer";
 import {
@@ -12,6 +12,8 @@ import {
 import { makePayment } from "../../lib/chama";
 import { parseEther } from "viem";
 import { showToast } from "./Toast";
+import { config } from "@/Providers/BlockchainProviders";
+import { getConnectorClient, getConnections } from "@wagmi/core";
 
 const CUSDPay = ({
   chamaId,
@@ -32,18 +34,37 @@ const CUSDPay = ({
   const { writeContractAsync } = useWriteContract();
   const [amount, setAmount] = useState("");
   const [isCalculating, setIsCalculating] = useState(false);
+  const [currentConnector, setCurrentConnector] = useState("");
+  const { switchChainAsync } = useSwitchChain();
+  const chainId = useChainId();
 
   const {
     data: balanceData,
     isLoading: isBalanceLoading,
     isError: isBalanceError,
   } = useReadContract({
-    chainId: celoAlfajores.id,
+    chainId: celo.id,
     address: cUSDContractAddress,
     functionName: "balanceOf",
     abi: erc20Abi,
     args: [address],
   });
+
+  useEffect(() => {
+    const initConnection = async () => {
+      if (address) {
+        try {
+          const connections = getConnections(config);
+          if (connections?.[0]?.connector?.id) {
+            setCurrentConnector(connections[0].connector.id);
+          }
+        } catch (err) {
+          console.error("Connection fetch error:", err);
+        }
+      }
+    };
+    initConnection();
+  }, [address]);
 
   const handlePayment = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,15 +91,45 @@ const CUSDPay = ({
       showToast("Insufficient cUSD balance", "error");
       return;
     }
+    console.log("the connected chain Id is", chainId);
+    console.log("the required chain id is", celo.id);
 
     const amountInWei = parseEther(totalAmount.toString());
+    if (chainId !== celo.id) {
+      try {
+        await switchChainAsync({ chainId: celo.id });
+      } catch (error) {
+        console.error("Failed to switch to celo:", error);
+      }
+    }
 
     try {
       setIsLoading(true);
       // setIsCalculating(true);
-
-      // const txHash = await processCheckout(cUSDContractAddress, amountInWei);
-      const txHash = "0x6gsau";
+      console.log("After connected chain Id is", chainId);
+      console.log("After required chain id is", celo.id);
+      let txHash: string | boolean = false;
+      if (currentConnector === "farcaster") {
+        const sendHash = await writeContractAsync({
+          address: cUSDContractAddress,
+          abi: erc20Abi,
+          functionName: "transfer",
+          args: [contractAddress, amountInWei],
+        });
+        if (sendHash) {
+          txHash = sendHash;
+        } else {
+          txHash = false;
+          showToast("unable to send", "warning");
+        }
+      } else {
+        const paid = await processCheckout(
+          contractAddress as `0x${string}`,
+          amountInWei,
+          currentConnector
+        );
+        txHash = paid;
+      }
       if (txHash) {
         const hash = await writeContractAsync({
           address: contractAddress,
@@ -86,26 +137,22 @@ const CUSDPay = ({
           functionName: "depositCash",
           args: [BigInt(chamaBlockchainId), amountInWei],
         });
-
-        if (hash) {
-          await makePayment(
-            amountInWei,
-            txHash,
-            chamaId,
-            address as string,
-            "You deposited"
-          );
-
-          showToast(`${amount} cUSD paid to ${name}`, "success");
-          onClose();
-        } else {
-          showToast("Unable to complete payment, please try again", "error");
+        if (!hash) {
+          showToast("unable to write to bc. try again.", "error");
+          return;
         }
-      } else {
-        showToast(
-          "Transaction failed. Ensure you have enough cUSD and try again.",
-          "error"
+        await makePayment(
+          amountInWei,
+          txHash,
+          chamaId,
+          address as string,
+          "You deposited"
         );
+
+        showToast(`${amount} cUSD paid to ${name}`, "success");
+        onClose();
+      } else {
+        showToast("Unable to complete payment, please try again", "error");
       }
     } catch (error: any) {
       console.error("Payment error:", error);

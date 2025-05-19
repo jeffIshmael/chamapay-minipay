@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import Head from "next/head";
 import React, { useEffect, useState } from "react";
 import ChamaNavbar from "@/app/Components/ChamaNav";
 import Members from "@/app/Components/Members";
@@ -40,6 +39,7 @@ import { config } from "@/Providers/BlockchainProviders";
 import { getConnections } from "@wagmi/core";
 import { celo, celoAlfajores } from "wagmi/chains";
 import { sdk } from "@farcaster/frame-sdk";
+import { HiArrowLeft } from "react-icons/hi";
 
 interface User {
   chamaId: number;
@@ -51,7 +51,7 @@ interface User {
     address: string;
     name: string | null;
     isFarcaster: boolean;
-    fid: number| null;
+    fid: number | null;
   };
   userId: number;
 }
@@ -179,6 +179,8 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
   // joining public chama
   const joinPublicChama = async () => {
     setError("");
+    console.log("the connected chain Id is", chainId);
+    console.log("the required chain id is", celo.id);
     if (!isConnected || !address) {
       setError("Please connect your wallet");
       return;
@@ -193,6 +195,8 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
 
     try {
       setProcessing(true);
+      console.log("After connected chain Id is", chainId);
+      console.log("After required chain id is", celo.id);
       let txHash: string | boolean = false;
       if (currentConnector === "farcaster") {
         const sendHash = await writeContractAsync({
@@ -259,7 +263,7 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
 
     // Construct the cast text
     const message =
-      `🔔 Join "${chama.name}" on ChamaPay!\n` +
+      `🔔 Join "${chama.name}" saving group on ChamaPay!\n` +
       `💰 Contribution: ${formatEther(chama.amount)} cUSD/${cycle}\n` +
       `👥 Members: ${chama.members?.length}\n` +
       `⏰ Next Pay Date: ${
@@ -386,6 +390,7 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
           <div className="flex justify-end gap-2 mb-1 mt-2">
             {/* Combined Status Indicator */}
             <div className="flex items-center bg-gray-50 px-2.5 py-1 rounded-lg border border-gray-200 text-xs">
+              <HiArrowLeft className="text-gray-700 cursor-pointer" onClick={()=> router.push("/myChamas")} />
               <span
                 className={`w-1.5 h-1.5 rounded-full mr-1.5 ${
                   chama.started ? "bg-green-500" : "bg-gray-400"
@@ -456,7 +461,7 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
                   })}`}
             </h3>
             {/* Pay Button */}
-            <div className="flex justify-center mb-4">
+            <div className="flex  justify-center mb-4">
               {!included ? (
                 <button
                   onClick={
@@ -484,7 +489,7 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
             </div>
             {/* SVG/Icon */}
 
-            <div className="flex justify-center space-x-4 mt-4">
+            <div className="flex justify-center items-center space-x-4 mt-4">
               {included && (
                 <div
                   onClick={() => {

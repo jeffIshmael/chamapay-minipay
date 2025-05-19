@@ -6,21 +6,25 @@ import { FiX, FiUser, FiDollarSign } from "react-icons/fi";
 import { processCheckout } from "@/app/Blockchain/TokenTransfer";
 import { showToast } from "./Toast";
 import { parseEther } from "viem";
+import erc20Abi from "@/app/ChamaPayABI/ERC20.json";
+import { cUSDContractAddress } from "../ChamaPayABI/ChamaPayContract";
+import { useWriteContract } from "wagmi";
 
 export default function SendModal({
   isOpen,
   onClose,
   balance,
-  currentConnector
+  currentConnector,
 }: {
   isOpen: boolean;
   onClose: () => void;
   balance: number;
-  currentConnector:string;
+  currentConnector: string;
 }) {
   const [recipient, setRecipient] = useState("");
   const [amount, setAmount] = useState("");
   const [isSending, setIsSending] = useState(false);
+  const { writeContractAsync } = useWriteContract();
 
   const handleSend = async () => {
     // Validate inputs
@@ -52,9 +56,30 @@ export default function SendModal({
     try {
       setIsSending(true);
       const parsedAmount = parseEther(amount);
-      const sent = await processCheckout(recipient as `0x${string}`, parsedAmount,currentConnector);
-     
-      
+      // const sent = await processCheckout(recipient as `0x${string}`, parsedAmount,currentConnector);
+      let sent: string | boolean = false;
+      if (currentConnector === "farcaster") {
+        const sendHash = await writeContractAsync({
+          address: cUSDContractAddress,
+          abi: erc20Abi,
+          functionName: "transfer",
+          args: [recipient, parsedAmount],
+        });
+        if (sendHash) {
+          sent = sendHash;
+        } else {
+          sent = false;
+          showToast("unable to send", "warning");
+        }
+      } else {
+        const paid = await processCheckout(
+          recipient as `0x${string}`,
+          parsedAmount,
+          currentConnector
+        );
+        sent = paid;
+      }
+
       if (!sent) {
         showToast("Unable to send payment. Please try again.", "error");
         return;
@@ -67,14 +92,15 @@ export default function SendModal({
     } catch (error) {
       console.error("Send error:", error);
       showToast(
-        `Failed to send: ${error instanceof Error ? error.message : "Unknown error"}`,
+        `Failed to send: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`,
         "error"
       );
     } finally {
       setIsSending(false);
     }
   };
-
 
   return (
     <Dialog open={isOpen} onClose={onClose} className="relative z-50">
@@ -85,7 +111,10 @@ export default function SendModal({
             <Dialog.Title className="text-xl font-bold text-gray-900">
               Send cUSD
             </Dialog.Title>
-            <button onClick={onClose} className="text-gray-500 hover:text-gray-700 bg-transparent hover:bg-gray-100 rounded-full p-1">
+            <button
+              onClick={onClose}
+              className="text-gray-500 hover:text-gray-700 bg-transparent hover:bg-gray-100 rounded-full p-1"
+            >
               <FiX size={24} />
             </button>
           </div>
@@ -126,7 +155,7 @@ export default function SendModal({
                 />
                 <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
                   <button
-                    onClick={() => setAmount((balance.toFixed(3)).toString())}
+                    onClick={() => setAmount(balance.toFixed(3).toString())}
                     className="text-xs text-downy-600 hover:text-downy-800 bg-transparent hover:bg-gray-100 rounded-md p-1"
                   >
                     Max
@@ -146,7 +175,7 @@ export default function SendModal({
                 Cancel
               </button>
               <button
-                onClick={()=> handleSend()}
+                onClick={() => handleSend()}
                 disabled={isSending}
                 className={`flex-1 bg-downy-600 text-white py-2 rounded-lg font-medium hover:bg-downy-700 transition ${
                   isSending ? "opacity-70 cursor-not-allowed" : ""
