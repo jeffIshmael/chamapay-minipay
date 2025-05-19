@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import BottomNavbar from "../Components/BottomNavbar";
-import CreateFamily from "../(Family&Friends)/CreateFamiy";
+import CreateFamily from "../(Family&Friends)/CreateFamily";
 import CreatePublic from "../(Public)/CreatePublic";
 
 const Page = () => {

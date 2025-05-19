@@ -15,7 +15,6 @@ import { getLatestChamaId } from "@/lib/readFunctions";
 import { parseEther } from "viem";
 import { FiAlertTriangle } from "react-icons/fi";
 import { showToast } from "../Components/Toast";
-import { celo, celoAlfajores } from "wagmi/chains";
 
 const CreateFamily = () => {
   const [groupName, setGroupName] = useState("");
@@ -28,17 +27,6 @@ const CreateFamily = () => {
   const [startDateTime, setStartDateTime] = useState("");
   const { isConnected, address } = useAccount();
   const router = useRouter();
-  const chainId = useChainId();
-  const { switchChainAsync } = useSwitchChain();
-
-  useEffect(() => {
-    const switchToCelo = async () => {
-      if (chainId !== celo.id) {
-        await switchChainAsync({ chainId: celo.id });
-      }
-    };
-    switchToCelo();
-  }, [chainId, switchChainAsync]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -85,15 +73,6 @@ const CreateFamily = () => {
         const dateObject = new Date(startDate as string);
 
         const dateInMilliseconds = dateObject.getTime();
-        console.log("the connected chain Id is", chainId);
-        console.log("the required chain id is", celo.id);
-
-        if (chainId !== celo.id) {
-          await switchChainAsync({ chainId: celo.id });
-        }
-        console.log("After connected chain Id is", chainId);
-        console.log("After required chain id is", celo.id);
-
         // get the current blockchain id from the blockchain
         const chamaIdToUse = await getLatestChamaId();
 

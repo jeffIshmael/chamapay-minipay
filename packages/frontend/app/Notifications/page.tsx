@@ -19,6 +19,7 @@ import { showToast } from "../Components/Toast";
 import sdk from "@farcaster/frame-sdk";
 import { getConnections } from "@wagmi/core";
 import { config } from "@/Providers/BlockchainProviders";
+import { useIsFarcaster } from "../context/isFarcasterContext";
 
 interface Chama {
   adminId: number;
@@ -76,7 +77,7 @@ const Page = () => {
   const [fetching, setFetching] = useState<boolean>(false);
   const { writeContractAsync } = useWriteContract();
   const { isConnected, address } = useAccount();
-  const [currentConnector, setCurrentConnector] = useState("");
+  const {isFarcaster, setIsFarcaster} = useIsFarcaster();
 
   // Fetch user details
   useEffect(() => {
@@ -118,21 +119,6 @@ const Page = () => {
     fetchData();
   }, [userId]);
 
-  useEffect(() => {
-    const initConnection = async () => {
-      if (address) {
-        try {
-          const connections = getConnections(config);
-          if (connections?.[0]?.connector?.id) {
-            setCurrentConnector(connections[0].connector.id);
-          }
-        } catch (err) {
-          console.error("Connection fetch error:", err);
-        }
-      }
-    };
-    initConnection();
-  }, [address]);
 
   const handleJoin = async (
     action: "approve" | "reject",
@@ -226,7 +212,7 @@ const Page = () => {
             Notifications
           </h1>
           <div className="flex items-center space-x-2">
-            {currentConnector === "farcaster" ? (
+            {isFarcaster ? (
               <button
                 onClick={() => addFrameToWarpcast()}
                 className="flex items-center gap-2 p-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition"

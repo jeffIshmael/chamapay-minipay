@@ -19,8 +19,6 @@ import {
   useAccount,
   useConnect,
   useWriteContract,
-  useChainId,
-  useSwitchChain,
 } from "wagmi";
 import {
   contractAbi,
@@ -28,18 +26,15 @@ import {
   cUSDContractAddress,
 } from "@/app/ChamaPayABI/ChamaPayContract";
 import ERC2OAbi from "@/app/ChamaPayABI/ERC20.json";
-import { injected } from "wagmi/connectors";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { processCheckout } from "@/app/Blockchain/TokenTransfer";
 import { useRouter } from "next/navigation";
 import { formatEther } from "viem";
 import { FiAlertTriangle } from "react-icons/fi";
 import { showToast } from "@/app/Components/Toast";
-import { config } from "@/Providers/BlockchainProviders";
-import { getConnections } from "@wagmi/core";
-import { celo, celoAlfajores } from "wagmi/chains";
 import { sdk } from "@farcaster/frame-sdk";
 import { HiArrowLeft } from "react-icons/hi";
+import { useIsFarcaster } from "@/app/context/isFarcasterContext";
 
 interface User {
   chamaId: number;
@@ -92,22 +87,13 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
   const [loading, setLoading] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [hasRequest, setHasRequest] = useState(false);
+  const { isFarcaster, setIsFarcaster } = useIsFarcaster();
   const router = useRouter();
-  const [currentConnector, setCurrentConnector] = useState("");
-  const chainId = useChainId();
-  const { switchChainAsync } = useSwitchChain();
 
   const togglePayModal = () => {
     setIsOpen(!isOpen);
   };
 
-  useEffect(() => {
-    if (!isConnected) {
-      connect({ connector: injected({ target: "metaMask" }) });
-    }
-    const connections = getConnections(config);
-    setCurrentConnector(connections[0].connector?.id);
-  }, [isConnected]);
 
   useEffect(() => {
     const fetchChama = async () => {
@@ -129,26 +115,6 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
     fetchChama();
   }, [address, params.slug]);
 
-  useEffect(() => {
-    const switchToCelo = async () => {
-      if (chainId !== celo.id) {
-        console.log("connected chain", chainId);
-        console.log("celo chain", celo.id);
-        try {
-          await switchChainAsync({ chainId: celo.id });
-        } catch (error) {
-          console.error("Failed to switch to celo:", error);
-        }
-      }
-    };
-    switchToCelo();
-  }, [chainId, switchChainAsync]);
-
-  useEffect(() => {
-    const connections = getConnections(config);
-    console.log("connections", connections);
-    setCurrentConnector(connections[0].connector?.id);
-  }, []);
 
   // sending request to join private chama
   const joinChama = async () => {
@@ -179,26 +145,15 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
   // joining public chama
   const joinPublicChama = async () => {
     setError("");
-    console.log("the connected chain Id is", chainId);
-    console.log("the required chain id is", celo.id);
     if (!isConnected || !address) {
       setError("Please connect your wallet");
       return;
     }
-    if (chainId !== celo.id) {
-      try {
-        await switchChainAsync({ chainId: celo.id });
-      } catch (error) {
-        console.error("Failed to switch to celo:", error);
-      }
-    }
-
+ 
     try {
       setProcessing(true);
-      console.log("After connected chain Id is", chainId);
-      console.log("After required chain id is", celo.id);
       let txHash: string | boolean = false;
-      if (currentConnector === "farcaster") {
+      if (isFarcaster) {
         const sendHash = await writeContractAsync({
           address: cUSDContractAddress,
           abi: ERC2OAbi,
@@ -215,7 +170,6 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
         const paid = await processCheckout(
           contractAddress as `0x${string}`,
           chama?.amount ?? BigInt(0),
-          currentConnector
         );
         txHash = paid;
       }
@@ -278,8 +232,7 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
               month: "short",
               year: "numeric",
             })
-      }\n\n` +
-      `🔗 Join here: https://chamapay-minipay.vercel.app/Chama/${chama.slug}`;
+      }\n\n`
 
     // Suggest an embed (e.g., link to the Chama's page or image)
     const embeds: [string, string] = [
@@ -291,9 +244,7 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
       const result = await sdk.actions.composeCast({
         text: message,
         embeds,
-        // close: true, // Uncomment if you want to auto-close the mini app
       });
-
       console.log("Cast posted:", result?.cast.hash);
     } catch (err) {
       console.error("ComposeCast failed:", err);
@@ -390,7 +341,7 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
           <div className="flex justify-end gap-2 mb-1 mt-2">
             {/* Combined Status Indicator */}
             <div className="flex items-center bg-gray-50 px-2.5 py-1 rounded-lg border border-gray-200 text-xs">
-              <HiArrowLeft className="text-gray-700 cursor-pointer" onClick={()=> router.push("/myChamas")} />
+              <HiArrowLeft className="text-gray-700 cursor-pointer" onClick={()=> router.push("/MyChamas")} />
               <span
                 className={`w-1.5 h-1.5 rounded-full mr-1.5 ${
                   chama.started ? "bg-green-500" : "bg-gray-400"
@@ -508,7 +459,7 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
                   </svg>
                 </div>
               )}
-              {currentConnector === "farcaster" && (
+              {isFarcaster && (
                 <button
                   onClick={handleShareCast}
                   className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition"
@@ -540,6 +491,7 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
           slug={chama.slug}
           members={chama.members}
           adminWallet={adminWallet || ""}
+          isFarcaster={isFarcaster}
         />
       )}
       {activeSection === "Chats" && (

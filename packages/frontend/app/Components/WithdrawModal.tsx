@@ -14,12 +14,12 @@ export default function WithdrawModal({
   isOpen,
   onClose,
   balance,
-  currentConnector,
+  isFarcaster,
 }: {
   isOpen: boolean;
   onClose: () => void;
   balance: number;
-  currentConnector:string;
+  isFarcaster:boolean;
 }) {
   const [amount, setAmount] = useState("");
   const [isWithdrawing, setIsWithdrawing] = useState(false);
@@ -58,7 +58,7 @@ export default function WithdrawModal({
       setIsWithdrawing(true);
       const parsedAmount = parseEther(amount);
       let sent: string | boolean = false;
-      if (currentConnector === "farcaster") {
+      if (isFarcaster) {
         const sendHash = await writeContractAsync({
           address: cUSDContractAddress,
           abi: erc20Abi,
@@ -75,11 +75,9 @@ export default function WithdrawModal({
         const paid = await processCheckout(
           receiver as `0x${string}`,
           parsedAmount,
-          currentConnector
         );
         sent = paid;
       }
-
       if (!sent) {
         showToast("Unable to withdraw. Please try again.", "error");
         return;

@@ -24,7 +24,7 @@ import {
   FiAlertTriangle,
 } from "react-icons/fi";
 import { RiHandCoinLine } from "react-icons/ri";
-import { IoMdPeople } from "react-icons/io";
+import { IoMdPeople, IoMdWallet } from "react-icons/io";
 import { TbPigMoney } from "react-icons/tb";
 import { checkUser, createUser } from "@/lib/chama";
 import { getConnections, switchChain } from "@wagmi/core";
@@ -32,7 +32,15 @@ import { getChainId } from "@wagmi/core";
 import { showToast } from "../Components/Toast";
 import { config } from "@/Providers/BlockchainProviders";
 import { sdk } from "@farcaster/frame-sdk";
-import { useIsFarcaster } from '../context/isFarcasterContext';
+import { useIsFarcaster } from "../context/isFarcasterContext";
+import { celo } from "wagmi/chains";
+
+interface User {
+  fid: number;
+  username?: string;
+  displayName?: string;
+  pfpUrl?: string;
+}
 
 const Page = () => {
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
@@ -41,65 +49,76 @@ const Page = () => {
   const [error, setError] = useState("");
   const [userName, setUserName] = useState("");
   const [isRegistering, setIsRegistering] = useState(false);
+  const { address, isConnected, chain } = useAccount();
   const [currentConnector, setCurrentConnector] = useState<string | null>(null);
   const { isFarcaster, setIsFarcaster } = useIsFarcaster();
+  const [fcDetails, setFcDetails] = useState<User | null>(null);
+  const { connect, connectors } = useConnect();
+  const { switchChain, isPending } = useSwitchChain();
+  const [showNetworkSwitch, setShowNetworkSwitch] = useState(false);
 
   useEffect(() => {
     const checkUserRegistered = async () => {
-      if (address) {
-        const user = await checkUser(address as string);
-        if (!user && currentConnector === "farcaster") {
-          try {
-            console.log("The current connector",currentConnector);
-            const context = await sdk.context;
-            console.log("this is the context", context);
-            console.log("FID:", context.user.fid);
-            console.log("Username:", context.user.username);
-            await createUser(
-              context.user.username
-                ? context.user.username
-                : context.user.displayName
-                ? context.user.displayName
-                : "anonymous",
-              address,
-              context.user.fid,
-              true
-            );
-            return;
-          } catch (err) {
-            console.error("Fetch error:", err);
-            setShowRegister(true);
-          }
-        } else if (!user) {
+      if (!address) {
+        showToast("please connect wallet", "warning");
+        return;
+      }
+      const user = await checkUser(address as string);
+      if (!user && isFarcaster) {
+        try {
+          const context = await sdk.context;
+          console.log("this is the context", context);
+          console.log("FID:", context.user.fid);
+          console.log("Username:", context.user.username);
+          await createUser(
+            context.user.username
+              ? context.user.username
+              : context.user.displayName
+              ? context.user.displayName
+              : "anonymous",
+            address,
+            context.user.fid,
+            true
+          );
+          return;
+        } catch (err) {
+          console.error("Fetch error:", err);
           setShowRegister(true);
         }
+      } else if (!user) {
+        setShowRegister(true);
       }
     };
 
     checkUserRegistered();
-  }, [address, currentConnector]);
+  }, [address]);
 
   // function to check if is farcsater
-  // useEffect(()=>{
-  //   const checkISFarcaster = async ()=>{
-  //     const context = 
-  //   }
-
-  // })
-
   useEffect(() => {
-    if (window.ethereum && window.ethereum.isMiniPay) {
-      connect({ connector: injected({ target: "metaMask" }) });
-    } else if (fcDetails) {
-      connect({ connector: connectors[1] });
-    }
+    const getContext = async () => {
+      try {
+        const context = await sdk.context;
+        console.log("we are setting context", context);
+        if (context?.user) {
+          setIsFarcaster(true);
+        } else {
+          setIsFarcaster(false);
+        }
+      } catch (err) {
+        console.error("Failed to get Farcaster context", err);
+        setIsFarcaster(false);
+      }
+    };
+    getContext();
   }, []);
 
   useEffect(() => {
-    if (fcDetails) {
+    if (isFarcaster) {
       connect({ connector: connectors[1] });
+    } else {
+      connect({ connector: injected({ target: "metaMask" }) });
     }
-  }, [fcDetails]);
+  }, [isFarcaster]);
 
   // Handle modal body class toggle
   useEffect(() => {
@@ -108,7 +127,6 @@ const Page = () => {
     } else {
       document.body.classList.remove("modal-open");
     }
-
     return () => document.body.classList.remove("modal-open");
   }, [showRegister]);
 
@@ -117,50 +135,11 @@ const Page = () => {
       setShowNetworkSwitch(chain.id !== celo.id);
       console.log("Current chain:", chain.name, chain.id);
     } else if (isConnected) {
-      // Connected but no chain info (unlikely but possible)
       setShowNetworkSwitch(true);
     } else {
-      // Not connected
       setShowNetworkSwitch(false);
     }
   }, [chain, isConnected]);
-
-  // Check if user is registered and trigger createUser if needed
-  useEffect(() => {
-    const checkUserRegistered = async () => {
-      if (!address || !currentConnector) return;
-
-      const user = await checkUser(address);
-      if (!user) {
-        if (currentConnector === "farcaster" && fcDetails) {
-          const name =
-            fcDetails.username || fcDetails.displayName || "anonymous";
-          try {
-            console.log("Registering Farcaster user:", fcDetails);
-            const createdUser = await createUser(
-              name,
-              address,
-              fcDetails.fid,
-              true
-            );
-            if (createdUser) {
-              setShowRegister(false);
-            } else {
-              setShowRegister(true);
-            }
-          } catch (err) {
-            console.error("Error creating user:", err);
-            showToast("error occurred when registering.");
-            // setShowRegister(true);
-          }
-        } else {
-          setShowRegister(true);
-        }
-      }
-    };
-
-    checkUserRegistered();
-  }, [address, currentConnector, fcDetails]);
 
   const handleSwitchToCelo = useCallback(async () => {
     try {
@@ -171,6 +150,19 @@ const Page = () => {
       showToast(`Failed to switch to Celo. Please try again.`, "error");
     }
   }, [switchChain]);
+
+  const handleConnect = async () => {
+    try {
+      if (isFarcaster) {
+        connect({ connector: connectors[1] });
+      } else {
+        connect({ connector: injected({ target: "metaMask" }) });
+      }
+    } catch (error) {
+      console.error(error);
+      showToast("Connection failed", "error");
+    }
+  };
 
   const toggleSection = (section: string) => {
     setExpandedSection(expandedSection === section ? null : section);
@@ -183,7 +175,6 @@ const Page = () => {
       setError("Enter a valid username.");
       return;
     }
-
     setIsRegistering(true);
     try {
       if (address) {
@@ -209,30 +200,69 @@ const Page = () => {
         <AnimatePresence>
           {showNetworkSwitch && (
             <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-            className="fixed top-2 z-50"
-          >
-            <motion.button
-              whileHover={{ 
-                scale: 1.02,
-                backgroundColor: "#f59e0b",
-              }}
-              whileTap={{ scale: 0.98 }}
-              onClick={handleSwitchToCelo}
-              className="bg-yellow-400 hover:bg-yellow-500 border-2 border-yellow-600 text-white font-medium py-2 px-4 rounded-full shadow-lg flex items-center space-x-3 backdrop-blur-sm"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              className="fixed top-2 z-50"
             >
-              <div className="flex flex-col items-start">
-                <span className="text-xs font-medium text-yellow-100">Currently on: {chain?.name || 'Unknown'}</span>
-                <span className="text-sm font-semibold flex items-center gap-2">
-                  <FiAlertTriangle   className="inline" />
-                  Switch to Celo
-                </span>
-              </div>
-              <FiArrowRight className="text-lg" />
-            </motion.button>
-          </motion.div>
+              <motion.button
+                whileHover={{
+                  scale: 1.02,
+                  backgroundColor: "#f59e0b",
+                }}
+                whileTap={{ scale: 0.98 }}
+                onClick={handleSwitchToCelo}
+                className="bg-yellow-400 hover:bg-yellow-500 border-2 border-yellow-600 text-white font-medium py-2 px-4 rounded-full shadow-lg flex items-center space-x-3 backdrop-blur-sm"
+              >
+                <div className="flex flex-col items-start">
+                  <span className="text-xs font-medium text-yellow-100">
+                    Currently on wrong chain.
+                  </span>
+                  <span className="text-sm font-semibold flex items-center gap-2">
+                    <FiAlertTriangle className="inline" />
+                    Switch to Celo
+                  </span>
+                </div>
+                <FiArrowRight className="text-lg" />
+              </motion.button>
+            </motion.div>
+          )}
+          {!isConnected && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              className="fixed top-4 z-50"
+            >
+              <motion.button
+                whileHover={{
+                  scale: 1.05,
+                  backgroundColor: "#06b6d4",
+                  boxShadow: "0 4px 14px rgba(6, 182, 212, 0.5)",
+                }}
+                whileTap={{ scale: 0.98 }}
+                onClick={handleConnect}
+                className="relative bg-downy-400 hover:bg-downy-500 border-2 border-downy-600 text-white font-medium py-2 pl-3 pr-4 rounded-full shadow-lg flex items-center gap-2 backdrop-blur-sm transition-all"
+              >
+                {/* Pulse dot */}
+                <motion.span
+                  animate={{
+                    scale: [1, 1.2, 1],
+                    opacity: [0.8, 1, 0.8],
+                  }}
+                  transition={{
+                    duration: 1.5,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                  }}
+                  className="absolute -left-1 -top-1 h-3 w-3 rounded-full bg-yellow-400 border-2 border-white"
+                />
+
+                <IoMdWallet className="text-lg text-white" />
+                <span className="font-semibold text-sm">Connect Wallet</span>
+                <FiArrowRight className="text-lg text-white ml-1" />
+              </motion.button>
+            </motion.div>
           )}
         </AnimatePresence>
         <motion.div

@@ -22,6 +22,7 @@ import { showToast } from "../Components/Toast";
 import { getConnectorClient, getConnections } from "@wagmi/core";
 import { config } from "@/Providers/BlockchainProviders";
 import { celo, celoAlfajores } from "wagmi/chains";
+import { useIsFarcaster } from "../context/isFarcasterContext";
 
 interface Form {
   amount: string;
@@ -46,7 +47,7 @@ const CreatePublic = () => {
   const [startDateTime, setStartDateTime] = useState("");
   const router = useRouter();
   const { isConnected, address } = useAccount();
-  const [currentConnector, setCurrentConnector] = useState("");
+  const {isFarcaster, setIsFarcaster} = useIsFarcaster();
   const { writeContractAsync } = useWriteContract();
   const [filledData, setFilledData] = useState<Form>({
     amount: "",
@@ -55,26 +56,7 @@ const CreatePublic = () => {
     name: "",
     startDate: "",
   });
-  const chainId = useChainId();
-  const { switchChainAsync } = useSwitchChain();
 
-  useEffect(() => {
-    const connections = getConnections(config);
-    setCurrentConnector(connections[0].connector?.id);
-  }, []);
-
-  useEffect(() => {
-    const switchToCelo = async () => {
-      if (chainId !== celo.id) {
-        try {
-          await switchChainAsync({ chainId: celo.id });
-        } catch (error) {
-          console.error("Failed to switch to celo:", error);
-        }
-      }
-    };
-    switchToCelo();
-  }, [chainId, switchChainAsync]);
 
   const openModal = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -133,20 +115,15 @@ const CreatePublic = () => {
       return;
     }
 
-    console.log(filledData);
     const amount = parseFloat(filledData.amount as string);
-    console.log(amount);
     const amountInWei = parseEther(amount.toString());
     const blockchainId = await getLatestChamaId();
-    console.log(`blockchainId: ${blockchainId}`);
-    const client = await getConnectorClient(config);
-    console.log("with clent", client);
 
     //function to send the lock amount
     try {
       setProcessing(true);
       let txHash: string | boolean = false;
-      if (currentConnector === "farcaster") {
+      if (isFarcaster) {
         const sendHash = await writeContractAsync({
           address: cUSDContractAddress,
           abi: ERC2OAbi,
@@ -163,7 +140,6 @@ const CreatePublic = () => {
         const paid = await processCheckout(
           contractAddress as `0x${string}`,
           amountInWei,
-          currentConnector
         );
         txHash = paid;
       }
@@ -202,8 +178,6 @@ const CreatePublic = () => {
             blockchainId,
             txHash
           );
-
-          console.log("done");
           showToast(`${filledData.name} created successfully.`, "success");
           setLoading(false);
           router.push("/MyChamas");

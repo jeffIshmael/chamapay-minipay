@@ -29,8 +29,9 @@ import SendModal from "./sendModal";
 import WithdrawModal from "./WithdrawModal";
 import QRCodeModal from "./QRCodeModal";
 import { getConnections } from "@wagmi/core";
-import  {sdk}  from "@farcaster/frame-sdk";
+import { sdk } from "@farcaster/frame-sdk";
 import { config } from "@/Providers/BlockchainProviders";
+import { useIsFarcaster } from "../context/isFarcasterContext";
 
 interface Payment {
   amount: bigint;
@@ -54,7 +55,7 @@ const Wallet = () => {
   const [hideButton, setHideButton] = useState(false);
   const router = useRouter();
   const [currentConnector, setCurrentConnector] = useState<string | null>(null);
-  const [isFarcasterWallet, setIsFarcasterWallet] = useState(false);
+  const { isFarcaster, setIsFarcaster } = useIsFarcaster();
   const { data: balanceData } = useReadContract({
     chainId: celo.id,
     address: cUSDContractAddress,
@@ -77,42 +78,6 @@ const Wallet = () => {
     ? `${address.slice(0, 6)}...${address.slice(-4)}`
     : "";
 
-  // Update your useEffect for Farcaster context
-  useEffect(() => {
-    const getContext = async () => {
-      try {
-        const context = await sdk.context;
-        console.log("we are setting context", context);
-        if (context?.user) {
-          setIsFarcasterWallet(true);
-        } else {
-          setIsFarcasterWallet(false);
-        }
-      } catch (err) {
-        console.error("Failed to get Farcaster context", err);
-        setIsFarcasterWallet(false);
-      }
-    };
-    getContext();
-  }, []);
-
-  // Detect and set current connector
-  useEffect(() => {
-    const initConnection = async () => {
-      if (address) {
-        try {
-          const connections = getConnections(config);
-          if (connections?.[0]?.connector?.id) {
-            setCurrentConnector(connections[0].connector.id);
-          }
-        } catch (err) {
-          console.error("Connection fetch error:", err);
-        }
-      }
-    };
-    initConnection();
-  }, [address]);
-
   const copyToClipboard = async () => {
     if (!address) return;
     await navigator.clipboard.writeText(address);
@@ -125,7 +90,7 @@ const Wallet = () => {
 
   const handleConnect = async () => {
     try {
-      if (isFarcasterWallet) {
+      if (isFarcaster) {
         // Handle Farcaster wallet connection
         connect({ connector: connectors[1] });
       } else {
@@ -140,15 +105,11 @@ const Wallet = () => {
 
   //useeffect to check if user is connected to minipay
   useEffect(() => {
-    if (isConnected) {
-      if (
-        (window.ethereum && window.ethereum.isMiniPay) ||
-        currentConnector === "farcaster"
-      ) {
-        setHideButton(true);
-      }
+    if (!isConnected) return;
+    if ((window.ethereum && window.ethereum.isMiniPay) || isFarcaster) {
+      setHideButton(true);
     }
-  }, [isConnected, currentConnector]);
+  }, [isConnected]);
 
   // Fetch user ID based on address
   useEffect(() => {
@@ -268,28 +229,10 @@ const Wallet = () => {
               whileTap={{ scale: 0.98 }}
               onClick={handleConnect}
               className={`w-full mt-4 bg-white text-downy-600 font-bold py-3 px-4 rounded-lg shadow-md ${
-                isFarcasterWallet && "border border-purple-300"
+                isFarcaster && "border border-purple-400"
               }`}
             >
-              {isFarcasterWallet ? (
-                <>
-                  connect{" "}
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="10"
-                    height="10"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      fill="currentColor"
-                      d="M18.24.24H5.76A5.76 5.76 0 0 0 0 6v12a5.76 5.76 0 0 0 5.76 5.76h12.48A5.76 5.76 0 0 0 24 18V6A5.76 5.76 0 0 0 18.24.24m.816 17.166v.504a.49.49 0 0 1 .543.48v.568h-5.143v-.569A.49.49 0 0 1 15 17.91v-.504c0-.22.153-.402.358-.458l-.01-4.364c-.158-1.737-1.64-3.098-3.443-3.098s-3.285 1.361-3.443 3.098l-.01 4.358c.228.042.532.208.54.464v.504a.49.49 0 0 1 .543.48v.568H4.392v-.569a.49.49 0 0 1 .543-.479v-.504c0-.253.201-.454.454-.472V9.039h-.49l-.61-2.031H6.93V5.042h9.95v1.966h2.822l-.61 2.03h-.49v7.896c.252.017.453.22.453.472"
-                    />
-                  </svg>
-                  wallet
-                </>
-              ) : (
-                "Connect Wallet"
-              )}
+              Connect Wallet
             </motion.button>
           )}
         </motion.div>
@@ -453,7 +396,7 @@ const Wallet = () => {
           isOpen={true}
           onClose={closeModal}
           balance={balance}
-          currentConnector={currentConnector ?? ""}
+          isFarcaster={isFarcaster}
         />
       )}
       {activeModal === "withdraw" && (
@@ -461,7 +404,7 @@ const Wallet = () => {
           isOpen={true}
           onClose={closeModal}
           balance={balance}
-          currentConnector={currentConnector ?? ""}
+          isFarcaster={isFarcaster}
         />
       )}
       {activeModal === "qr" && (

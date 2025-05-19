@@ -33,28 +33,24 @@ const Members = ({
   slug,
   members,
   adminWallet,
+  isFarcaster,
 }: {
   imageSrc: string;
   name: string;
   slug: string;
   members: User[];
   adminWallet: string;
+  isFarcaster:boolean;
 }) => {
   const [groupLink, setGroupLink] = useState("");
   const { isConnected, address } = useAccount();
   const [copied, setCopied] = useState(false);
-
-  const [currentConnector, setCurrentConnector] = useState<string | null>(null);
 
   // Generate invite link
   useEffect(() => {
     setGroupLink(`${window.location.origin}/Chama/${slug}`);
   }, [slug]);
 
-  useEffect(() => {
-    const connections = getConnections(config);
-    setCurrentConnector(connections[0].connector?.id);
-  }, []);
 
   // Copy invite link to clipboard
   const copyToClipboard = async () => {
@@ -188,7 +184,7 @@ const Members = ({
                   </div>
                   <div className="flex items-center gap-2">
                     {member.user.isFarcaster &&
-                      currentConnector === "farcaster" && (
+                      isFarcaster && (
                         <motion.button
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}

@@ -14,12 +14,12 @@ export default function SendModal({
   isOpen,
   onClose,
   balance,
-  currentConnector,
+  isFarcaster,
 }: {
   isOpen: boolean;
   onClose: () => void;
   balance: number;
-  currentConnector: string;
+  isFarcaster: boolean;
 }) {
   const [recipient, setRecipient] = useState("");
   const [amount, setAmount] = useState("");
@@ -58,7 +58,7 @@ export default function SendModal({
       const parsedAmount = parseEther(amount);
       // const sent = await processCheckout(recipient as `0x${string}`, parsedAmount,currentConnector);
       let sent: string | boolean = false;
-      if (currentConnector === "farcaster") {
+      if (isFarcaster) {
         const sendHash = await writeContractAsync({
           address: cUSDContractAddress,
           abi: erc20Abi,
@@ -75,16 +75,13 @@ export default function SendModal({
         const paid = await processCheckout(
           recipient as `0x${string}`,
           parsedAmount,
-          currentConnector
         );
         sent = paid;
       }
-
       if (!sent) {
         showToast("Unable to send payment. Please try again.", "error");
         return;
       }
-
       showToast(`${amount} cUSD sent successfully!`, "success");
       setRecipient("");
       setAmount("");
