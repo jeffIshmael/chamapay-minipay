@@ -403,7 +403,7 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
                   dateStyle: 'medium',
                   timeStyle: 'short',
                   timeZoneName: 'short',
-                }).format(new Date(chama.startDate))}`}
+                }).format(chama.startDate)}`}
             </h3>
             {/* Pay Button */}
             <div className="flex  justify-center mb-4">

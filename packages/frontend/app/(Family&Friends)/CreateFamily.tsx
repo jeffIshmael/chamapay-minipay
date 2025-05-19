@@ -76,6 +76,10 @@ const CreateFamily = () => {
         const dateInMilliseconds = dateObject.getTime();
         // get the current blockchain id from the blockchain
         const chamaIdToUse = await getLatestChamaId();
+        const localDateTime = new Date(`${startDateDate}T${startDateTime}`);
+        const startDateUTC = new Date(
+          localDateTime.getTime() - localDateTime.getTimezoneOffset() * 60000
+        ).toISOString();
 
         const chamaArgs = [
           parseEther(data.amount as string),
@@ -102,7 +106,7 @@ const CreateFamily = () => {
         if (hash) {
           await createChama(
             formData,
-            startDate,
+            startDateUTC,
             "Private",
             address,
             chamaIdToUse,
