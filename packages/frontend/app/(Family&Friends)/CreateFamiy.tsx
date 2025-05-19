@@ -242,7 +242,7 @@ const CreateFamily = () => {
             htmlFor="duration"
             className="block text-sm font-medium text-gray-700"
           >
-            Cycle Time (in days) (min 1)
+            Cycle Time (in days) (min 1dy)
           </label>
           <input
             type="number"

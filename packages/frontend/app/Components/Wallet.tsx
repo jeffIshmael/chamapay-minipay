@@ -29,7 +29,7 @@ import SendModal from "./sendModal";
 import WithdrawModal from "./WithdrawModal";
 import QRCodeModal from "./QRCodeModal";
 import { getConnections } from "@wagmi/core";
-import  sdk  from "@farcaster/frame-sdk";
+import  {sdk}  from "@farcaster/frame-sdk";
 import { config } from "@/Providers/BlockchainProviders";
 
 interface Payment {
@@ -82,6 +82,7 @@ const Wallet = () => {
     const getContext = async () => {
       try {
         const context = await sdk.context;
+        console.log("we are setting context", context);
         if (context?.user) {
           setIsFarcasterWallet(true);
         } else {
