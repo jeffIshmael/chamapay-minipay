@@ -113,16 +113,15 @@ const Page = () => {
       <div className="sticky top-0 z-10 bg-white rounded-b-lg shadow-sm px-4 pt-4 pb-2">
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold text-downy-800">ChamaPay</h1>
-         
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className=" text-white p-2 rounded-full bg-downy-500"
-              onClick={() => setShowLinkSearch(true)}
-            >
-              <FiSearch className="text-lg" />
-            </motion.button>
-          
+
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className=" text-white p-2 rounded-full bg-downy-500"
+            onClick={() => setShowLinkSearch(true)}
+          >
+            <FiSearch className="text-lg" />
+          </motion.button>
         </div>
 
         <h2 className="text-xl font-bold text-gray-800 mt-2">My Chamas</h2>
@@ -278,8 +277,8 @@ const ChamaCard = ({
               <FiCalendar className="mr-1" />
               <span>
                 {chama.started
-                  ? `Pay date: ${formatDate(chama.payDate)}`
-                  : `Start date: ${formatDate(chama.startDate)}`}
+                  ? `Pay date: ${new Date(chama.payDate).toLocaleString()}`
+                  : `Start date: ${new Date(chama.startDate).toLocaleString()}`}
               </span>
             </div>
 

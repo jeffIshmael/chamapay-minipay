@@ -124,10 +124,7 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
         chama?.id ?? 0
       );
       if (!request) {
-        showToast(
-          "Join request sent to admin. wait for approval.",
-          "success"
-        );
+        showToast("Join request sent to admin. wait for approval.", "success");
         return;
       }
       showToast("You already sent a request.", "warning");
@@ -399,11 +396,7 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
                     hour: "numeric",
                     minute: "numeric",
                   })}`
-                : `StartDate:${new Intl.DateTimeFormat('en-GB', {
-                  dateStyle: 'medium',
-                  timeStyle: 'short',
-                  timeZoneName: 'short',
-                }).format(chama.startDate)}`}
+                : `StartDate:${new Date(chama.startDate).toLocaleString()}`}
             </h3>
             {/* Pay Button */}
             <div className="flex  justify-center mb-4">

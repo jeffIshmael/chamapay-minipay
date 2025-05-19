@@ -77,7 +77,7 @@ const CreateFamily = () => {
         // get the current blockchain id from the blockchain
         const chamaIdToUse = await getLatestChamaId();
         const localDateTime = new Date(`${startDateDate}T${startDateTime}`);
-        const startDateUTC = localDateTime.toISOString(); // ✅ correct UTC        
+        const startDateUTC = localDateTime.toISOString();        
         console.log("the localDateTime is",localDateTime);     
         console.log("the startDateUTCTime is",startDateUTC);
 
