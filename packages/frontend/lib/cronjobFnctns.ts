@@ -10,6 +10,7 @@ import {
   sendNotificationToAllMembers,
   checkIfChamaOver,
   changeIncognitoMembers,
+  sendFarcasterNotificationToAllMembers,
 } from "./chama";
 import { getAgentWalletBalance, performPayout } from "./PayOut";
 import { getFundsDisbursedEventLogs } from "./readFunctions";
@@ -100,6 +101,13 @@ export async function checkChamaStarted() {
             `First payout: ${
               payoutOrder[0]?.user?.name || "Member"
             } on ${chama.payDate.toLocaleDateString()}`
+        );
+        await sendFarcasterNotificationToAllMembers(
+          chama.id,
+          `🚀 ${chama.name}, ${chama.type} chama has started!`,
+          `First payout: ${
+            payoutOrder[0]?.user?.name || "Member"
+          } on ${chama.payDate.toLocaleDateString()}`
         );
       }
     });
@@ -222,16 +230,20 @@ export async function checkChamaPaydate() {
             canJoin: chama.round > 1 ? false : true,
             // lastPayoutAt: new Date(),
           },
-        }),
-          await sendNotificationToAllMembers(
-            chama.id,
-            `💰 Payout Complete!\n\n` +
-              `${user.name} received ${formatEther(
-                logs.args.totalPay
-              )} cUSD\n` +
-              `Round: ${chama.round + 1} • Cycle: ${chama.cycle}\n` +
-              `TX: ${txHash.slice(0, 12)}...`
-          );
+        });
+        await sendNotificationToAllMembers(
+          chama.id,
+          `💰 Payout for ${chama.name} Complete!\n\n` +
+            `${user.name} received ${formatEther(logs.args.totalPay)} cUSD\n` +
+            `Round: ${chama.round + 1} • Cycle: ${chama.cycle}\n` +
+            `TX: ${txHash.slice(0, 12)}...`
+        );
+        await sendFarcasterNotificationToAllMembers(
+          chama.id,
+          `💰 Payout for ${chama.name} Complete!`,
+          `${user.name} received ${formatEther(logs.args.totalPay)} cUSD for
+            Round: ${chama.round + 1} • Cycle: ${chama.cycle}`
+        );
 
         success = true;
       } catch (error) {
@@ -280,6 +292,13 @@ export async function notifyDeadline() {
             `${chama.name} payment due in 24 hours!\n` +
             `Amount: ${formatEther(chama.amount)} cUSD\n` +
             `Pay by: ${chama.payDate.toLocaleString()}`
+        );
+        await sendFarcasterNotificationToAllMembers(
+          chama.id,
+          `⏰ FINAL REMINDER for ${chama.name} chama`,
+          `${chama.name} payment due in 24 hours!Please pay ${formatEther(
+            chama.amount
+          )} cUSD by ${chama.payDate.toLocaleString()} `
         );
       })
     );

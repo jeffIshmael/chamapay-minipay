@@ -3,6 +3,7 @@
 import { PrismaClient } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { parseEther } from "viem";
+import { sendFarcasterNotification } from "./farcasterNotification";
 const cron = require("node-cron");
 const prisma = new PrismaClient();
 
@@ -475,14 +476,43 @@ export async function sendNotificationToUserIds(
 // function to send notification to all members
 export async function sendNotificationToAllMembers(
   chamaId: number,
-  message: string
+  message: string,
 ) {
   const members = await prisma.chamaMember.findMany({
     where: { chamaId },
   });
   const memberUserIds = members.map((member) => member.userId);
   await sendNotificationToUserIds(memberUserIds, message);
+  // send notification to farcaster users
 }
+
+// function to send notification via fc to all chama members
+export async function sendFarcasterNotificationToAllMembers(
+  chamaId: number,
+  title: string,
+  message: string,
+) {
+  let fids: number[] = [];
+  const members = await prisma.chamaMember.findMany({
+    where: { chamaId },
+    include: {
+      user: true,
+    },
+  });
+
+  for (const member of members) {
+    if (member.user.isFarcaster && member.user.fid) {
+      fids.push(member.user.fid);
+    }
+  }
+
+  if (fids.length > 0) {
+    await sendFarcasterNotification(fids, title, message);
+  } else {
+    console.log("No Farcaster users found in this Chama.");
+  }
+}
+
 
 // sending request to join private chama
 export async function requestToJoinChama(address: string, chamaId: number) {
