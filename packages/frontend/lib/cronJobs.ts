@@ -4,6 +4,8 @@ import {
   checkChamaStarted,
   notifyDeadline,
   getChamasWithPaydateToday,
+  TestNotify,
+  checkBalance,
 } from "./cronjobFnctns";
 
 // Global flag to prevent duplicate initialization
@@ -22,6 +24,8 @@ export const initializeCronJobs = async () => {
       getChamasWithPaydateToday(),
       checkChamaPaydate(),
       notifyDeadline(),
+      TestNotify(),
+      checkBalance(),
     ]);
 
     // // 2. Scheduled recurring jobs
