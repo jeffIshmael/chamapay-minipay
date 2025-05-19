@@ -165,7 +165,7 @@ export async function createChama(
         type: chamaType,
         amount: parseEther(formData.get("amount") as string),
         cycleTime: Number(formData.get("cycleTime")),
-        maxNo: Number(formData.get("maxNumber")) || 0,
+        maxNo: Number(formData.get("maxNumber")) || 15,
         slug: (formData.get("name") as string)
           .replace(/\s+/g, "-")
           .toLowerCase(),

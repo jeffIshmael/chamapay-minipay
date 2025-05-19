@@ -174,7 +174,7 @@ const CreateFamily = () => {
             htmlFor="amount"
             className="block text-sm font-medium text-gray-700"
           >
-            Amount(in cUSD) (&gt; 0)
+            Amount(in cUSD)
           </label>
           <input
             type="text"
@@ -231,7 +231,7 @@ const CreateFamily = () => {
             htmlFor="duration"
             className="block text-sm font-medium text-gray-700"
           >
-            Cycle Time (in days) (min 1dy)
+            Cycle Time (in days) (min 1 day)
           </label>
           <input
             type="number"

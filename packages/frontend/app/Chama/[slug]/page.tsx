@@ -331,7 +331,7 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
           <div className="flex items-center justify-between px-1">
             {/* Back icon */}
             <button
-              className="px-2 py-1 bg-downy-300 flex justify-start"
+              className="px-2 py-1 bg-downy-300 rounded-md mr-8 flex justify-start"
               onClick={() => router.push("/MyChamas")}
             >
               <HiArrowLeft className="flex justify-start text-gray-700 cursor-pointer" />
@@ -399,14 +399,11 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
                     hour: "numeric",
                     minute: "numeric",
                   })}`
-                : `StartDate:${chama.startDate.toLocaleString("en-GB", {
-                    day: "numeric",
-                    month: "short",
-                    year: "numeric",
-                    hour12: false,
-                    hour: "numeric",
-                    minute: "numeric",
-                  })}`}
+                : `StartDate:${new Intl.DateTimeFormat('en-GB', {
+                  dateStyle: 'medium',
+                  timeStyle: 'short',
+                  timeZoneName: 'short',
+                }).format(new Date(chama.startDate))}`}
             </h3>
             {/* Pay Button */}
             <div className="flex  justify-center mb-4">
