@@ -28,9 +28,7 @@ import DepositModal from "./DepositModal";
 import SendModal from "./sendModal";
 import WithdrawModal from "./WithdrawModal";
 import QRCodeModal from "./QRCodeModal";
-import { getConnections } from "@wagmi/core";
 import { sdk } from "@farcaster/frame-sdk";
-import { config } from "@/Providers/BlockchainProviders";
 import { useIsFarcaster } from "../context/isFarcasterContext";
 
 interface Payment {
@@ -162,7 +160,13 @@ const Wallet = () => {
 
   //function to open farcaster link
   async function openFarcasterLink(txHash: string) {
-    await sdk.actions.openUrl(`https://celoscan.io/tx/${txHash}`);
+    const url = `https://celoscan.io/tx/${txHash}`;
+    const inFrame = Boolean((await sdk.context).client); // true in a valid Farcaster frame
+    if (inFrame) {
+      await sdk.actions.openUrl(url);
+    } else {
+      window.open(url, "_blank");
+    }
   }
 
   return (
@@ -376,7 +380,7 @@ const Wallet = () => {
 
             {payments.length > 5 && (
               <Link href="/transactions">
-                <button className="w-full mt-4 text-downy-600 font-medium text-sm">
+                <button className="w-full mt-4 text-downy-600 font-medium text-sm p-2">
                   View all transactions
                 </button>
               </Link>

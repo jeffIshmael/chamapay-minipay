@@ -15,11 +15,7 @@ import {
 } from "@/lib/chama";
 import { duration } from "@/utils/duration";
 import Pay from "@/app/Components/Pay";
-import {
-  useAccount,
-  useConnect,
-  useWriteContract,
-} from "wagmi";
+import { useAccount, useConnect, useWriteContract } from "wagmi";
 import {
   contractAbi,
   contractAddress,
@@ -94,7 +90,6 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
     setIsOpen(!isOpen);
   };
 
-
   useEffect(() => {
     const fetchChama = async () => {
       const data = await getChama(params.slug, address as string);
@@ -114,7 +109,6 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
     };
     fetchChama();
   }, [address, params.slug]);
-
 
   // sending request to join private chama
   const joinChama = async () => {
@@ -149,7 +143,7 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
       setError("Please connect your wallet");
       return;
     }
- 
+
     try {
       setProcessing(true);
       let txHash: string | boolean = false;
@@ -169,7 +163,7 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
       } else {
         const paid = await processCheckout(
           contractAddress as `0x${string}`,
-          chama?.amount ?? BigInt(0),
+          chama?.amount ?? BigInt(0)
         );
         txHash = paid;
       }
@@ -232,7 +226,7 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
               month: "short",
               year: "numeric",
             })
-      }\n\n`
+      }\n\n`;
 
     // Suggest an embed (e.g., link to the Chama's page or image)
     const embeds: [string, string] = [
@@ -338,12 +332,14 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
               </div>
             </div>
           )}
+          {/* Back icon */}
+          <HiArrowLeft
+            className="flex justify-start text-gray-700 cursor-pointer"
+            onClick={() => router.push("/MyChamas")}
+          />
           <div className="flex justify-end gap-2 mb-1 mt-2">
-            {/* Back icon */}
-            <HiArrowLeft className="text-gray-700 cursor-pointer" onClick={()=> router.push("/MyChamas")} />
             {/* Combined Status Indicator */}
             <div className="flex items-center bg-gray-50 px-2.5 py-1 rounded-lg border border-gray-200 text-xs">
-              
               <span
                 className={`w-1.5 h-1.5 rounded-full mr-1.5 ${
                   chama.started ? "bg-green-500" : "bg-gray-400"
