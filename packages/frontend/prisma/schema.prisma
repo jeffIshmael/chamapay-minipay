@@ -37,7 +37,7 @@ model Chama {
   amount        BigInt
   round         Int
   cycle         Int
-  maxNo         Int
+  maxNo         Int           
   blockchainId  String
   adminId       Int
   canJoin       Boolean  @default(true)

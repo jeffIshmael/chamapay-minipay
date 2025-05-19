@@ -319,11 +319,3 @@ export async function checkBalance() {
     await sendEmail("Balance is low", `Your agent balance is ${balance} celo.`);
   }
 }
-
-export async function TestNotify() {
-  await sendFarcasterNotificationToAllMembers(
-    2,
-    "🚀inviters, chama has started!",
-    "First payout: on "
-  );
-}

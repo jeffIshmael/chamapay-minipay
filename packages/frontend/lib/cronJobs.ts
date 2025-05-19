@@ -4,7 +4,6 @@ import {
   checkChamaStarted,
   notifyDeadline,
   getChamasWithPaydateToday,
-  TestNotify,
   checkBalance,
 } from "./cronjobFnctns";
 
@@ -24,7 +23,6 @@ export const initializeCronJobs = async () => {
       getChamasWithPaydateToday(),
       checkChamaPaydate(),
       notifyDeadline(),
-      TestNotify(),
       checkBalance(),
     ]);
 

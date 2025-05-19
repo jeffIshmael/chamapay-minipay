@@ -15,6 +15,7 @@ import { getLatestChamaId } from "@/lib/readFunctions";
 import { parseEther } from "viem";
 import { FiAlertTriangle } from "react-icons/fi";
 import { showToast } from "../Components/Toast";
+import { registrationTx } from "@/lib/divviRegistration";
 
 const CreateFamily = () => {
   const [groupName, setGroupName] = useState("");
@@ -76,18 +77,27 @@ const CreateFamily = () => {
         // get the current blockchain id from the blockchain
         const chamaIdToUse = await getLatestChamaId();
 
-        const hash = await writeContractAsync({
-          address: contractAddress,
-          abi: contractAbi,
-          functionName: "registerChama",
-          args: [
-            parseEther(data.amount as string),
-            BigInt(Number(data.cycleTime)),
-            BigInt(dateInMilliseconds),
-            BigInt(Number(0)), //no max members
-            false,
-          ],
-        });
+        const chamaArgs = [
+          parseEther(data.amount as string),
+          BigInt(Number(data.cycleTime)),
+          BigInt(dateInMilliseconds),
+          BigInt(Number(0)), //no max members
+          false,
+        ];
+
+        // const hash = await writeContractAsync({
+        //   address: contractAddress,
+        //   abi: contractAbi,
+        //   functionName: "registerChama",
+        //   args: [
+        //     parseEther(data.amount as string),
+        //     BigInt(Number(data.cycleTime)),
+        //     BigInt(dateInMilliseconds),
+        //     BigInt(Number(0)), //no max members
+        //     false,
+        //   ],
+        // });
+        const hash = await registrationTx("registerChama", chamaArgs);
 
         if (hash) {
           await createChama(

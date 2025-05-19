@@ -19,9 +19,7 @@ import { FiAlertTriangle, FiGlobe } from "react-icons/fi";
 import { parseEther } from "viem";
 import { getLatestChamaId } from "@/lib/readFunctions";
 import { showToast } from "../Components/Toast";
-import { getConnectorClient, getConnections } from "@wagmi/core";
-import { config } from "@/Providers/BlockchainProviders";
-import { celo, celoAlfajores } from "wagmi/chains";
+import { getDataSuffix, submitReferral } from '@divvi/referral-sdk'
 import { useIsFarcaster } from "../context/isFarcasterContext";
 
 interface Form {

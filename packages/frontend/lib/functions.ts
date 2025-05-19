@@ -4,7 +4,6 @@ import {
     notifyDeadline,
     getChamasWithPaydateToday,
     checkBalance,
-    TestNotify,
   } from "./cronjobFnctns";
 // export all  functions without cron
 export const allFunctions = async () => {
@@ -15,7 +14,6 @@ export const allFunctions = async () => {
         notifyDeadline(),
         getChamasWithPaydateToday(),
         checkBalance(),
-        TestNotify(),
       ]);
       return results;
     } catch (error) {

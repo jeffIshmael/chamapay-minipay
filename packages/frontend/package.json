@@ -13,6 +13,7 @@
     "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
   },
   "dependencies": {
+    "@divvi/referral-sdk": "^1.0.0",
     "@farcaster/frame-sdk": "^0.0.39",
     "@farcaster/frame-wagmi-connector": "^0.0.27",
     "@headlessui/react": "^2.2.2",
