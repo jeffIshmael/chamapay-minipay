@@ -77,9 +77,11 @@ const CreateFamily = () => {
         // get the current blockchain id from the blockchain
         const chamaIdToUse = await getLatestChamaId();
         const localDateTime = new Date(`${startDateDate}T${startDateTime}`);
+        console.log("the localDateTime is",localDateTime);
         const startDateUTC = new Date(
           localDateTime.getTime() - localDateTime.getTimezoneOffset() * 60000
         ).toISOString();
+        console.log("the startDateUTCTime is",startDateUTC);
 
         const chamaArgs = [
           parseEther(data.amount as string),
