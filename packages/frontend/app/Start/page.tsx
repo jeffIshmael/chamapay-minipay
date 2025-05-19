@@ -39,7 +39,6 @@ interface User {
   fid: number;
   username?: string;
   displayName?: string;
-  pfpUrl?: string;
 }
 
 const Page = () => {
@@ -50,7 +49,6 @@ const Page = () => {
   const [userName, setUserName] = useState("");
   const [isRegistering, setIsRegistering] = useState(false);
   const { address, isConnected, chain } = useAccount();
-  const [currentConnector, setCurrentConnector] = useState<string | null>(null);
   const { isFarcaster, setIsFarcaster } = useIsFarcaster();
   const [fcDetails, setFcDetails] = useState<User | null>(null);
   const { connect, connectors } = useConnect();
@@ -101,6 +99,11 @@ const Page = () => {
         console.log("we are setting context", context);
         if (context?.user) {
           setIsFarcaster(true);
+          setFcDetails({
+            fid: context.user.fid,
+            username: context.user.username,
+            displayName: context.user.displayName,
+          });
         } else {
           setIsFarcaster(false);
         }
@@ -113,10 +116,13 @@ const Page = () => {
   }, []);
 
   useEffect(() => {
-    if (isFarcaster) {
-      connect({ connector: connectors[1] });
-    } else {
+    if (!isFarcaster) {
+      console.log("cannot load farcaster user", isFarcaster);
+    }
+    if (window.ethereum && window.ethereum.isMinipay && !isFarcaster) {
       connect({ connector: injected({ target: "metaMask" }) });
+    } else if (isFarcaster) {
+      connect({ connector: connectors[1] });
     }
   }, [isFarcaster]);
 
