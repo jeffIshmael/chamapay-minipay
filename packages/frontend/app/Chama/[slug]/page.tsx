@@ -332,36 +332,37 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
               </div>
             </div>
           )}
-          {/* Back icon */}
-          <button
-            className="px-2 py-1 bg-downy-300 flex justify-start"
-            onClick={() => router.push("/MyChamas")}
-          >
-            <HiArrowLeft className="flex justify-start text-gray-700 cursor-pointer" />
-          </button>
-          <div className="flex justify-end gap-2 mb-1 mt-2">
-            {/* Combined Status Indicator */}
-            <div className="flex items-center bg-gray-50 px-2.5 py-1 rounded-lg border border-gray-200 text-xs">
-              <span
-                className={`w-1.5 h-1.5 rounded-full mr-1.5 ${
-                  chama.started ? "bg-green-500" : "bg-gray-400"
-                }`}
-              ></span>
-              <span>{chama.started ? "Started" : "Not started"}</span>
-
-              {chama.started && (
-                <>
-                  <span className="mx-1.5 text-gray-300">|</span>
-                  <span
-                    className={`w-1.5 h-1.5 rounded-full mr-1.5 ${
-                      chama.canJoin ? "bg-purple-500" : "bg-yellow-500"
-                    }`}
-                  ></span>
-                  <span>
-                    {chama.canJoin ? "Open membership" : "Observer only"}
-                  </span>
-                </>
-              )}
+          <div className="flex items-center justify-between px-1">
+            {/* Back icon */}
+            <button
+              className="px-2 py-1 bg-downy-300 flex justify-start"
+              onClick={() => router.push("/MyChamas")}
+            >
+              <HiArrowLeft className="flex justify-start text-gray-700 cursor-pointer" />
+            </button>
+            <div className="flex justify-end gap-2 mb-1 mt-2">
+              {/* Combined Status Indicator */}
+              <div className="flex items-center bg-gray-50 px-2.5 py-1 rounded-lg border border-gray-200 text-xs">
+                <span
+                  className={`w-1.5 h-1.5 rounded-full mr-1.5 ${
+                    chama.started ? "bg-green-500" : "bg-gray-400"
+                  }`}
+                ></span>
+                <span>{chama.started ? "Started" : "Not started"}</span>
+                {chama.started && (
+                  <>
+                    <span className="mx-1.5 text-gray-300">|</span>
+                    <span
+                      className={`w-1.5 h-1.5 rounded-full mr-1.5 ${
+                        chama.canJoin ? "bg-purple-500" : "bg-yellow-500"
+                      }`}
+                    ></span>
+                    <span>
+                      {chama.canJoin ? "Open membership" : "Observer only"}
+                    </span>
+                  </>
+                )}
+              </div>
             </div>
           </div>
 

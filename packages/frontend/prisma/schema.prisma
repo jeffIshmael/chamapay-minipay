@@ -5,7 +5,8 @@ generator client {
 // prisma/schema.prisma
 datasource db {
   provider  = "postgresql"
-  url  	    = env("DATABASE_URL")
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model User {
@@ -16,6 +17,7 @@ model User {
   fid           Int?
   token         String?
   url           String?
+  divviReferred Boolean       @default(false)
   createdChamas Chama[]        @relation("AdminChamas")
   chamas        ChamaMember[]
   joinRequests  ChamaRequest[]
@@ -37,7 +39,7 @@ model Chama {
   amount        BigInt
   round         Int
   cycle         Int
-  maxNo         Int           
+  maxNo         Int           @default(15)      
   blockchainId  String
   adminId       Int
   canJoin       Boolean  @default(true)
