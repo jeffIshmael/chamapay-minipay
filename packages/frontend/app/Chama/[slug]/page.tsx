@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import Head from "next/head";
 import React, { useEffect, useState } from "react";
 import ChamaNavbar from "@/app/Components/ChamaNav";
 import Members from "@/app/Components/Members";
@@ -40,6 +39,7 @@ import { config } from "@/Providers/BlockchainProviders";
 import { getConnections } from "@wagmi/core";
 import { celo, celoAlfajores } from "wagmi/chains";
 import { sdk } from "@farcaster/frame-sdk";
+import { HiArrowLeft } from "react-icons/hi";
 
 interface User {
   chamaId: number;
@@ -390,6 +390,7 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
           <div className="flex justify-end gap-2 mb-1 mt-2">
             {/* Combined Status Indicator */}
             <div className="flex items-center bg-gray-50 px-2.5 py-1 rounded-lg border border-gray-200 text-xs">
+              <HiArrowLeft className="text-gray-700" onClick={()=> router.push("/myChamas")} />
               <span
                 className={`w-1.5 h-1.5 rounded-full mr-1.5 ${
                   chama.started ? "bg-green-500" : "bg-gray-400"
