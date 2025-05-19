@@ -12,8 +12,7 @@ import {
 import { makePayment } from "../../lib/chama";
 import { parseEther } from "viem";
 import { showToast } from "./Toast";
-import { config } from "@/Providers/BlockchainProviders";
-import { getConnectorClient, getConnections } from "@wagmi/core";
+import { useIsFarcaster } from "../context/isFarcasterContext";
 
 const CUSDPay = ({
   chamaId,
@@ -34,9 +33,7 @@ const CUSDPay = ({
   const { writeContractAsync } = useWriteContract();
   const [amount, setAmount] = useState("");
   const [isCalculating, setIsCalculating] = useState(false);
-  const [currentConnector, setCurrentConnector] = useState("");
-  const { switchChainAsync } = useSwitchChain();
-  const chainId = useChainId();
+  const {isFarcaster, setIsFarcaster} = useIsFarcaster();
 
   const {
     data: balanceData,
@@ -50,21 +47,6 @@ const CUSDPay = ({
     args: [address],
   });
 
-  useEffect(() => {
-    const initConnection = async () => {
-      if (address) {
-        try {
-          const connections = getConnections(config);
-          if (connections?.[0]?.connector?.id) {
-            setCurrentConnector(connections[0].connector.id);
-          }
-        } catch (err) {
-          console.error("Connection fetch error:", err);
-        }
-      }
-    };
-    initConnection();
-  }, [address]);
 
   const handlePayment = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -91,25 +73,14 @@ const CUSDPay = ({
       showToast("Insufficient cUSD balance", "error");
       return;
     }
-    console.log("the connected chain Id is", chainId);
-    console.log("the required chain id is", celo.id);
-
     const amountInWei = parseEther(totalAmount.toString());
-    if (chainId !== celo.id) {
-      try {
-        await switchChainAsync({ chainId: celo.id });
-      } catch (error) {
-        console.error("Failed to switch to celo:", error);
-      }
-    }
+ 
 
     try {
       setIsLoading(true);
       // setIsCalculating(true);
-      console.log("After connected chain Id is", chainId);
-      console.log("After required chain id is", celo.id);
       let txHash: string | boolean = false;
-      if (currentConnector === "farcaster") {
+      if (isFarcaster) {
         const sendHash = await writeContractAsync({
           address: cUSDContractAddress,
           abi: erc20Abi,
@@ -126,7 +97,6 @@ const CUSDPay = ({
         const paid = await processCheckout(
           contractAddress as `0x${string}`,
           amountInWei,
-          currentConnector
         );
         txHash = paid;
       }
