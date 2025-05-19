@@ -46,44 +46,35 @@ const Page = () => {
   const { switchChain, isPending } = useSwitchChain();
   const [showNetworkSwitch, setShowNetworkSwitch] = useState(false);
 
+  // checkUserRegistered effect
   useEffect(() => {
     const checkUserRegistered = async () => {
-      if (!address) {
+      if (!address || !isConnected || isFarcaster) {
         return;
       }
-      const user = await checkUser(address as string);
-      if (!user && isFarcaster) {
-        try {
-          const context = await sdk.context;
-          await createUser(
-            context.user.username
-              ? context.user.username
-              : context.user.displayName
-              ? context.user.displayName
-              : "anonymous",
-            address,
-            context.user.fid,
-            true
-          );
-          return;
-        } catch (err) {
-          console.error("Fetch error:", err);
+
+      try {
+        const user = await checkUser(address);
+        if (!user) {
           setShowRegister(true);
         }
-      } else if (!user) {
-        setShowRegister(true);
+      } catch (err) {
+        console.error("Error checking user:", err);
+        // Only show register modal for non-Farcaster users
+        if (!isFarcaster) {
+          setShowRegister(true);
+        }
       }
     };
 
     checkUserRegistered();
-  }, [address]);
+  }, [address, isConnected, isFarcaster]);
 
-  // function to check if is farcsater
+  // Farcaster detection useEffect
   useEffect(() => {
     const getContext = async () => {
       try {
         const context = await sdk.context;
-        console.log("we are setting context", context);
         if (context?.user) {
           setIsFarcaster(true);
           setFcDetails({
@@ -91,6 +82,8 @@ const Page = () => {
             username: context.user.username,
             displayName: context.user.displayName,
           });
+          // Connect Farcaster wallet immediately if detected
+          connect({ connector: connectors[1] });
         } else {
           setIsFarcaster(false);
         }
@@ -99,19 +92,17 @@ const Page = () => {
         setIsFarcaster(false);
       }
     };
+
     getContext();
   }, []);
 
+  // wallet connection effect
   useEffect(() => {
-    if (!isFarcaster) {
-      console.log("cannot load farcaster user", isFarcaster);
-    }
-    if (window.ethereum && window.ethereum.isMinipay && !isFarcaster) {
+    if (isFarcaster) return; 
+    if (window.ethereum?.isMiniPay) {
       connect({ connector: injected({ target: "metaMask" }) });
-    } else if (isFarcaster) {
-      connect({ connector: connectors[1] });
     }
-  }, [isFarcaster]);
+  }, [isFarcaster]); // Only run when isFarcaster changes
 
   // Handle modal body class toggle
   useEffect(() => {

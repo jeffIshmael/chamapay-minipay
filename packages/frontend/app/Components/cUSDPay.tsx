@@ -13,6 +13,7 @@ import { makePayment } from "../../lib/chama";
 import { parseEther } from "viem";
 import { showToast } from "./Toast";
 import { useIsFarcaster } from "../context/isFarcasterContext";
+import { registrationTx } from "@/lib/divviRegistration";
 
 const CUSDPay = ({
   chamaId,
@@ -101,12 +102,8 @@ const CUSDPay = ({
         txHash = paid;
       }
       if (txHash) {
-        const hash = await writeContractAsync({
-          address: contractAddress,
-          abi: contractAbi,
-          functionName: "depositCash",
-          args: [BigInt(chamaBlockchainId), amountInWei],
-        });
+        const depositArgs = [BigInt(chamaBlockchainId), amountInWei];
+        const hash = await registrationTx("addPublicMember", depositArgs);
         if (!hash) {
           showToast("unable to write to bc. try again.", "error");
           return;

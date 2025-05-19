@@ -21,6 +21,7 @@ import { getLatestChamaId } from "@/lib/readFunctions";
 import { showToast } from "../Components/Toast";
 import { getDataSuffix, submitReferral } from '@divvi/referral-sdk'
 import { useIsFarcaster } from "../context/isFarcasterContext";
+import { registrationTx } from "@/lib/divviRegistration";
 
 interface Form {
   amount: string;
@@ -147,19 +148,15 @@ const CreatePublic = () => {
         const dateObject = new Date(startDate);
         const dateInMilliseconds = dateObject.getTime();
 
-        const hash = await writeContractAsync({
-          address: contractAddress,
-          abi: contractAbi,
-          functionName: "registerChama",
-          args: [
-            amountInWei,
-            BigInt(Number(filledData.cycleTime)),
-            BigInt(dateInMilliseconds),
-            BigInt(Number(filledData.maxNumber)),
-            true,
-          ],
-        });
+        const chamaArgs= [
+          amountInWei,
+          BigInt(Number(filledData.cycleTime)),
+          BigInt(dateInMilliseconds),
+          BigInt(Number(filledData.maxNumber)),
+          true,
+        ];
 
+        const hash = await registrationTx("registerChama", chamaArgs);
         if (hash) {
           const formData = new FormData();
           formData.append("name", filledData.name);

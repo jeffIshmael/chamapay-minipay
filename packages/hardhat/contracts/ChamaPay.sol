@@ -120,8 +120,7 @@ contract ChamaPay is Ownable,ReentrancyGuard {
             msg.sender
         );
     }
-    
-    
+        
     // Add a member to the chama(Private)
     function addMember(address _address, uint _chamaId) public onlyAdmin(_chamaId) {
         require(_chamaId < chamas.length, "The chamaId does not exist");

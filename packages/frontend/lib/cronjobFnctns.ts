@@ -174,7 +174,13 @@ export async function checkChamaPaydate() {
     while (retries < MAX_RETRIES && !success) {
       try {
         const txHash = await performPayout(Number(chama.blockchainId));
-        if (!txHash) throw new Error("Payout failed");
+        if (!txHash || txHash instanceof Error) {
+          await sendEmail(
+            "An error occured in processPayout",
+            JSON.stringify(txHash)
+          );
+          throw new Error("Payout failed");
+        }
 
         const logs: EventLog = await getFundsDisbursedEventLogs(
           Number(chama.blockchainId)

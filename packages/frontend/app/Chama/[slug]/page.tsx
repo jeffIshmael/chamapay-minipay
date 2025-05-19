@@ -31,6 +31,7 @@ import { showToast } from "@/app/Components/Toast";
 import { sdk } from "@farcaster/frame-sdk";
 import { HiArrowLeft } from "react-icons/hi";
 import { useIsFarcaster } from "@/app/context/isFarcasterContext";
+import { registrationTx } from "@/lib/divviRegistration";
 
 interface User {
   chamaId: number;
@@ -124,14 +125,14 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
       );
       if (!request) {
         showToast(
-          "Join request sent to admin./n wait for approval.",
+          "Join request sent to admin. wait for approval.",
           "success"
         );
+        return;
       }
       showToast("You already sent a request.", "warning");
     } catch (error: any) {
       console.log(error);
-
       showToast("An error occurred while sending the join request.", "error");
     }
   };
@@ -152,7 +153,7 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
           address: cUSDContractAddress,
           abi: ERC2OAbi,
           functionName: "transfer",
-          args: [cUSDContractAddress, chama?.amount],
+          args: [contractAddress, chama?.amount],
         });
         if (sendHash) {
           txHash = sendHash;
@@ -170,15 +171,10 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
       if (txHash) {
         setProcessing(false);
         setLoading(true);
-        const hash = await writeContractAsync({
-          address: contractAddress,
-          abi: contractAbi,
-          functionName: "addPublicMember",
-          args: [
-            chama?.blockchainId ? [BigInt(Number(chama.blockchainId))] : [],
-          ],
-        });
-
+        const addPublicArgs = [
+          chama?.blockchainId ? [BigInt(Number(chama.blockchainId))] : [],
+        ];
+        const hash = await registrationTx("addPublicMember", addPublicArgs);
         if (hash) {
           await addMemberToPublicChama(
             address as string,
