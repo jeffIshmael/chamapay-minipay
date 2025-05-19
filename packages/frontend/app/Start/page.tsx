@@ -23,6 +23,7 @@ import { getConnections } from "@wagmi/core";
 import { showToast } from "../Components/Toast";
 import { config } from "@/Providers/BlockchainProviders";
 import { sdk } from "@farcaster/frame-sdk";
+import { useIsFarcaster } from '../context/isFarcasterContext';
 
 const Page = () => {
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
@@ -34,6 +35,7 @@ const Page = () => {
   const [userName, setUserName] = useState("");
   const [isRegistering, setIsRegistering] = useState(false);
   const [currentConnector, setCurrentConnector] = useState<string | null>(null);
+  const { isFarcaster, setIsFarcaster } = useIsFarcaster();
 
   useEffect(() => {
     const checkUserRegistered = async () => {
@@ -69,6 +71,14 @@ const Page = () => {
 
     checkUserRegistered();
   }, [address, currentConnector]);
+
+  // function to check if is farcsater
+  // useEffect(()=>{
+  //   const checkISFarcaster = async ()=>{
+  //     const context = 
+  //   }
+
+  // })
 
   useEffect(() => {
     if (window.ethereum && window.ethereum.isMiniPay) {
