@@ -339,9 +339,11 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
             </div>
           )}
           <div className="flex justify-end gap-2 mb-1 mt-2">
+            {/* Back icon */}
+            <HiArrowLeft className="text-gray-700 cursor-pointer" onClick={()=> router.push("/MyChamas")} />
             {/* Combined Status Indicator */}
             <div className="flex items-center bg-gray-50 px-2.5 py-1 rounded-lg border border-gray-200 text-xs">
-              <HiArrowLeft className="text-gray-700 cursor-pointer" onClick={()=> router.push("/MyChamas")} />
+              
               <span
                 className={`w-1.5 h-1.5 rounded-full mr-1.5 ${
                   chama.started ? "bg-green-500" : "bg-gray-400"

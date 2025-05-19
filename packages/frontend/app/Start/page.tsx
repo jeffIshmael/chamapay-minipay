@@ -2,13 +2,7 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 import BottomNavbar from "../Components/BottomNavbar";
-import {
-  useAccount,
-  useConnect,
-  useSwitchChain,
-  useChainId,
-  useChains,
-} from "wagmi";
+import { useAccount, useConnect, useSwitchChain } from "wagmi";
 import { injected } from "wagmi/connectors";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
@@ -27,10 +21,7 @@ import { RiHandCoinLine } from "react-icons/ri";
 import { IoMdPeople, IoMdWallet } from "react-icons/io";
 import { TbPigMoney } from "react-icons/tb";
 import { checkUser, createUser } from "@/lib/chama";
-import { getConnections, switchChain } from "@wagmi/core";
-import { getChainId } from "@wagmi/core";
 import { showToast } from "../Components/Toast";
-import { config } from "@/Providers/BlockchainProviders";
 import { sdk } from "@farcaster/frame-sdk";
 import { useIsFarcaster } from "../context/isFarcasterContext";
 import { celo } from "wagmi/chains";
@@ -58,16 +49,12 @@ const Page = () => {
   useEffect(() => {
     const checkUserRegistered = async () => {
       if (!address) {
-        showToast("please connect wallet", "warning");
         return;
       }
       const user = await checkUser(address as string);
       if (!user && isFarcaster) {
         try {
           const context = await sdk.context;
-          console.log("this is the context", context);
-          console.log("FID:", context.user.fid);
-          console.log("Username:", context.user.username);
           await createUser(
             context.user.username
               ? context.user.username
