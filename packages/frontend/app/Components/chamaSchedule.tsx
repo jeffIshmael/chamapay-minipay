@@ -68,41 +68,10 @@ const ChamaSchedule = ({ chama }: { chama: Chama }) => {
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
-        <div className="bg-white p-6 rounded-xl shadow-sm mb-8 border border-gray-200">
+        <div className="bg-white p-6 rounded-xl shadow-sm mb-4 border border-gray-200">
           <h1 className="text-2xl font-bold text-gray-800 mb-2">
             {chama.name} Payout Schedule
           </h1>
-          <div className="flex flex-wrap gap-4">
-            <div className="flex items-center bg-downy-50 px-4 py-2 rounded-lg">
-              <IoMdCalendar className="text-downy-600 mr-2" />
-              <div>
-                <p className="text-xs text-gray-600">Cycle Start</p>
-                <p className="font-medium">
-                  {dayjs(chama.startDate).format("MMM D, YYYY")}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center bg-downy-50 px-4 py-2 rounded-lg">
-              <FiClock className="text-downy-600 mr-2" />
-              <div>
-                <p className="text-xs text-gray-600">Current Round</p>
-                <p className="font-medium">
-                  {currentRoundIndex === -1
-                    ? "Completed"
-                    : `Round ${currentRoundIndex + 1}`}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center bg-downy-50 px-4 py-2 rounded-lg">
-              <FiDollarSign className="text-downy-600 mr-2" />
-              <div>
-                <p className="text-xs text-gray-600">Amount</p>
-                <p className="font-medium">
-                  {Number(formatEther(chama.amount))} cUSD
-                </p>
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* Timeline */}
