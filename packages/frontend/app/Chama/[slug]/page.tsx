@@ -328,7 +328,7 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
           <div className="flex items-center justify-between px-1">
             {/* Back icon */}
             <button
-              className="px-2 py-1 bg-downy-300 rounded-md ml-0 flex justify-start"
+              className="px-2 py-1 bg-downy-300 rounded-md mr-12 flex justify-start"
               onClick={() => router.push("/MyChamas")}
             >
               <HiArrowLeft className="flex justify-start text-gray-700 cursor-pointer" />
