@@ -32,6 +32,7 @@ import { sdk } from "@farcaster/frame-sdk";
 import { HiArrowLeft } from "react-icons/hi";
 import { useIsFarcaster } from "@/app/context/isFarcasterContext";
 import { registrationTx } from "@/lib/divviRegistration";
+import ChamaSchedule from "@/app/Components/chamaSchedule";
 
 interface User {
   chamaId: number;
@@ -531,7 +532,7 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
           isMember={included}
         />
       )}
-      {activeSection === "Wallet" && <Wallet />}
+      {activeSection === "Wallet" && <ChamaSchedule chama={chama} />}
       {isOpen && (
         <>
           <div

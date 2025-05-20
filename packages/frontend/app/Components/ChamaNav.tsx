@@ -160,7 +160,6 @@ export default function ChamaNavbar({
             <span className="text-xs  mt-1">Wallet</span>
           </button>
 
-          {/* Repeat for other buttons */}
         </div>
       ) : (
         <div className="flex justify-around w-full items-center">

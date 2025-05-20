@@ -5159,6 +5159,7 @@ framer-motion@^12.9.2:
   version "0.1.0"
   resolved "file:packages/frontend"
   dependencies:
+    "@divvi/referral-sdk" "^1.0.0"
     "@farcaster/frame-sdk" "^0.0.39"
     "@farcaster/frame-wagmi-connector" "^0.0.27"
     "@headlessui/react" "^2.2.2"

@@ -7,13 +7,11 @@ import dayjs from "dayjs";
 import { useAccount, useReadContract } from "wagmi";
 import { contractAbi, contractAddress } from "../ChamaPayABI/ChamaPayContract";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  FiDollarSign,
-  FiClock,
-  FiLock,
-} from "react-icons/fi";
+import { FiDollarSign, FiClock, FiLock } from "react-icons/fi";
 import { formatEther } from "viem";
 import { formatTimeRemaining } from "@/lib/paydate";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
 import { IoMdCalendar, IoMdPerson, IoMdWallet } from "react-icons/io";
 import { toast } from "sonner";
 import { showToast } from "./Toast";
@@ -27,7 +25,7 @@ interface User {
     address: string;
     name: string | null;
     isFarcaster: boolean;
-    fid: number| null;
+    fid: number | null;
   };
   userId: number;
 }
@@ -63,7 +61,6 @@ const Schedule = ({ chama, type }: { chama: Chama; type: string }) => {
   const [currentTime, setCurrentTime] = useState(Date.now());
   const [timeUntilStart, setTimeUntilStart] = useState("");
 
-
   const { data } = useReadContract({
     address: contractAddress,
     abi: contractAbi,
@@ -92,24 +89,23 @@ const Schedule = ({ chama, type }: { chama: Chama; type: string }) => {
   // Calculate progress percentage
   const calculateProgress = () => {
     if (!chama?.startDate || !chama?.cycleTime || !chama?.members) return 0;
-  
+
     const startDate = new Date(chama.startDate);
     const startTime = startDate.getTime();
-  
+
     // Total duration = cycleTime (in days) × number of members
     const totalDays = chama.cycleTime * chama.members.length;
     const totalMilliseconds = totalDays * 24 * 60 * 60 * 1000; // convert days to ms
-  
+
     const endTime = startTime + totalMilliseconds;
     const currentTime = Date.now();
-  
+
     if (currentTime < startTime) return 0;
     if (currentTime >= endTime) return 100;
-  
+
     const elapsedDuration = currentTime - startTime;
     return Math.min((elapsedDuration / totalMilliseconds) * 100, 100);
   };
-  
 
   const progress = calculateProgress();
 
@@ -127,15 +123,14 @@ const Schedule = ({ chama, type }: { chama: Chama; type: string }) => {
     let mounted = true;
 
     const updateTime = async () => {
-
       if (!chama?.startDate) return;
-    
+
       const startTime = new Date(chama.startDate).getTime();
       const diff = startTime - currentTime;
       const result =
         diff <= 0 ? "Starting..." : await formatTimeRemaining(diff);
       if (mounted) {
-        setTimeUntilStart(result);       
+        setTimeUntilStart(result);
       }
     };
 
@@ -266,38 +261,37 @@ const Schedule = ({ chama, type }: { chama: Chama; type: string }) => {
             </div>
 
             {/* Member Indicators */}
-            {members.map((member, index) => (
-              <motion.div
-                key={member.id}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: index * 0.1 }}
-                className="absolute top-1/2 left-1/2 w-16 h-16 -ml-8 -mt-8 flex flex-col items-center justify-center"
-                style={{
-                  transform: calculateMemberPosition(index),
-                }}
-              >
-                {/* <div className="bg-downy-500 text-white text-xs font-bold w-8 h-8 rounded-full flex items-center justify-center shadow-md">
-                  {index + 1}
-                </div> */}
-                <div className="absolute -bottom-6 text-xs font-medium text-center border border-gray-200 rounded-md p-2 w-20">
-                  <p className="truncate">
-                    {chama?.startDate &&
-                    currentTime < new Date(chama.startDate).getTime()
-                      ? "---"
-                      : member.user.name?.split(" ")[0] || "Member"}
-                  </p>
-                  <p className="text-downy-600">
-                    {chama?.startDate &&
-                    currentTime < new Date(chama.startDate).getTime()
-                      ? "---"
-                      : dayjs(getMemberPayoutDate(index)).format(
-                          "MMM D, YYYY h:mm A"
-                        )}
-                  </p>
-                </div>
-              </motion.div>
-            ))}
+            {chama.started &&
+              members
+                .filter((member) => member.user.address === address)
+                .map((member, index) => (
+                  <motion.div
+                    key={member.id}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: index * 0.1 }}
+                    className="absolute top-1/2 left-1/2 w-16 h-16 -ml-8 -mt-8 flex flex-col items-center justify-center"
+                    style={{
+                      transform: calculateMemberPosition(index),
+                    }}
+                  >
+                    <div className="absolute -bottom-6 text-xs font-medium text-center border border-gray-200 rounded-md p-2 w-20">
+                      <p className="truncate">
+                        {chama.started
+                          ? "---"
+                          : member.user.name?.split(" ")[0] || "Member"}
+                      </p>
+                      <p className="text-downy-600">
+                        {chama?.startDate &&
+                        currentTime < new Date(chama.startDate).getTime()
+                          ? "---"
+                          : dayjs(getMemberPayoutDate(index)).format(
+                              "MMM D, YYYY h:mm A"
+                            )}
+                      </p>
+                    </div>
+                  </motion.div>
+                ))}
           </div>
 
           {/* Stats */}
@@ -308,21 +302,20 @@ const Schedule = ({ chama, type }: { chama: Chama; type: string }) => {
               <p className="text-xs font-semibold text-gray-600 mt-1">
                 Next Payout
               </p>
-              {!chama?.startDate ||
-              currentTime < new Date(chama.startDate).getTime() ? (
+              {chama.started ? (
                 <p className="text-xs text-gray-500 mt-1">---</p>
               ) : (
                 <div className="flex flex-col items-center">
                   <div className="flex items-center justify-between w-full">
                     <IoMdCalendar className="text-gray-500" />
                     <p className="text-xs font-semibold text-gray-500 mt-1">
-                      {dayjs(chama.payDate).format("MMM D, YYYY")}
+                      {dayjs(chama.payDate).utc().local().format("MMM D, YYYY")}
                     </p>
                   </div>
                   <div className="flex items-center justify-between w-full">
                     <FiClock className="text-gray-500" />
                     <p className="text-xs font-semibold text-gray-500 mt-1 mr-2">
-                      {dayjs(chama.payDate).format("h:mm A")}
+                      {dayjs(chama.payDate).utc().local().format("h:mm A")}
                     </p>
                   </div>
                 </div>
