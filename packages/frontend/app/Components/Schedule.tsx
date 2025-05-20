@@ -12,6 +12,8 @@ import { formatEther } from "viem";
 import { formatTimeRemaining } from "@/lib/paydate";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
+// @ts-ignore
+import LiquidFillGauge from 'react-liquid-gauge';
 import { IoMdCalendar, IoMdPerson, IoMdWallet } from "react-icons/io";
 import { toast } from "sonner";
 import { showToast } from "./Toast";
@@ -60,6 +62,8 @@ const Schedule = ({ chama, type }: { chama: Chama; type: string }) => {
   const { address } = useAccount();
   const [currentTime, setCurrentTime] = useState(Date.now());
   const [timeUntilStart, setTimeUntilStart] = useState("");
+  const [timeUntilUserPayout, setTimeUntilUserPayout] = useState("");
+  const [userPayoutProgress, setUserPayoutProgress] = useState(0);
 
   const { data } = useReadContract({
     address: contractAddress,
@@ -142,6 +146,40 @@ const Schedule = ({ chama, type }: { chama: Chama; type: string }) => {
       clearInterval(interval);
     };
   }, [chama?.startDate, currentTime]);
+
+  // Calculate user's payout date and progress
+  useEffect(() => {
+    if (!chama.started || !address) return;
+
+    const updateUserPayoutInfo = async () => {
+      const userIndex = chama.members.findIndex(
+        (m) => m.user.address === address
+      );
+      if (userIndex === -1) return;
+
+      const userPayoutDate = getMemberPayoutDate(userIndex);
+      const now = dayjs();
+      const payoutDate = dayjs(userPayoutDate);
+
+      if (now.isAfter(payoutDate)) {
+        setTimeUntilUserPayout("Payment due now");
+        setUserPayoutProgress(100);
+      } else {
+        const diff = payoutDate.diff(now);
+        setTimeUntilUserPayout(await formatTimeRemaining(diff));
+
+        // Calculate progress (0-100) based on time remaining
+        const cycleDuration = chama.cycleTime * 24 * 60 * 60 * 1000;
+        const elapsed = cycleDuration - diff;
+        const progress = Math.min((elapsed / cycleDuration) * 100, 100);
+        setUserPayoutProgress(progress);
+      }
+    };
+
+    updateUserPayoutInfo();
+    const interval = setInterval(updateUserPayoutInfo, 1000);
+    return () => clearInterval(interval);
+  }, [chama, address, currentTime]);
 
   // Calculate member position around the circle
   const calculateMemberPosition = (index: number) => {
@@ -231,67 +269,104 @@ const Schedule = ({ chama, type }: { chama: Chama; type: string }) => {
             </div>
           </div>
 
-          {/* Progress Circle */}
-          <div className="relative mx-auto w-[200px] h-[200px]">
-            <div
-              className="absolute w-full h-full rounded-full"
-              style={{
-                background: `conic-gradient(#66d9d0 ${progress}%, #e5f7f5 ${progress}% 100%)`,
-              }}
-            >
-              <div className="absolute inset-4 bg-white rounded-full flex flex-col items-center justify-center shadow-inner">
-                {chama?.startDate &&
-                currentTime < new Date(chama.startDate).getTime() ? (
-                  <div className="flex flex-col items-center">
-                    <FiClock className="text-downy-500 mb-2" size={24} />
-                    <p className="text-sm text-gray-500">Starts in</p>
-                    <p className="text-xl text-downy-500 mt-1">
-                      {timeUntilStart}
-                    </p>
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center">
-                    <span className="text-sm text-gray-500">Current Round</span>
-                    <p className="text-4xl font-bold text-downy-600 mt-1">
-                      {round}
-                    </p>
-                  </div>
-                )}
+          {/* Cycle Progress */}
+          <div className="px-2 mt-2">
+            <div className="bg-white p-4 rounded-2xl shadow-md border border-gray-100">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-lg font-bold text-gray-800">
+                  {chama.started ? "Your Payout Progress" : "Cycle Progress"}
+                </h2>
+                <div className="bg-downy-100 text-downy-600 px-3 py-1 rounded-full text-sm font-medium">
+                  Cycle {cycle}
+                </div>
               </div>
-            </div>
 
-            {/* Member Indicators */}
-            {chama.started &&
-              members
-                .filter((member) => member.user.address === address)
-                .map((member, index) => (
-                  <motion.div
-                    key={member.id}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: index * 0.1 }}
-                    className="absolute top-1/2 left-1/2 w-16 h-16 -ml-8 -mt-8 flex flex-col items-center justify-center"
-                    style={{
-                      transform: calculateMemberPosition(index),
-                    }}
-                  >
-                    <div className="absolute -bottom-6 text-xs font-medium text-center border border-gray-200 rounded-md p-2 w-20">
-                      <p className="truncate">
-                        {chama.started
-                          ? "---"
-                          : member.user.name?.split(" ")[0] || "Member"}
-                      </p>
-                      <p className="text-downy-600">
-                        {chama?.startDate &&
-                        currentTime < new Date(chama.startDate).getTime()
-                          ? "---"
-                          : dayjs(getMemberPayoutDate(index)).format(
-                              "MMM D, YYYY h:mm A"
-                            )}
+              {chama.started ? (
+                <div className="flex flex-col items-center">
+                  <div className="relative w-48 h-48">
+                    <LiquidFillGauge
+                      value={Math.round(userPayoutProgress)}
+                      width={200}
+                      height={200}
+                      textSize={1}
+                      textOffsetX={0}
+                      textOffsetY={0}
+                      riseAnimation
+                      waveAnimation
+                      waveFrequency={2}
+                      waveAmplitude={1}
+                      gradient
+                      circleStyle={{
+                        fill: "#06b6d4",
+                      }}
+                      waveStyle={{
+                        fill: "#06b6d4",
+                      }}
+                      textStyle={{
+                        fill: "#444",
+                        fontSize: "1em",
+                      }}
+                      waveTextStyle={{
+                        fill: "#fff",
+                        fontSize: "1em",
+                      }}
+                    />
+                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                      <FiClock className="text-downy-500 mb-2" size={24} />
+                      <p className="text-sm text-gray-500">Time remaining</p>
+                      <p className="text-xl font-semibold text-downy-600 mt-1">
+                        {timeUntilUserPayout}
                       </p>
                     </div>
-                  </motion.div>
-                ))}
+                  </div>
+                  <p className="text-sm text-gray-600 mt-2 text-center">
+                    Your payout date:{" "}
+                    {dayjs(
+                      getMemberPayoutDate(
+                        chama.members.findIndex(
+                          (m) => m.user.address === address
+                        )
+                      )
+                    ).format("MMM D, YYYY h:mm A")}
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <div className="relative mx-auto w-[200px] h-[200px]">
+                    <div
+                      className="absolute w-full h-full rounded-full"
+                      style={{
+                        background: `conic-gradient(#66d9d0 ${progress}%, #e5f7f5 ${progress}% 100%)`,
+                      }}
+                    >
+                      <div className="absolute inset-4 bg-white rounded-full flex flex-col items-center justify-center shadow-inner">
+                        {chama.started ? (
+                          <div className="flex flex-col items-center">
+                            <FiClock
+                              className="text-downy-500 mb-2"
+                              size={24}
+                            />
+                            <p className="text-sm text-gray-500">Starts in</p>
+                            <p className="text-xl text-downy-500 mt-1">
+                              {timeUntilStart}
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="flex flex-col items-center">
+                            <span className="text-sm text-gray-500">
+                              Current Round
+                            </span>
+                            <p className="text-4xl font-bold text-downy-600 mt-1">
+                              {round}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
 
           {/* Stats */}
