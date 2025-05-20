@@ -2135,6 +2135,11 @@
   dependencies:
     "@types/node" "*"
 
+"@types/date-arithmetic@*":
+  version "4.1.4"
+  resolved "https://registry.npmjs.org/@types/date-arithmetic/-/date-arithmetic-4.1.4.tgz"
+  integrity sha512-p9eZ2X9B80iKiTW4ukVj8B4K6q9/+xFtQ5MGYA5HWToY9nL4EkhV9+6ftT2VHpVMEZb5Tv00Iel516bVdO+yRw==
+
 "@types/debug@^4.1.7":
   version "4.1.12"
   resolved "https://registry.npmjs.org/@types/debug/-/debug-4.1.12.tgz"
@@ -2238,6 +2243,15 @@
   resolved "https://registry.npmjs.org/@types/qs/-/qs-6.9.18.tgz"
   integrity sha512-kK7dgTYDyGqS+e2Q4aK9X3D7q234CIZ1Bv0q/7Z5IwRDoADNU81xXJK/YVyLbLTZCoIwUoDoffFeF+p/eIklAA==
 
+"@types/react-big-calendar@^1.16.1":
+  version "1.16.1"
+  resolved "https://registry.npmjs.org/@types/react-big-calendar/-/react-big-calendar-1.16.1.tgz"
+  integrity sha512-pDHFcVWx+BvZbX6U39R4l8c9930vKnfx+09lf4W8r8HuxBDLzGk7Q63ncBmqqnQImEFNDKfwa6MDyu90cfzJ2A==
+  dependencies:
+    "@types/date-arithmetic" "*"
+    "@types/prop-types" "*"
+    "@types/react" "*"
+
 "@types/react-dom@^18":
   version "18.3.0"
   resolved "https://registry.npmjs.org/@types/react-dom/-/react-dom-18.3.0.tgz"
@@ -2245,16 +2259,7 @@
   dependencies:
     "@types/react" "*"
 
-"@types/react@*":
-  version "18.2.55"
-  resolved "https://registry.npmjs.org/@types/react/-/react-18.2.55.tgz"
-  integrity sha512-Y2Tz5P4yz23brwm2d7jNon39qoAtMMmalOQv6+fEFt1mT+FcM3D841wDpoUvFXhaYenuROCy3FZYqdTjM7qVyA==
-  dependencies:
-    "@types/prop-types" "*"
-    "@types/scheduler" "*"
-    csstype "^3.0.2"
-
-"@types/react@^16.8.0 || ^17.0.0 || ^18.0.0", "@types/react@^16.9.0 || ^17.0.0 || ^18.0.0", "@types/react@^18", "@types/react@>=16.8", "@types/react@>=16.9.11", "@types/react@>=18.0.0":
+"@types/react@*", "@types/react@^16.8.0 || ^17.0.0 || ^18.0.0", "@types/react@^16.9.0 || ^17.0.0 || ^18.0.0", "@types/react@^18", "@types/react@>=16.8", "@types/react@>=16.9.11", "@types/react@>=18.0.0":
   version "18.3.3"
   resolved "https://registry.npmjs.org/@types/react/-/react-18.3.3.tgz"
   integrity sha512-hti/R0pS0q1/xx+TsI73XIqk26eBsISZ2R0wUijXIngRK9R/e7Xw/cXVxQK7R5JjW+SV4zGcn5hXjudkN/pLIw==
@@ -5214,6 +5219,7 @@ framer-motion@^12.9.2:
     pino-pretty "^11.2.2"
     punycode "^2.3.1"
     react "^18"
+    react-big-calendar "^1.18.0"
     react-dom "^18"
     react-icons "^5.5.0"
     react-loading-skeleton "^3.5.0"
