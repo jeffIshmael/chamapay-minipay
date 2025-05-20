@@ -4,10 +4,10 @@ import React, { useEffect, useState } from "react";
 import {   getPublicNotMember } from "../../lib/chama";
 import Link from "next/link";
 import Image from "next/image";
-import { duration as getDuration } from "@/utils/duration";
+import { duration as getDuration, utcToLocalTime } from "@/utils/duration";
 import BottomNavbar from "../Components/BottomNavbar";
 import { formatEther } from "viem";
-import { IoMdCash, IoMdPeople } from "react-icons/io";
+import { IoMdCash, IoMdPeople, IoMdTime } from "react-icons/io";
 import { useAccount } from "wagmi";
 
 
@@ -86,13 +86,17 @@ const ChamaCard = ({ chama }: { chama: Chama }) => {
           <div className="flex items-center gap-2">
             <IoMdCash className="text-downy-600" />
             <span>{formatEther(chama.amount)} cUSD</span>
-            {chamaDuration && <span className=" text-gray-500">/{chamaDuration}</span>}
           </div>
+          <div className="flex items-center gap-2">
+            <IoMdTime className="text-downy-600" />
+            {chamaDuration && <span className=" text-gray-500">{chamaDuration}</span>}
+          </div>
+          <IoMdTime />
 
           <div className="text-sm text-gray-500">
             {chama.started
-              ? `Next Pay: ${new Date(chama.payDate).toLocaleDateString()}`
-              : `Starts on: ${new Date(chama.startDate).toLocaleDateString()}`}
+              ? `Next Pay: ${utcToLocalTime(chama.payDate)}`
+              : `Starts on: ${utcToLocalTime(chama.startDate)}`}
           </div>
         </div>
       </div>

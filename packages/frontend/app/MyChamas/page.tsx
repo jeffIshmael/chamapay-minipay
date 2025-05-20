@@ -18,6 +18,7 @@ import {
   FiSearch,
 } from "react-icons/fi";
 import { formatEther } from "viem";
+import { utcToLocalTime } from "@/utils/duration";
 
 interface User {
   id: number;
@@ -277,8 +278,8 @@ const ChamaCard = ({
               <FiCalendar className="mr-1" />
               <span>
                 {chama.started
-                  ? `Pay date: ${new Date(chama.payDate).toLocaleString()}`
-                  : `Start date: ${new Date(chama.startDate).toLocaleString()}`}
+                  ? `Pay date: ${utcToLocalTime(chama.payDate)}`
+                  : `Start date: ${utcToLocalTime(chama.startDate)}`}
               </span>
             </div>
 
