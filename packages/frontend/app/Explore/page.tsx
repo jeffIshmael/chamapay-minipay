@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import {   getPublicNotMember } from "../../lib/chama";
+import { getPublicNotMember } from "../../lib/chama";
 import Link from "next/link";
 import Image from "next/image";
 import { duration as getDuration, utcToLocalTime } from "@/utils/duration";
@@ -9,8 +9,6 @@ import BottomNavbar from "../Components/BottomNavbar";
 import { formatEther } from "viem";
 import { IoMdCash, IoMdPeople, IoMdTime } from "react-icons/io";
 import { useAccount } from "wagmi";
-
-
 
 interface Chama {
   adminId: number;
@@ -33,7 +31,6 @@ interface Chama {
   type: string;
 }
 
-
 const ChamaCard = ({ chama }: { chama: Chama }) => {
   const [chamaDuration, setChamaDuration] = useState<string | null>(null);
 
@@ -53,7 +50,9 @@ const ChamaCard = ({ chama }: { chama: Chama }) => {
         <div className="flex justify-end">
           <span
             className={`text-xs font-medium px-2 py-1 rounded-full ${
-              chama.started ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"
+              chama.started
+                ? "bg-green-100 text-green-600"
+                : "bg-red-100 text-red-600"
             }`}
           >
             {chama.started ? "Started" : "Not Started"}
@@ -63,7 +62,9 @@ const ChamaCard = ({ chama }: { chama: Chama }) => {
         {/* Profile and Name */}
         <div className="flex flex-col mt-2 ">
           <Image
-            src={`https://ipfs.io/ipfs/Qmd1VFua3zc65LT93Sv81VVu6BGa2QEuAakAFJexmRDGtX/${chama.id}.jpg`}
+            src={`https://ipfs.io/ipfs/Qmd1VFua3zc65LT93Sv81VVu6BGa2QEuAakAFJexmRDGtX/${getPicture(
+              Number(chama.id)
+            )}.jpg`}
             alt="Chama Profile"
             width={100}
             height={100}
@@ -80,7 +81,9 @@ const ChamaCard = ({ chama }: { chama: Chama }) => {
         <div className="mt-2 space-y-2 text-sm text-gray-600">
           <div className="flex items-center gap-2">
             <IoMdPeople className="text-downy-600" />
-            <span>{chama.members.length} / {chama.maxNo} Members</span>
+            <span>
+              {chama.members.length} / {chama.maxNo} Members
+            </span>
           </div>
 
           <div className="flex items-center gap-2">
@@ -89,7 +92,9 @@ const ChamaCard = ({ chama }: { chama: Chama }) => {
           </div>
           <div className="flex items-center gap-2">
             <IoMdTime className="text-downy-600" />
-            {chamaDuration && <span className=" text-gray-500">{chamaDuration}</span>}
+            {chamaDuration && (
+              <span className=" text-gray-500">{chamaDuration}</span>
+            )}
           </div>
           <IoMdTime />
 
@@ -107,7 +112,7 @@ const ChamaCard = ({ chama }: { chama: Chama }) => {
 const Page = () => {
   const [chamas, setChamas] = useState<Chama[]>([]);
   const [loading, setLoading] = useState<boolean>(true); // New loading state
-  const {address} = useAccount();
+  const { address } = useAccount();
 
   useEffect(() => {
     const fetchChamas = async () => {

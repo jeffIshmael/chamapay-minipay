@@ -40,3 +40,13 @@ export const utcToLocalTime = (utcDate: Date) => {
     timeZone: userTimeZone,
   }).format(date);
 };
+
+
+// this function will is to loop between the pictures
+export const getPicture = (id: number): string => {
+  if (id <= 20) {
+    return id.toString();
+  } else {
+    return (id % 20).toString();
+  }
+};

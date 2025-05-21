@@ -13,7 +13,7 @@ import {
   addMemberToPublicChama,
   checkRequest,
 } from "@/lib/chama";
-import { duration, utcToLocalTime } from "@/utils/duration";
+import { duration, getPicture, utcToLocalTime } from "@/utils/duration";
 import Pay from "@/app/Components/Pay";
 import { useAccount, useConnect, useWriteContract } from "wagmi";
 import {
@@ -364,8 +364,8 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
             {/* Image */}
             <div className="flex justify-center mb-2">
               <Image
-                src={`https://ipfs.io/ipfs/Qmd1VFua3zc65LT93Sv81VVu6BGa2QEuAakAFJexmRDGtX/${Number(
-                  chama.id
+                src={`https://ipfs.io/ipfs/Qmd1VFua3zc65LT93Sv81VVu6BGa2QEuAakAFJexmRDGtX/${getPicture(
+                  Number(chama.id)
                 ).toString()}.jpg`}
                 alt="profile"
                 width={200}
@@ -465,8 +465,8 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
       )}
       {activeSection === "Members" && (
         <Members
-          imageSrc={`https://ipfs.io/ipfs/Qmd1VFua3zc65LT93Sv81VVu6BGa2QEuAakAFJexmRDGtX/${Number(
-            chama.id
+          imageSrc={`https://ipfs.io/ipfs/Qmd1VFua3zc65LT93Sv81VVu6BGa2QEuAakAFJexmRDGtX/${getPicture(
+            Number(chama.id)
           ).toString()}.jpg`}
           name={chama.name}
           slug={chama.slug}
@@ -497,9 +497,9 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
             </svg>
 
             <Image
-              src={`https://ipfs.io/ipfs/Qmd1VFua3zc65LT93Sv81VVu6BGa2QEuAakAFJexmRDGtX/${Number(
-                chama.id
-              ).toString()}.jpg`}
+              src={`https://ipfs.io/ipfs/Qmd1VFua3zc65LT93Sv81VVu6BGa2QEuAakAFJexmRDGtX/${getPicture(
+                Number(chama.id)
+              )}.jpg`}
               alt="logo"
               width={40}
               height={40}

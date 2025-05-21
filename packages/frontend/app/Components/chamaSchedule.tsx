@@ -1,16 +1,6 @@
 import React from "react";
 import dayjs from "dayjs";
-import relativeTime from "dayjs/plugin/relativeTime";
-dayjs.extend(relativeTime);
-import {
-  VerticalTimeline,
-  VerticalTimelineElement,
-} from "react-vertical-timeline-component";
-import "react-vertical-timeline-component/style.min.css";
-import { FaCheckCircle, FaHourglassHalf, FaUser } from "react-icons/fa";
-import { FiDollarSign, FiClock, FiUser } from "react-icons/fi";
-import { IoMdCalendar } from "react-icons/io";
-import { formatEther } from "viem";
+import { motion } from "framer-motion";
 
 interface User {
   chamaId: number;
@@ -48,124 +38,136 @@ interface Chama {
 const ChamaSchedule = ({ chama }: { chama: Chama }) => {
   const getMemberPayoutDate = (index: number): Date => {
     const payoutDate = new Date(chama.startDate);
-    payoutDate.setDate(payoutDate.getDate() + chama.cycleTime * (index + 1));
+    payoutDate.setDate(payoutDate.getDate() + chama.cycleTime * index);
     return payoutDate;
   };
+
+  const now = new Date();
 
   const sortedMembers = chama.members
     .map((member, index) => ({
       ...member,
       payoutDate: getMemberPayoutDate(index),
-      position: index + 1,
     }))
     .sort((a, b) => a.payoutDate.getTime() - b.payoutDate.getTime());
 
-  const currentRoundIndex = sortedMembers.findIndex((member) =>
-    dayjs().isBefore(member.payoutDate)
+  // Find the next member to be paid
+  const nextMemberIndex = sortedMembers.findIndex((m) =>
+    dayjs(m.payoutDate).isAfter(dayjs(), "day")
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 p-6 md:p-10">
       <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="bg-white p-6 rounded-xl shadow-sm mb-4 border border-gray-200">
-          <h1 className="text-2xl font-bold text-gray-800 mb-2">
-            {chama.name} Payout Schedule
-          </h1>
-        </div>
-
-        {/* Timeline */}
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-800 mb-6 flex items-center">
-            <FiUser className="mr-2 text-downy-600" />
-            Member Payout Timeline
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="mb-10"
+        >
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-2">
+            Payout Timeline for {chama.name}
           </h2>
+          <p className="text-gray-600">
+            Total members: {chama.members.length} • Cycle: {chama.cycleTime} days
+          </p>
+        </motion.div>
 
-          <VerticalTimeline lineColor="#e5e7eb" className="!w-full">
-            {sortedMembers.map((member, index) => {
-              const isPaid = dayjs().isAfter(member.payoutDate);
-              const isCurrent = index === currentRoundIndex;
-              const isUpcoming = index > currentRoundIndex;
+        <div className="relative">
+          {/* Vertical timeline line */}
+          <div className="absolute left-6 top-0 h-full w-1 bg-indigo-200 rounded-full"></div>
 
-              const icon = isPaid ? (
-                <FaCheckCircle className="text-white" />
-              ) : (
-                <FaHourglassHalf className="text-white" />
-              );
+          {sortedMembers.map((member, index) => {
+            const isPaid = dayjs().isAfter(member.payoutDate, "day");
+            const isNext = index === nextMemberIndex;
+            const isCurrent = isNext && dayjs().isSame(member.payoutDate, "day");
 
-              const iconBg = isPaid
-                ? "bg-green-500"
-                : isCurrent
-                ? "bg-downy-500"
-                : "bg-gray-400";
+            return (
+              <motion.div
+                key={member.id}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.1 }}
+                className="mb-8 pl-12 relative"
+              >
+                {/* Timeline dot */}
+                <div
+                  className={`absolute left-0 w-5 h-5 rounded-full -ml-[10px] top-4 border-4 transition-all duration-300 ${
+                    isCurrent
+                      ? "bg-white border-indigo-600 animate-pulse"
+                      : isPaid
+                      ? "bg-green-500 border-green-300"
+                      : isNext
+                      ? "bg-amber-400 border-amber-200"
+                      : "bg-gray-300 border-gray-100"
+                  }`}
+                ></div>
 
-              const dateColor = isCurrent
-                ? "text-downy-600 font-semibold"
-                : "text-gray-500";
-
-              const cardBg = isCurrent
-                ? "bg-downy-50 border-downy-200"
-                : "bg-white border-gray-200";
-
-              return (
-                <VerticalTimelineElement
-                  key={member.id}
-                  className="vertical-timeline-element--work"
-                  contentStyle={{
-                    background: "transparent",
-                    boxShadow: "none",
-                    padding: "0 0 20px 0",
-                  }}
-                  contentArrowStyle={{ display: "none" }}
-                  date={dayjs(member.payoutDate).format("MMM D, YYYY")}
-                  dateClassName={`text-sm ${dateColor}`}
-                  iconStyle={{
-                    background: iconBg,
-                    boxShadow:
-                      "0 0 0 4px #fff, inset 0 2px 0 rgba(0,0,0,.08), 0 3px 0 4px rgba(0,0,0,.05)",
-                  }}
-                  icon={icon}
+                {/* Member card */}
+                <motion.div
+                  whileHover={{ scale: 1.02 }}
+                  className={`bg-white p-6 rounded-xl shadow-lg transition-all duration-300 ${
+                    isCurrent
+                      ? "ring-2 ring-indigo-500"
+                      : isNext
+                      ? "ring-1 ring-amber-300"
+                      : ""
+                  }`}
                 >
-                  <div className={`p-4 border rounded-lg ${cardBg}`}>
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="text-lg font-semibold text-gray-800">
-                          {member.user.name || `Member ${member.position}`}
-                        </h3>
-                        <p className="text-sm text-gray-500 mt-1">
-                          {member.user.address.slice(0, 6)}...
-                          {member.user.address.slice(-4)}
-                        </p>
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+                    <div>
+                      <h3 className="text-xl font-semibold text-gray-800">
+                        {member.user.name || `Member ${index + 1}`}
+                        {isCurrent && (
+                          <span className="ml-2 px-2 py-1 text-xs font-bold bg-indigo-100 text-indigo-800 rounded-full">
+                            TODAY
+                          </span>
+                        )}
+                      </h3>
+                      <p className="text-gray-500 text-sm mt-1">
+                        {member.user.address.slice(0, 6)}...
+                        {member.user.address.slice(-4)}
+                      </p>
+                    </div>
+                    <div className="mt-2 md:mt-0 text-right">
+                      <div className="text-lg font-medium text-gray-700">
+                        {dayjs(member.payoutDate).format("MMM D, YYYY")}
                       </div>
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          isPaid
+                      <div
+                        className={`mt-1 inline-block px-3 py-1 text-sm font-semibold rounded-full ${
+                          isCurrent
+                            ? "bg-indigo-100 text-indigo-800"
+                            : isPaid
                             ? "bg-green-100 text-green-800"
-                            : isCurrent
-                            ? "bg-downy-100 text-downy-800"
+                            : isNext
+                            ? "bg-amber-100 text-amber-800"
                             : "bg-gray-100 text-gray-800"
                         }`}
                       >
-                        {isPaid ? "Paid" : isCurrent ? "Current" : "Upcoming"}
-                      </span>
-                    </div>
-                    {isCurrent && (
-                      <div className="mt-3 pt-3 border-t border-gray-200 flex items-center text-sm text-downy-600">
-                        <FiClock className="mr-2" />
-                        <span>
-                          {dayjs(member.payoutDate).isBefore(dayjs())
-                            ? "Payment due now"
-                            : `Due in ${dayjs(member.payoutDate).fromNow(
-                                true
-                              )}`}
-                        </span>
+                        {isCurrent
+                          ? "Payment Due"
+                          : isPaid
+                          ? "Paid"
+                          : isNext
+                          ? "Up Next"
+                          : "Pending"}
                       </div>
-                    )}
+                    </div>
                   </div>
-                </VerticalTimelineElement>
-              );
-            })}
-          </VerticalTimeline>
+
+                  {/* Additional details */}
+                  <div className="mt-4 pt-4 border-t border-gray-100 flex justify-between text-sm text-gray-500">
+                    <div>
+                      <span className="font-medium">Round:</span> {chama.round}
+                    </div>
+                    <div>
+                      <span className="font-medium">Cycle:</span> {chama.cycle}
+                    </div>
+                  </div>
+                </motion.div>
+              </motion.div>
+            );
+          })}
         </div>
       </div>
     </div>
