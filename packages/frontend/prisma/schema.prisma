@@ -59,6 +59,7 @@ model ChamaMember {
   userId  Int
   chamaId Int
   incognito Boolean @default(false)
+  isPaid    Boolean  @default(false)
   chama   Chama @relation(fields: [chamaId], references: [id])
   user    User  @relation(fields: [userId], references: [id])
   payDate         DateTime // To track the payment rotation date

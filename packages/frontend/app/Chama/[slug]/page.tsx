@@ -47,6 +47,7 @@ interface User {
     fid: number | null;
   };
   userId: number;
+  isPaid:boolean;
 }
 
 interface Chama {
@@ -58,6 +59,7 @@ interface Chama {
   maxNo: number;
   blockchainId: string;
   members: User[];
+  // payoutOrder: User[];
   name: string;
   round: number;
   cycle: number;
@@ -97,6 +99,7 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
       const data = await getChama(params.slug, address as string);
       if (data) {
         setChama(data.chama);
+        console.log("the payout order is", data.chama?.payOutOrder);
         setIncluded(data.isMember);
         setAdminWallet(data.adminWallet || null);
         const time = await duration(data.chama?.cycleTime || 0);

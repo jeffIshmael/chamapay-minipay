@@ -11,6 +11,8 @@ import {
   checkIfChamaOver,
   changeIncognitoMembers,
   sendFarcasterNotificationToAllMembers,
+  setPaid,
+  setAllUnpaid,
 } from "./chama";
 import { getAgentWalletBalance, performPayout } from "./PayOut";
 import { getFundsDisbursedEventLogs } from "./readFunctions";
@@ -173,6 +175,14 @@ export async function checkChamaPaydate() {
 
     while (retries < MAX_RETRIES && !success) {
       try {
+        // check if payout date has reached
+        if (new Date(chama.payDate) < new Date(Date.now())) {
+          await sendEmail(
+            "There are chamas today but not yet time" + chama.name,
+            "function of chama pay date"
+          );
+          return;
+        }
         const txHash = await performPayout(Number(chama.blockchainId));
         if (!txHash || txHash instanceof Error) {
           await sendEmail(
@@ -190,6 +200,9 @@ export async function checkChamaPaydate() {
         const recipient = logs.args.recipient;
         const user = await getUser(recipient);
         if (!user) throw new Error("User not found");
+
+        // set chama member as paid
+        await setPaid(recipient, chama.id);
 
         // check recipient's position in  the payOut order
         let cycleOver: boolean = false;
@@ -224,9 +237,23 @@ export async function checkChamaPaydate() {
           }),
         ]);
 
-        // add the incognito members
         if (cycleOver) {
+          // add the incognito members
           await changeIncognitoMembers(chama.id);
+          // set members as unpaid because its now a new cycle
+          await setAllUnpaid(chama.adminId);
+          // shuffle the payout order
+          const payoutOrder = [...chama.members];
+          for (let i = payoutOrder.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [payoutOrder[i], payoutOrder[j]] = [payoutOrder[j], payoutOrder[i]];
+          }
+          await prisma.chama.update({
+            where: { id: chama.id },
+            data: {
+              payOutOrder: JSON.stringify(payoutOrder),
+            },
+          });
         }
 
         // if chama round is 1, set canJoin true

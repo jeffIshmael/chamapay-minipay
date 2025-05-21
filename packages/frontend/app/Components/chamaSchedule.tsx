@@ -1,7 +1,14 @@
 import React from "react";
 import dayjs from "dayjs";
 import { motion } from "framer-motion";
-import { FiClock, FiFileText, FiGift, FiUsers, FiCalendar, FiDollarSign } from "react-icons/fi";
+import {
+  FiClock,
+  FiFileText,
+  FiGift,
+  FiUsers,
+  FiCalendar,
+  FiDollarSign,
+} from "react-icons/fi";
 import { formatEther } from "viem";
 
 interface User {
@@ -16,6 +23,8 @@ interface User {
     fid: number | null;
   };
   userId: number;
+  isPaid: boolean;
+  incognito:boolean;
 }
 
 interface Chama {
@@ -58,7 +67,7 @@ const ChamaSchedule = ({ chama }: { chama: Chama }) => {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-downy-200 via-white to-downy-100 py-8 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-downy-200 via-gray-200 to-downy-100 py-8 px-4">
       <div className="max-w-4xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -66,13 +75,13 @@ const ChamaSchedule = ({ chama }: { chama: Chama }) => {
           transition={{ duration: 0.6 }}
           className="mb-10"
         >
-          <div className="flex items-center gap-2">
+          <div className="flex justify-between gap-2">
             <h2 className="text-3xl font-bold text-gray-800">{chama.name}</h2>
             <FiFileText className="text-downy-500 text-xl" />
           </div>
           <p className="text-gray-600 mt-1">
             <span className="font-medium text-gray-800">Total Members:</span>{" "}
-            {chama.members.length} • <span>Cycle:</span> {chama.cycleTime} days
+            {chama.members.length} <span className="font-medium text-gray-800"> • Cycle:</span> {chama.cycleTime} days
           </p>
           <h3 className="text-xl font-semibold text-gray-800 mt-4">
             Payout Schedule
@@ -80,7 +89,7 @@ const ChamaSchedule = ({ chama }: { chama: Chama }) => {
         </motion.div>
 
         <div className="relative pl-6">
-          <div className="absolute left-3 top-0 h-full w-1 bg-downy-200 rounded-full"></div>
+          <div className="absolute left-3 top-0 h-full w-1 bg-downy-300 rounded-full"></div>
 
           {sortedMembers.map((member, index) => {
             const isPaid = dayjs().isAfter(member.payoutDate, "day");
@@ -88,7 +97,13 @@ const ChamaSchedule = ({ chama }: { chama: Chama }) => {
             const isCurrent =
               isNext && dayjs().isSame(member.payoutDate, "day");
 
-            const differentColors = isPaid ? "text-downy-500" : isNext ? "text-yellow-300" :isCurrent ? "text-indigo-400":"text-gray-500";
+            const differentColors = isPaid
+              ? "text-downy-500"
+              : isNext
+              ? "text-yellow-300"
+              : isCurrent
+              ? "text-indigo-400"
+              : "text-gray-500";
 
             return (
               <motion.div
@@ -96,7 +111,7 @@ const ChamaSchedule = ({ chama }: { chama: Chama }) => {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className="mb-8 relative"
+                className="mb-4 relative"
               >
                 <div
                   className={`absolute left-0 w-4 h-4 top-4 rounded-full -ml-[6px] border-4 transition-all duration-300 ${
@@ -116,7 +131,9 @@ const ChamaSchedule = ({ chama }: { chama: Chama }) => {
                       ? "ring-2 ring-indigo-500"
                       : isNext
                       ? "ring-1 ring-yellow-300"
-                      : isPaid ? "ring-1 ring-downy-400" : ""
+                      : isPaid
+                      ? "ring-1 ring-downy-400"
+                      : ""
                   }`}
                 >
                   <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">

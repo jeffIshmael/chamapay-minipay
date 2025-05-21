@@ -9,3 +9,4 @@ const getPicture = (id) => {
 };
 
 getPicture(69);
+console.log(new Date(Date.now()));

@@ -357,7 +357,7 @@ const Schedule = ({ chama, type }: { chama: Chama; type: string }) => {
             <p className="text-xs font-semibold text-gray-600 mt-1">
               Next Payout
             </p>
-            {chama.started ? (
+            {!chama.started ? (
               <p className="text-xs text-gray-500 mt-1">---</p>
             ) : (
               <div className="flex flex-col items-center">

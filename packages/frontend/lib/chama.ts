@@ -93,7 +93,12 @@ export async function getChamaById(chamaId: number) {
 }
 
 //create a user
-export async function createUser(userName: string | null, address: string,fid: number, farcaster:boolean) {
+export async function createUser(
+  userName: string | null,
+  address: string,
+  fid: number,
+  farcaster: boolean
+) {
   // Check if the address already exists
   let user = await prisma.user.findUnique({
     where: {
@@ -233,6 +238,40 @@ export async function checkChama(chamaName: string) {
   } else {
     return false;
   }
+}
+
+// to set chama member as paid
+export async function setPaid(userAddress: string, chamaId: number) {
+  const user = await getUser(userAddress);
+  const member = await prisma.chamaMember.findFirst({
+    where: {
+      userId: user?.id,
+      chamaId: chamaId,
+    },
+  });
+
+  if (member) {
+    await prisma.chamaMember.update({
+      where: {
+        id: member.id,
+      },
+      data: {
+        isPaid: true,
+      },
+    });
+  }
+}
+
+// to set all members as unpaid
+export async function setAllUnpaid(chamaId:number){
+  await prisma.chamaMember.updateMany({
+    where:{
+      chamaId: chamaId,
+    },
+    data:{
+      isPaid: false,
+    }
+  })
 }
 
 //function to add member to public chama
@@ -476,7 +515,7 @@ export async function sendNotificationToUserIds(
 // function to send notification to all members
 export async function sendNotificationToAllMembers(
   chamaId: number,
-  message: string,
+  message: string
 ) {
   const members = await prisma.chamaMember.findMany({
     where: { chamaId },
@@ -490,7 +529,7 @@ export async function sendNotificationToAllMembers(
 export async function sendFarcasterNotificationToAllMembers(
   chamaId: number,
   title: string,
-  message: string,
+  message: string
 ) {
   let fids: number[] = [];
   const members = await prisma.chamaMember.findMany({
@@ -512,7 +551,6 @@ export async function sendFarcasterNotificationToAllMembers(
     console.log("No Farcaster users found in this Chama.");
   }
 }
-
 
 // sending request to join private chama
 export async function requestToJoinChama(address: string, chamaId: number) {
