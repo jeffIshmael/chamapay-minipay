@@ -50,13 +50,26 @@ const Page = () => {
   // checkUserRegistered effect
   useEffect(() => {
     const checkUserRegistered = async () => {
-      if (!address || !isConnected || isFarcaster || !farcasterChecked) {
+      if (
+        !address ||
+        !isConnected ||
+        !farcasterChecked ||
+        (isFarcaster && !fcDetails)
+      ) {
         return;
       }
 
       try {
         const user = await checkUser(address);
-        if (!user) {
+        if (!user && isFarcaster && farcasterChecked && fcDetails) {
+          await createUser(
+            fcDetails.username ?? "anonymous",
+            address as string,
+            fcDetails.fid,
+            true
+          );
+          return;
+        } else if (!user) {
           setShowRegister(true);
         }
       } catch (err) {
