@@ -246,9 +246,7 @@ const ChamaCard = ({
         <div className="flex items-start gap-3">
           <div className="relative">
             <Image
-              src={`https://ipfs.io/ipfs/Qmd1VFua3zc65LT93Sv81VVu6BGa2QEuAakAFJexmRDGtX/${getPicture(
-                Number(chama.id)
-              )}.jpg`}
+              src={`https://ipfs.io/ipfs/Qmd1VFua3zc65LT93Sv81VVu6BGa2QEuAakAFJexmRDGtX/${(chama.id).toString()}.jpg`}
               alt={chama.name}
               width={48}
               height={48}
