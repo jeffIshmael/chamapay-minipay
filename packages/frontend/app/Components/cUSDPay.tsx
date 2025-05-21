@@ -80,27 +80,33 @@ const CUSDPay = ({
     try {
       setIsLoading(true);
       // setIsCalculating(true);
-      let txHash: string | boolean = false;
-      if (isFarcaster) {
-        const sendHash = await writeContractAsync({
-          address: cUSDContractAddress,
-          abi: erc20Abi,
-          functionName: "transfer",
-          args: [contractAddress, amountInWei],
-        });
-        if (sendHash) {
-          txHash = sendHash;
-        } else {
-          txHash = false;
-          showToast("unable to send", "warning");
-        }
-      } else {
-        const paid = await processCheckout(
-          contractAddress as `0x${string}`,
-          amountInWei,
-        );
-        txHash = paid;
-      }
+      // let txHash: string | boolean = false;
+      const txHash = await writeContractAsync({
+        address: cUSDContractAddress,
+        abi: erc20Abi,
+        functionName: "approve",
+        args: [contractAddress, amountInWei],
+      });
+      // if (isFarcaster) {
+      //   const sendHash = await writeContractAsync({
+      //     address: cUSDContractAddress,
+      //     abi: erc20Abi,
+      //     functionName: "transfer",
+      //     args: [contractAddress, amountInWei],
+      //   });
+      //   if (sendHash) {
+      //     txHash = sendHash;
+      //   } else {
+      //     txHash = false;
+      //     showToast("unable to send", "warning");
+      //   }
+      // } else {
+      //   const paid = await processCheckout(
+      //     contractAddress as `0x${string}`,
+      //     amountInWei,
+      //   );
+      //   txHash = paid;
+      // }
       if (txHash) {
         const depositArgs = [BigInt(chamaBlockchainId), amountInWei];
         const hash = await registrationTx("addPublicMember", depositArgs);
@@ -110,7 +116,7 @@ const CUSDPay = ({
         }
         await makePayment(
           amountInWei,
-          txHash,
+          hash,
           chamaId,
           address as string,
           "You deposited"

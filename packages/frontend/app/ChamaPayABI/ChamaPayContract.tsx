@@ -1,8 +1,8 @@
-export const contractAddress = "0xF0DE432cf2B18b02c6C2099c22412e916B0021f1";
+export const contractAddress = "0x0bAfd6F04e3d8adeda9430541433C4e6D29fE579";
 
 export const cUSDContractAddress = "0x765DE816845861e75A25fCA122bb6898B8B1282a";
 
-export const contractAbi =  [
+export const contractAbi =   [
   {
     "inputs": [],
     "stateMutability": "nonpayable",
@@ -526,6 +526,11 @@ export const contractAbi =  [
         "internalType": "address",
         "name": "_address",
         "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_amount",
+        "type": "uint256"
       }
     ],
     "name": "emergencyWithdraw",

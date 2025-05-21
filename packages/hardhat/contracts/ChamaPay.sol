@@ -86,6 +86,7 @@ contract ChamaPay is Ownable,ReentrancyGuard {
         require(_startDate >= block.timestamp, "Start date must be in the future.");
         require(_duration > 0, "Duration must be greater than 0.");
         require(_amount > 0, "Amount must be greater than 0.");
+        require(_maxMembers <= 15,"Maximum number of members is 15.");
 
         Chama storage newChama = chamas.push();
         newChama.chamaId = totalChamas;
@@ -125,7 +126,7 @@ contract ChamaPay is Ownable,ReentrancyGuard {
     function addMember(address _address, uint _chamaId) public onlyAdmin(_chamaId) {
         require(_chamaId < chamas.length, "The chamaId does not exist");
         Chama storage chama = chamas[_chamaId];
-        // require(chama.members.length < chama.maxMembers, "Chama already has max members");
+        require(chama.members.length < 15, "Chama already has max members.");
         chama.members.push(_address);
         if(block.timestamp > chama.startDate){
             chama.payoutOrder.push(_address);
@@ -149,30 +150,36 @@ contract ChamaPay is Ownable,ReentrancyGuard {
     }
 
     // Deposit cash to a chama
-    function depositCash(uint _chamaId, uint _amount) public onlyMembers(_chamaId) nonReentrant {
-        // Ensure the chama exists
+      function depositCash(uint _chamaId, uint _amount) public onlyMembers(_chamaId) nonReentrant {
         require(_chamaId < totalChamas, "Chama does not exist");
-
         Chama storage chama = chamas[_chamaId];
         
+        require(_amount > 0, "Amount must be greater than 0");
+        
+        // Transfer cUSD tokens from sender to this contract
+        require(
+            cUSDToken.transferFrom(msg.sender, address(this), _amount),
+            "Token transfer failed"
+        );
 
-        // Update balance for the sender
+        // Update balance
         chama.balances[msg.sender] += _amount;
 
-        // Mark the user as having sent their payment if they have reached the required amount
+        // Mark as paid if reached required amount
         if (chama.balances[msg.sender] >= chama.amount) {
             chama.hasSent[msg.sender] = true;
         }
-        // Emit an event for the cash deposit
+        
         emit CashDeposited(_chamaId, msg.sender, _amount);
     }
 
-    // Check if all members have contributed
+
+    // Check if all members in the payout have contributed
     function allMembersContributed(uint _chamaId) internal view returns (bool) {
         Chama storage chama = chamas[_chamaId];
         
-        for (uint i = 0; i < chama.members.length; i++) {
-            uint membersBalance = chama.balances[chama.members[i]] + chama.lockedAmounts[chama.members[i]];
+        for (uint i = 0; i < chama.payoutOrder.length; i++) {
+            uint membersBalance = chama.balances[chama.payoutOrder[i]] + chama.lockedAmounts[chama.payoutOrder[i]];
             if (membersBalance < chama.amount) {
                 return false;
             }
@@ -184,8 +191,8 @@ contract ChamaPay is Ownable,ReentrancyGuard {
     function disburse(uint _chamaId) internal nonReentrant {
         Chama storage chama = chamas[_chamaId];        
         require(chama.payoutOrder.length > 0, "Payout order is empty");
-        address recipient = chama.members[chama.cycle % chama.payoutOrder.length];
-        uint totalPay = chama.amount * chama.members.length;
+        address recipient = chama.payoutOrder[chama.cycle % chama.payoutOrder.length];
+        uint totalPay = chama.amount * chama.payoutOrder.length;
 
         // Calculate total available funds: sum of all balances + sum of all lockedAmounts (for public chamas)
         uint totalAvailable = 0;
@@ -340,7 +347,6 @@ contract ChamaPay is Ownable,ReentrancyGuard {
 
         emit ChamaDeleted(_chamaId);
     }
-
 
    // Check pay date and trigger payout or refund
     function checkPayDate(uint[] memory chamaIds) public onlyAiAgent nonReentrant {
@@ -501,9 +507,9 @@ contract ChamaPay is Ownable,ReentrancyGuard {
     }
 
     //function to withdraw from the contract
-   function emergencyWithdraw(address _address) public onlyOwner {
-       cUSDToken.transfer(_address, cUSDToken.balanceOf(address(this)));
-       emit amountWithdrawn(_address, cUSDToken.balanceOf(address(this)));
+   function emergencyWithdraw(address _address, uint256 _amount) public onlyOwner {
+       cUSDToken.transfer(_address, _amount);
+       emit amountWithdrawn(_address, _amount);
    }
 
    //function to set aiAgent
