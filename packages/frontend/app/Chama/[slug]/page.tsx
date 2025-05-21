@@ -332,7 +332,7 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
               className="px-2 py-1 bg-downy-300 rounded-md mr-12 flex justify-start"
               onClick={() => router.push("/MyChamas")}
             >
-              <HiArrowLeft className="flex justify-start text-gray-700 cursor-pointer" />
+              <HiArrowLeft className="flex justify-self-start text-gray-700 cursor-pointer" />
             </button>
             <div className="flex justify-end gap-2 mb-1 mt-2">
               {/* Combined Status Indicator */}
