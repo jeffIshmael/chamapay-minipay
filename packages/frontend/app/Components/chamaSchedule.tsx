@@ -58,7 +58,7 @@ const ChamaSchedule = ({ chama }: { chama: Chama }) => {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-downy-100 via-white to-downy-50 py-8 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-downy-200 via-white to-downy-100 py-8 px-4">
       <div className="max-w-4xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -88,6 +88,8 @@ const ChamaSchedule = ({ chama }: { chama: Chama }) => {
             const isCurrent =
               isNext && dayjs().isSame(member.payoutDate, "day");
 
+            const differentColors = isPaid ? "text-downy-500" : isNext ? "text-yellow-300" :isCurrent ? "text-indigo-400":"text-gray-500";
+
             return (
               <motion.div
                 key={member.id}
@@ -114,12 +116,12 @@ const ChamaSchedule = ({ chama }: { chama: Chama }) => {
                       ? "ring-2 ring-indigo-500"
                       : isNext
                       ? "ring-1 ring-yellow-300"
-                      : ""
+                      : isPaid ? "ring-1 ring-downy-400" : ""
                   }`}
                 >
                   <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div>
-                      <h4 className="text-gray-500 text-sm">#{index + 1}</h4>
+                      <h4 className={`${differentColors}`}>#{index + 1}</h4>
                       <h3 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
                         {member.user.name || `Member ${index + 1}`}
                         {isCurrent && (
@@ -136,13 +138,13 @@ const ChamaSchedule = ({ chama }: { chama: Chama }) => {
 
                     <div className="text-right">
                       <p className="text-sm text-gray-500 flex items-center gap-1">
-                        <FiGift className="text-lg text-downy-500" />
+                        <FiGift className={`text-lg ${differentColors}`} />
                         {Number(formatEther(chama.amount)) *
                           chama.members.length}{" "}
                         cUSD
                       </p>
                       <p className="text-sm text-gray-500 flex items-center gap-1 mt-1">
-                        <FiClock className="text-lg text-downy-500" />
+                        <FiClock className={`text-lg ${differentColors}`} />
                         {dayjs(member.payoutDate).format("MMM D, YYYY")}
                       </p>
                     </div>
