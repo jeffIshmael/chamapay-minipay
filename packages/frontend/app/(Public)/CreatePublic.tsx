@@ -19,7 +19,7 @@ import { FiAlertTriangle, FiGlobe } from "react-icons/fi";
 import { parseEther } from "viem";
 import { getLatestChamaId } from "@/lib/readFunctions";
 import { showToast } from "../Components/Toast";
-import { getDataSuffix, submitReferral } from '@divvi/referral-sdk'
+import { getDataSuffix, submitReferral } from "@divvi/referral-sdk";
 import { useIsFarcaster } from "../context/isFarcasterContext";
 import { registrationTx } from "@/lib/divviRegistration";
 
@@ -46,7 +46,7 @@ const CreatePublic = () => {
   const [startDateTime, setStartDateTime] = useState("");
   const router = useRouter();
   const { isConnected, address } = useAccount();
-  const {isFarcaster, setIsFarcaster} = useIsFarcaster();
+  const { isFarcaster, setIsFarcaster } = useIsFarcaster();
   const { writeContractAsync } = useWriteContract();
   const [filledData, setFilledData] = useState<Form>({
     amount: "",
@@ -55,7 +55,6 @@ const CreatePublic = () => {
     name: "",
     startDate: "",
   });
-
 
   const openModal = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -121,34 +120,19 @@ const CreatePublic = () => {
     //function to send the lock amount
     try {
       setProcessing(true);
-      let txHash: string | boolean = false;
-      if (isFarcaster) {
-        const sendHash = await writeContractAsync({
-          address: cUSDContractAddress,
-          abi: ERC2OAbi,
-          functionName: "transfer",
-          args: [contractAddress, amountInWei],
-        });
-        if (sendHash) {
-          txHash = sendHash;
-        } else {
-          txHash = false;
-          showToast("unable to send", "warning");
-        }
-      } else {
-        const paid = await processCheckout(
-          contractAddress as `0x${string}`,
-          amountInWei,
-        );
-        txHash = paid;
-      }
+      const txHash = await writeContractAsync({
+        address: cUSDContractAddress,
+        abi: ERC2OAbi,
+        functionName: "approve",
+        args: [contractAddress, amountInWei],
+      });
       if (txHash) {
         setProcessing(false);
         setLoading(true);
         const dateObject = new Date(startDate);
         const dateInMilliseconds = dateObject.getTime();
 
-        const chamaArgs= [
+        const chamaArgs = [
           amountInWei,
           BigInt(Number(filledData.cycleTime)),
           BigInt(dateInMilliseconds),

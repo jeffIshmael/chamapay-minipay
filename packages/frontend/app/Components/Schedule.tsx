@@ -60,7 +60,7 @@ const Schedule = ({
 }: {
   chama: Chama;
   type: string;
-  payoutOrder: string;
+  payoutOrder: string | null;
 }) => {
   const [showDeposit, setShowDeposit] = useState(false);
   const [members, setMembers] = useState<User[]>([]);
@@ -80,7 +80,7 @@ const Schedule = ({
     args: [BigInt(Number(chama.blockchainId)), address],
   });
 
-  const payoutOrderArray: User[] = JSON.parse(payoutOrder);
+  const payoutOrderArray: User[] = payoutOrder ? JSON.parse(payoutOrder) : chama.members;
 
   // Update your useEffect for initial data loading
   useEffect(() => {

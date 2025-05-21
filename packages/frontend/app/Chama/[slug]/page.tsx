@@ -156,27 +156,12 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
 
     try {
       setProcessing(true);
-      let txHash: string | boolean = false;
-      if (isFarcaster) {
-        const sendHash = await writeContractAsync({
-          address: cUSDContractAddress,
-          abi: ERC2OAbi,
-          functionName: "transfer",
-          args: [contractAddress, chama?.amount],
-        });
-        if (sendHash) {
-          txHash = sendHash;
-        } else {
-          txHash = false;
-          showToast("unable to send", "warning");
-        }
-      } else {
-        const paid = await processCheckout(
-          contractAddress as `0x${string}`,
-          chama?.amount ?? BigInt(0)
-        );
-        txHash = paid;
-      }
+      const txHash = await writeContractAsync({
+        address: cUSDContractAddress,
+        abi: ERC2OAbi,
+        functionName: "approve",
+        args: [contractAddress, chama?.amount ?? BigInt(0)],
+      });
       if (txHash) {
         setProcessing(false);
         setLoading(true);
@@ -533,7 +518,7 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
       )}
 
       {activeSection === "Schedule" && (
-        <Schedule chama={chama} type={chamaType} payoutOrder={ chama.payOutOrder ? chama.payOutOrder : ""} />
+        <Schedule chama={chama} type={chamaType} payoutOrder={ chama.payOutOrder ? chama.payOutOrder : null} />
       )}
 
       {activeSection !== "Chats" && (
@@ -543,7 +528,7 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
           isMember={included}
         />
       )}
-      {activeSection === "Wallet" && <ChamaSchedule chama={chama} payoutOrder={ chama.payOutOrder ? chama.payOutOrder : "" } />}
+      {activeSection === "Wallet" && <ChamaSchedule chama={chama} payoutOrder={ chama.payOutOrder ? chama.payOutOrder : null } />}
       {isOpen && (
         <>
           <div

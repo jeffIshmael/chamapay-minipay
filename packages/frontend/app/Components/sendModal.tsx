@@ -9,6 +9,7 @@ import { parseEther } from "viem";
 import erc20Abi from "@/app/ChamaPayABI/ERC20.json";
 import { cUSDContractAddress } from "../ChamaPayABI/ChamaPayContract";
 import { useWriteContract } from "wagmi";
+import { registrationTokenTx } from "@/lib/divviRegistration";
 
 export default function SendModal({
   isOpen,
@@ -56,28 +57,7 @@ export default function SendModal({
     try {
       setIsSending(true);
       const parsedAmount = parseEther(amount);
-      // const sent = await processCheckout(recipient as `0x${string}`, parsedAmount,currentConnector);
-      let sent: string | boolean = false;
-      if (isFarcaster) {
-        const sendHash = await writeContractAsync({
-          address: cUSDContractAddress,
-          abi: erc20Abi,
-          functionName: "transfer",
-          args: [recipient, parsedAmount],
-        });
-        if (sendHash) {
-          sent = sendHash;
-        } else {
-          sent = false;
-          showToast("unable to send", "warning");
-        }
-      } else {
-        const paid = await processCheckout(
-          recipient as `0x${string}`,
-          parsedAmount,
-        );
-        sent = paid;
-      }
+      const sent = await registrationTokenTx(recipient, parsedAmount);
       if (!sent) {
         showToast("Unable to send payment. Please try again.", "error");
         return;

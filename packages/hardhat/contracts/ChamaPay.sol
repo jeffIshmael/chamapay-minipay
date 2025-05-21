@@ -82,11 +82,18 @@ contract ChamaPay is Ownable,ReentrancyGuard {
         uint _duration, 
         uint _startDate, 
         uint _maxMembers, 
-        bool _isPublic ) public {
+        bool _isPublic ) public nonReentrant {
         require(_startDate >= block.timestamp, "Start date must be in the future.");
         require(_duration > 0, "Duration must be greater than 0.");
         require(_amount > 0, "Amount must be greater than 0.");
         require(_maxMembers <= 15,"Maximum number of members is 15.");
+        if(_isPublic){
+             // Transfer cUSD tokens from sender to this contract
+        require(
+            cUSDToken.transferFrom(msg.sender, address(this), _amount),
+            "Token transfer failed"
+        );
+        }
 
         Chama storage newChama = chamas.push();
         newChama.chamaId = totalChamas;
@@ -135,12 +142,18 @@ contract ChamaPay is Ownable,ReentrancyGuard {
     }
 
     //add a member to a public Chama
-     function addPublicMember(uint _chamaId) public {
+     function addPublicMember(uint _chamaId, uint _amount) public nonReentrant {
         require(_chamaId < chamas.length, "The chamaId does not exist");
         Chama storage chama = chamas[_chamaId];
         require(chama.isPublic, "This is not a public chama.");
         require(chama.members.length < chama.maxMembers, "Chama already has max members");
         require(!isMember(_chamaId, msg.sender), "Already a member of the chama.");
+        require(_amount >= chama.amount,"Amount too small.");
+         // Transfer cUSD tokens from sender to this contract
+        require(
+            cUSDToken.transferFrom(msg.sender, address(this), _amount),
+            "Token transfer failed"
+        );
         chama.members.push(msg.sender);
         chama.lockedAmounts[msg.sender] += chama.amount;
         if(block.timestamp > chama.startDate){

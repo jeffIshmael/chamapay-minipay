@@ -46,7 +46,7 @@ interface Chama {
   type: string;
 }
 
-const ChamaSchedule = ({ chama, payoutOrder }: { chama: Chama,payoutOrder: string }) => {
+const ChamaSchedule = ({ chama, payoutOrder }: { chama: Chama,payoutOrder: string | null }) => {
   const getMemberPayoutDate = (index: number): Date => {
     const payoutDate = new Date(chama.startDate);
     payoutDate.setDate(payoutDate.getDate() + chama.cycleTime * index);
@@ -54,7 +54,7 @@ const ChamaSchedule = ({ chama, payoutOrder }: { chama: Chama,payoutOrder: strin
   };
 
   const now = new Date();
-  const payoutOrderArray: User[] = JSON.parse(payoutOrder);
+  const payoutOrderArray: User[] = payoutOrder ? JSON.parse(payoutOrder) : chama.members;
 
   const sortedMembers = payoutOrderArray
     .map((member, index) => ({

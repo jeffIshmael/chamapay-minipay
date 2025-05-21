@@ -9,6 +9,7 @@ import { processCheckout } from "../Blockchain/TokenTransfer";
 import { cUSDContractAddress } from "../ChamaPayABI/ChamaPayContract";
 import erc20Abi from "@/app/ChamaPayABI/ERC20.json";
 import { useWriteContract } from "wagmi";
+import { registrationTokenTx } from "@/lib/divviRegistration";
 
 export default function WithdrawModal({
   isOpen,
@@ -57,27 +58,7 @@ export default function WithdrawModal({
     try {
       setIsWithdrawing(true);
       const parsedAmount = parseEther(amount);
-      let sent: string | boolean = false;
-      if (isFarcaster) {
-        const sendHash = await writeContractAsync({
-          address: cUSDContractAddress,
-          abi: erc20Abi,
-          functionName: "transfer",
-          args: [receiver, parsedAmount],
-        });
-        if (sendHash) {
-          sent = sendHash;
-        } else {
-          sent = false;
-          showToast("unable to send", "warning");
-        }
-      } else {
-        const paid = await processCheckout(
-          receiver as `0x${string}`,
-          parsedAmount,
-        );
-        sent = paid;
-      }
+      const sent = await registrationTokenTx(receiver, parsedAmount);
       if (!sent) {
         showToast("Unable to withdraw. Please try again.", "error");
         return;

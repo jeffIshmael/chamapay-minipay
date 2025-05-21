@@ -45,11 +45,12 @@ const Page = () => {
   const { connect, connectors } = useConnect();
   const { switchChain, isPending } = useSwitchChain();
   const [showNetworkSwitch, setShowNetworkSwitch] = useState(false);
+  const [farcasterChecked, setFarcasterChecked] = useState(false);
 
   // checkUserRegistered effect
   useEffect(() => {
     const checkUserRegistered = async () => {
-      if (!address || !isConnected || isFarcaster) {
+      if (!address || !isConnected || isFarcaster || !farcasterChecked) {
         return;
       }
 
@@ -60,15 +61,12 @@ const Page = () => {
         }
       } catch (err) {
         console.error("Error checking user:", err);
-        // Only show register modal for non-Farcaster users
-        if (!isFarcaster && !fcDetails) {
-          setShowRegister(true);
-        }
+        setShowRegister(true);
       }
     };
 
     checkUserRegistered();
-  }, [address, isConnected, isFarcaster, fcDetails]);
+  }, [address, isConnected, isFarcaster, farcasterChecked]);
 
   // Farcaster detection useEffect
   useEffect(() => {
@@ -77,20 +75,21 @@ const Page = () => {
         const context = await sdk.context;
         if (context?.user) {
           setIsFarcaster(true);
-          setShowRegister(false);
           setFcDetails({
             fid: context.user.fid,
             username: context.user.username,
             displayName: context.user.displayName,
           });
-          // Connect Farcaster wallet immediately if detected
-          connect({ connector: connectors[1] });
+          setShowRegister(false); // don't show modal
+          connect({ connector: connectors[1] }); // connect Farcaster wallet
         } else {
           setIsFarcaster(false);
         }
       } catch (err) {
         console.error("Failed to get Farcaster context", err);
         setIsFarcaster(false);
+      } finally {
+        setFarcasterChecked(true); // now it's safe to run checkUser
       }
     };
 
@@ -99,7 +98,7 @@ const Page = () => {
 
   // wallet connection effect
   useEffect(() => {
-    if (isFarcaster) return; 
+    if (isFarcaster) return;
     if (window.ethereum?.isMiniPay) {
       connect({ connector: injected({ target: "metaMask" }) });
     }
