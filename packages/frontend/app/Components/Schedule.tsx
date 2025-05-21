@@ -53,7 +53,15 @@ interface Chama {
 
 type Account = [bigint, bigint];
 
-const Schedule = ({ chama, type }: { chama: Chama; type: string }) => {
+const Schedule = ({
+  chama,
+  type,
+  payoutOrder,
+}: {
+  chama: Chama;
+  type: string;
+  payoutOrder: string;
+}) => {
   const [showDeposit, setShowDeposit] = useState(false);
   const [members, setMembers] = useState<User[]>([]);
   const [round, setRound] = useState(0);
@@ -72,11 +80,13 @@ const Schedule = ({ chama, type }: { chama: Chama; type: string }) => {
     args: [BigInt(Number(chama.blockchainId)), address],
   });
 
+  const payoutOrderArray: User[] = JSON.parse(payoutOrder);
+
   // Update your useEffect for initial data loading
   useEffect(() => {
     if (data) {
       setBalance(data as Account);
-      setMembers(chama.members);
+      setMembers(payoutOrderArray);
       setRound(chama.round);
       setCycle(chama.cycle);
     }
@@ -91,27 +101,27 @@ const Schedule = ({ chama, type }: { chama: Chama; type: string }) => {
   }, []);
 
   // Calculate progress percentage
-  const calculateProgress = () => {
-    if (!chama?.startDate || !chama?.cycleTime || !chama?.members) return 0;
+  // const calculateProgress = () => {
+  //   if (!chama?.startDate || !chama?.cycleTime || !chama?.members) return 0;
 
-    const startDate = new Date(chama.startDate);
-    const startTime = startDate.getTime();
+  //   const startDate = new Date(chama.startDate);
+  //   const startTime = startDate.getTime();
 
-    // Total duration = cycleTime (in days) × number of members
-    const totalDays = chama.cycleTime * chama.members.length;
-    const totalMilliseconds = totalDays * 24 * 60 * 60 * 1000; // convert days to ms
+  //   // Total duration = cycleTime (in days) × number of members
+  //   const totalDays = chama.cycleTime * chama.members.length;
+  //   const totalMilliseconds = totalDays * 24 * 60 * 60 * 1000; // convert days to ms
 
-    const endTime = startTime + totalMilliseconds;
-    const currentTime = Date.now();
+  //   const endTime = startTime + totalMilliseconds;
+  //   const currentTime = Date.now();
 
-    if (currentTime < startTime) return 0;
-    if (currentTime >= endTime) return 100;
+  //   if (currentTime < startTime) return 0;
+  //   if (currentTime >= endTime) return 100;
 
-    const elapsedDuration = currentTime - startTime;
-    return Math.min((elapsedDuration / totalMilliseconds) * 100, 100);
-  };
+  //   const elapsedDuration = currentTime - startTime;
+  //   return Math.min((elapsedDuration / totalMilliseconds) * 100, 100);
+  // };
 
-  const progress = calculateProgress();
+  // const progress = calculateProgress();
 
   //function to ge a members payout date
   const getMemberPayoutDate = (memberIndex: number) => {
@@ -223,9 +233,6 @@ const Schedule = ({ chama, type }: { chama: Chama; type: string }) => {
         <div className="relative mx-auto w-[200px] h-[200px]">
           <div
             className="absolute w-full h-full rounded-full"
-            style={{
-              background: `conic-gradient(#66d9d0 ${progress}%, #e5f7f5 ${progress}% 100%)`,
-            }}
           >
             <div className="absolute inset-4 bg-white rounded-full flex flex-col items-center justify-center shadow-inner">
               <div className="flex flex-col items-center">
@@ -275,11 +282,15 @@ const Schedule = ({ chama, type }: { chama: Chama; type: string }) => {
             textRenderer={() => null} // Disable default text
           />
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <FiClock className="text-downy-500 mb-2" size={24} />
-              <p className="text-xl font-semibold text-downy-600 mt-1">
+            <FiClock className="text-downy-500 mb-2" size={24} />
+            <p className="text-xl font-semibold text-downy-600 mt-1">
               {timeUntilUserPayout}
             </p>
-            <p className={`transition-colors duration-300 text-sm ${subTextColor} mt-1`}>To your payout</p>
+            <p
+              className={`transition-colors duration-300 text-sm ${subTextColor} mt-1`}
+            >
+              To your payout
+            </p>
           </div>
         </div>
         <p className="text-sm text-gray-600 mt-2 text-center">

@@ -263,15 +263,15 @@ export async function setPaid(userAddress: string, chamaId: number) {
 }
 
 // to set all members as unpaid
-export async function setAllUnpaid(chamaId:number){
+export async function setAllUnpaid(chamaId: number) {
   await prisma.chamaMember.updateMany({
-    where:{
+    where: {
       chamaId: chamaId,
     },
-    data:{
+    data: {
       isPaid: false,
-    }
-  })
+    },
+  });
 }
 
 //function to add member to public chama

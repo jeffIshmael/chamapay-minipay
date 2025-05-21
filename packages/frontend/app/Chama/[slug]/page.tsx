@@ -34,6 +34,7 @@ import { useIsFarcaster } from "@/app/context/isFarcasterContext";
 import { registrationTx } from "@/lib/divviRegistration";
 import ChamaSchedule from "@/app/Components/chamaSchedule";
 
+
 interface User {
   chamaId: number;
   id: number;
@@ -47,7 +48,7 @@ interface User {
     fid: number | null;
   };
   userId: number;
-  isPaid:boolean;
+  isPaid: boolean;
 }
 
 interface Chama {
@@ -59,7 +60,7 @@ interface Chama {
   maxNo: number;
   blockchainId: string;
   members: User[];
-  // payoutOrder: User[];
+  payOutOrder: string | null;
   name: string;
   round: number;
   cycle: number;
@@ -69,6 +70,13 @@ interface Chama {
   startDate: Date;
   started: boolean;
   type: string;
+  admin: {
+    id: number;
+    address: string;
+    name: string | null;
+    isFarcaster: boolean;
+    fid: number | null;
+  };
 }
 
 const ChamaDetails = ({ params }: { params: { slug: string } }) => {
@@ -525,7 +533,7 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
       )}
 
       {activeSection === "Schedule" && (
-        <Schedule chama={chama} type={chamaType} />
+        <Schedule chama={chama} type={chamaType} payoutOrder={ chama.payOutOrder ? chama.payOutOrder : ""} />
       )}
 
       {activeSection !== "Chats" && (
@@ -535,7 +543,7 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
           isMember={included}
         />
       )}
-      {activeSection === "Wallet" && <ChamaSchedule chama={chama} />}
+      {activeSection === "Wallet" && <ChamaSchedule chama={chama} payoutOrder={ chama.payOutOrder ? chama.payOutOrder : "" } />}
       {isOpen && (
         <>
           <div
