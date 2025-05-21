@@ -23,7 +23,7 @@ export async function sendFarcasterNotification(
     const notification = {
       title,
       body: message,
-      target_url: "https://chamapay-minipay.vercel.app/notification-destination",
+      target_url: "https://chamapay-minipay.vercel.app/",
     };
 
     const response = await client.publishFrameNotifications({
