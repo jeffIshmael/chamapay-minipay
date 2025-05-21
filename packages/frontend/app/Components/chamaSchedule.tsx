@@ -1,7 +1,7 @@
 import React from "react";
 import dayjs from "dayjs";
 import { motion } from "framer-motion";
-import { FiClock, FiFileText, FiGift } from "react-icons/fi";
+import { FiClock, FiFileText, FiGift, FiUsers, FiCalendar, FiDollarSign } from "react-icons/fi";
 import { formatEther } from "viem";
 
 interface User {
@@ -45,6 +45,7 @@ const ChamaSchedule = ({ chama }: { chama: Chama }) => {
   };
 
   const now = new Date();
+  const totalAmount = Number(formatEther(chama.amount)) * chama.members.length;
 
   const sortedMembers = chama.members
     .map((member, index) => ({
@@ -53,52 +54,82 @@ const ChamaSchedule = ({ chama }: { chama: Chama }) => {
     }))
     .sort((a, b) => a.payoutDate.getTime() - b.payoutDate.getTime());
 
-  // Find the next member to be paid
   const nextMemberIndex = sortedMembers.findIndex((m) =>
     dayjs(m.payoutDate).isAfter(dayjs(), "day")
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-downy-200 to-downy-100 pt-4 p-2">
+    <div className="min-h-screen bg-gradient-to-br from-downy-50 to-downy-100 py-8 px-4 sm:px-6">
       <div className="max-w-4xl mx-auto">
+        {/* Header Section */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="mb-10"
+          className="mb-8 bg-white rounded-xl shadow-sm p-6"
         >
-          <div className="flex items-center gap-2">
-            <h2 className="text-2xl font-bold text-gray-800 mb-2">
-              {chama.name} Chama
-            </h2>
-            <FiFileText className="justify-self-end text-downy-500 text-lg" />
-          </div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold text-gray-800 mb-2">
-              Payout Schedule
-            </h1>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+            <div>
+              <div className="flex items-center gap-3">
+                <h2 className="text-2xl font-bold text-gray-800">{chama.name} Chama</h2>
+                <FiFileText className="text-downy-500 text-xl" />
+              </div>
+              <h1 className="text-xl font-semibold text-gray-700 mt-1">Payout Schedule</h1>
+            </div>
+            
+            <div className="bg-downy-50 rounded-lg p-3">
+              <p className="text-downy-800 font-medium flex items-center gap-2">
+                <FiDollarSign className="text-downy-600" />
+                <span>Total Pool:</span> 
+                <span className="text-gray-800">{totalAmount.toFixed(2)} cUSD</span>
+              </p>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <p className="text-gray-600">
-              <span className="font-semibold text-gray-800">
-                Total members:
-              </span>{" "}
-              {chama.members.length}
-            </p>
-            <p className="text-gray-600">• Cycle: {chama.cycleTime} days</p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg">
+              <div className="bg-downy-100 p-2 rounded-full">
+                <FiUsers className="text-downy-600" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Members</p>
+                <p className="font-semibold text-gray-800">{chama.members.length}</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg">
+              <div className="bg-downy-100 p-2 rounded-full">
+                <FiClock className="text-downy-600" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Cycle Time</p>
+                <p className="font-semibold text-gray-800">{chama.cycleTime} days</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg">
+              <div className="bg-downy-100 p-2 rounded-full">
+                <FiCalendar className="text-downy-600" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Started</p>
+                <p className="font-semibold text-gray-800">
+                  {dayjs(chama.startDate).format("MMM D, YYYY")}
+                </p>
+              </div>
+            </div>
           </div>
         </motion.div>
 
+        {/* Timeline Section */}
         <div className="relative">
           {/* Vertical timeline line */}
-          <div className="absolute left-6 top-0 h-full w-1 bg-indigo-200 rounded-full"></div>
+          <div className="absolute left-6 top-0 h-full w-1 bg-downy-200 rounded-full"></div>
 
           {sortedMembers.map((member, index) => {
             const isPaid = dayjs().isAfter(member.payoutDate, "day");
             const isNext = index === nextMemberIndex;
-            const isCurrent =
-              isNext && dayjs().isSame(member.payoutDate, "day");
+            const isCurrent = isNext && dayjs().isSame(member.payoutDate, "day");
 
             return (
               <motion.div
@@ -106,13 +137,13 @@ const ChamaSchedule = ({ chama }: { chama: Chama }) => {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className="mb-8 pl-12 relative"
+                className="mb-6 pl-12 relative"
               >
                 {/* Timeline dot */}
                 <div
-                  className={`absolute left-0 w-5 h-5 rounded-full -ml-[10px] top-4 border-4 transition-all duration-300 ${
+                  className={`absolute left-0 w-5 h-5 rounded-full -ml-[10px] top-6 border-4 transition-all duration-300 ${
                     isCurrent
-                      ? "bg-white border-indigo-600 animate-pulse"
+                      ? "bg-white border-downy-600 animate-pulse"
                       : isPaid
                       ? "bg-green-500 border-green-300"
                       : isNext
@@ -123,53 +154,56 @@ const ChamaSchedule = ({ chama }: { chama: Chama }) => {
 
                 {/* Member card */}
                 <motion.div
-                  whileHover={{ scale: 1.02 }}
-                  className={`bg-white p-2 rounded-xl shadow-lg transition-all duration-300 ${
+                  whileHover={{ scale: 1.01 }}
+                  className={`bg-white p-5 rounded-xl shadow-sm transition-all duration-300 ${
                     isCurrent
-                      ? "ring-2 ring-indigo-500"
+                      ? "ring-2 ring-downy-500 border border-downy-100"
                       : isNext
-                      ? "ring-1 ring-amber-300"
-                      : ""
+                      ? "ring-1 ring-amber-300 border border-amber-100"
+                      : "border border-gray-100"
                   }`}
                 >
-                  <div className="">
-                    <div>
-                      <h3 className="text-gray-500 text-sm">
-                        # {index + 1}
-                      </h3>
-                      <h3 className="text-xl font-semibold text-gray-800">
-                        {member.user.name || `Member ${index + 1}`}
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3">
+                        <span className="text-downy-600 font-medium">#{index + 1}</span>
+                        <h3 className="text-lg font-semibold text-gray-800">
+                          {member.user.name || `Member ${index + 1}`}
+                        </h3>
                         {isCurrent && (
-                          <span className="ml-2 px-2 py-1 text-xs font-bold bg-indigo-100 text-indigo-800 rounded-full">
+                          <span className="ml-auto px-2 py-1 text-xs font-bold bg-downy-100 text-downy-800 rounded-full">
                             TODAY
                           </span>
                         )}
-                      </h3>
+                      </div>
                       <p className="text-gray-500 text-sm mt-1">
-                        {member.user.address.slice(0, 6)}...
-                        {member.user.address.slice(-4)}
+                        {member.user.address.slice(0, 6)}...{member.user.address.slice(-4)}
                       </p>
                     </div>
-                    <div>
-                      <FiGift className="text-gray-500 text-lg" />
-                      <p className="text-gray-500 text-sm">
-                        {Number(formatEther(chama.amount)) * chama.members.length} cUSD
-                      </p>
-                    </div>
-                    <div className="mt-2 md:mt-0 text-right">
-                    <FiClock />
-                      <div className="text-lg font-medium text-gray-700">
-                        {dayjs(member.payoutDate).format("MMM D, YYYY")}
+
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                      <div className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-lg">
+                        <FiGift className="text-downy-500" />
+                        <span className="text-gray-700 font-medium">
+                          {Number(formatEther(chama.amount)).toFixed(2)} cUSD
+                        </span>
+                      </div>
+                      
+                      <div className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-lg">
+                        <FiClock className="text-downy-500" />
+                        <span className="text-gray-700 font-medium">
+                          {dayjs(member.payoutDate).format("MMM D, YYYY")}
+                        </span>
                       </div>
                     </div>
                   </div>
 
-                  {/* Additional details */}
-                  <div className="mt-4 pt-4 border-t border-gray-100 flex justify-center text-sm text-gray-500">
+                  {/* Status badge */}
+                  <div className="mt-4 flex justify-center">
                     <div
-                      className={`mt-1 inline-block px-3 py-2 text-lg font-semibold rounded-full ${
+                      className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-medium ${
                         isCurrent
-                          ? "bg-indigo-100 text-indigo-800"
+                          ? "bg-downy-100 text-downy-800"
                           : isPaid
                           ? "bg-green-100 text-green-800"
                           : isNext
@@ -178,12 +212,12 @@ const ChamaSchedule = ({ chama }: { chama: Chama }) => {
                       }`}
                     >
                       {isCurrent
-                        ? "Payment Due"
+                        ? "Payment Due Today"
                         : isPaid
-                        ? "Paid"
+                        ? "Payment Completed"
                         : isNext
-                        ? "Up Next"
-                        : "Pending"}
+                        ? "Upcoming Payment"
+                        : "Pending Payment"}
                     </div>
                   </div>
                 </motion.div>
