@@ -57,7 +57,7 @@ export default function SendModal({
     try {
       setIsSending(true);
       const parsedAmount = parseEther(amount);
-      const sent = await registrationTokenTx(recipient, parsedAmount);
+      const sent = await registrationTokenTx(recipient, parsedAmount,"transfer");
       if (!sent) {
         showToast("Unable to send payment. Please try again.", "error");
         return;

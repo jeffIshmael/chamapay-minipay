@@ -51,14 +51,14 @@ export const registrationTx = async (functionName, args) => {
   }
 };
 
-export const registrationTokenTx = async (receiverAddress, amount) => {
+export const registrationTokenTx = async (receiverAddress, amount, functionName) => {
   try {
     const walletClient = await getWalletClient(config);
     const account = getAccount(config);
 
     const functionData = encodeFunctionData({
       abi: cUSDContractAddress,
-      functionName: "transfer",
+      functionName,
       args: [receiverAddress, amount],
     });
 

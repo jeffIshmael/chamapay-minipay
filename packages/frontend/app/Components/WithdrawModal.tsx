@@ -58,7 +58,7 @@ export default function WithdrawModal({
     try {
       setIsWithdrawing(true);
       const parsedAmount = parseEther(amount);
-      const sent = await registrationTokenTx(receiver, parsedAmount);
+      const sent = await registrationTokenTx(receiver, parsedAmount, "transfer");
       if (!sent) {
         showToast("Unable to withdraw. Please try again.", "error");
         return;
