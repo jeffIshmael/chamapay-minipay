@@ -61,14 +61,14 @@ const Page = () => {
       } catch (err) {
         console.error("Error checking user:", err);
         // Only show register modal for non-Farcaster users
-        if (!isFarcaster) {
+        if (!isFarcaster && !fcDetails) {
           setShowRegister(true);
         }
       }
     };
 
     checkUserRegistered();
-  }, [address, isConnected, isFarcaster]);
+  }, [address, isConnected, isFarcaster, fcDetails]);
 
   // Farcaster detection useEffect
   useEffect(() => {
@@ -77,6 +77,7 @@ const Page = () => {
         const context = await sdk.context;
         if (context?.user) {
           setIsFarcaster(true);
+          setShowRegister(false);
           setFcDetails({
             fid: context.user.fid,
             username: context.user.username,
