@@ -109,7 +109,7 @@ const CUSDPay = ({
       // }
       if (txHash) {
         const depositArgs = [BigInt(chamaBlockchainId), amountInWei];
-        const hash = await registrationTx("addPublicMember", depositArgs);
+        const hash = await registrationTx("depositCash", depositArgs);
         if (!hash) {
           showToast("unable to write to bc. try again.", "error");
           return;
