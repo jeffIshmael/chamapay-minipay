@@ -18,7 +18,7 @@ import {
   FiSearch,
 } from "react-icons/fi";
 import { formatEther } from "viem";
-import { utcToLocalTime } from "@/utils/duration";
+import { getPicture, utcToLocalTime } from "@/utils/duration";
 
 interface User {
   id: number;
