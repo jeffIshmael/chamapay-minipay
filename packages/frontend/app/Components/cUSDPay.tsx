@@ -89,14 +89,15 @@ const CUSDPay = ({
         functionName: "approve",
         args: [contractAddress, amountInWei],
       });
+      // await txHash;
       if (txHash) {
         const depositArgs = [BigInt(chamaBlockchainId), amountInWei];
-        const hash = await registrationTx(
-          "depositCash",
-          depositArgs,
-          false,
-          BigInt(0)
-        );
+        const hash = await writeContractAsync({
+          address: contractAddress,
+          abi: contractAbi,
+          functionName: "depositCash",
+          args: depositArgs,
+        });
         if (!hash) {
           showToast("unable to write to bc. try again.", "error");
           return;
