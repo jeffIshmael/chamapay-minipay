@@ -77,7 +77,7 @@ const Page = () => {
   const [fetching, setFetching] = useState<boolean>(false);
   const { writeContractAsync } = useWriteContract();
   const { isConnected, address } = useAccount();
-  const {isFarcaster, setIsFarcaster} = useIsFarcaster();
+  const { isFarcaster, setIsFarcaster } = useIsFarcaster();
 
   // Fetch user details
   useEffect(() => {
@@ -119,7 +119,6 @@ const Page = () => {
     fetchData();
   }, [userId]);
 
-
   const handleJoin = async (
     action: "approve" | "reject",
     chamaBlockchainId: number,
@@ -143,9 +142,6 @@ const Page = () => {
       if (!request) throw new Error("Notification not found");
       if (!userData) throw new Error("User details not found");
 
-      // setSenderDetails(userData);
-      await handleJoinRequest(requestId, action, userId, chamaId, canJoin);
-
       if (action === "approve") {
         try {
           const txHash = await writeContractAsync({
@@ -156,6 +152,14 @@ const Page = () => {
           });
 
           if (txHash) {
+            // setSenderDetails(userData);
+            await handleJoinRequest(
+              requestId,
+              action,
+              userId,
+              chamaId,
+              canJoin
+            );
             showToast(
               `${userData.name} successfully added to ${chamaName}`,
               "success"
@@ -166,9 +170,11 @@ const Page = () => {
           console.log(error);
         }
       } else if (action === "reject") {
+        // setSenderDetails(userData);
+        await handleJoinRequest(requestId, action, userId, chamaId, canJoin);
         showToast(`Request successfully rejected`, "error");
-      }else{
-        showToast("No action taken.","info");
+      } else {
+        showToast("No action taken.", "info");
       }
 
       // Refetch data

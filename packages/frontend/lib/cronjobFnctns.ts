@@ -18,6 +18,7 @@ import { getAgentWalletBalance, performPayout } from "./PayOut";
 import { getFundsDisbursedEventLogs } from "./readFunctions";
 import { formatEther } from "viem";
 import { sendEmail } from "../app/actions/emailService";
+import { utcToLocalTime } from "@/utils/duration";
 
 const prisma = new PrismaClient();
 
@@ -100,16 +101,16 @@ export async function checkChamaStarted() {
         await sendNotificationToAllMembers(
           chama.id,
           `🚀 ${chama.name}, ${chama.type} chama has started!\n\n` +
-            `First payout: ${
+            `🥇 First payout: ${
               payoutOrder[0]?.user?.name || "Member"
-            } on ${chama.payDate.toLocaleDateString()}`
+            } on ${utcToLocalTime(chama.payDate)}`
         );
         await sendFarcasterNotificationToAllMembers(
           chama.id,
           `🚀 ${chama.name}, ${chama.type} chama has started!`,
-          `First payout: ${
+          `🥇 First payout: ${
             payoutOrder[0]?.user?.name || "Member"
-          } on ${chama.payDate.toLocaleDateString()}`
+          } on ${utcToLocalTime(chama.payDate)}`
         );
       }
     });
@@ -274,7 +275,7 @@ export async function checkChamaPaydate() {
         await sendFarcasterNotificationToAllMembers(
           chama.id,
           `💰 Payout for ${chama.name} Complete!`,
-          `${user.name} received ${formatEther(logs.args.totalPay)} cUSD for
+          `⚡ ${user.name} received ${formatEther(logs.args.totalPay)} cUSD for
             Round: ${chama.round + 1} • Cycle: ${chama.cycle}`
         );
 
@@ -324,14 +325,16 @@ export async function notifyDeadline() {
           `⏰ FINAL REMINDER\n\n` +
             `${chama.name} payment due in 24 hours!\n` +
             `Amount: ${formatEther(chama.amount)} cUSD\n` +
-            `Pay by: ${chama.payDate.toLocaleString()}`
+            `Pay by: ${utcToLocalTime(chama.payDate)}`
         );
         await sendFarcasterNotificationToAllMembers(
           chama.id,
           `⏰ FINAL REMINDER for ${chama.name} chama`,
-          `${chama.name} payment due in 24 hours!Please pay ${formatEther(
+          `${
+            chama.name
+          } chama payment is due in 24 hours!Please pay ${formatEther(
             chama.amount
-          )} cUSD by ${chama.payDate.toLocaleString()} `
+          )} cUSD by ${utcToLocalTime(chama.payDate)} `
         );
       })
     );

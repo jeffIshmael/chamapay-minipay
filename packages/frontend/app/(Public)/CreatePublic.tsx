@@ -140,7 +140,7 @@ const CreatePublic = () => {
           true,
         ];
 
-        const hash = await registrationTx("registerChama", chamaArgs);
+        const hash = await registrationTx("registerChama", chamaArgs,true,amountInWei);
         if (hash) {
           const formData = new FormData();
           const localDateTime = new Date(startDate);

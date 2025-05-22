@@ -174,7 +174,12 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
         const addPublicArgs = [
           chama?.blockchainId ? [BigInt(Number(chama.blockchainId))] : [],
         ];
-        const hash = await registrationTx("addPublicMember", addPublicArgs);
+        const hash = await registrationTx(
+          "addPublicMember",
+          addPublicArgs,
+          true,
+          chama?.amount ?? BigInt(0)
+        );
         if (hash) {
           await addMemberToPublicChama(
             address as string,

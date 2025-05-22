@@ -1,6 +1,12 @@
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
-import { useReadContract, useAccount, useWriteContract, useSwitchChain, useChainId } from "wagmi";
+import {
+  useReadContract,
+  useAccount,
+  useWriteContract,
+  useSwitchChain,
+  useChainId,
+} from "wagmi";
 import { celo, celoAlfajores } from "viem/chains";
 import erc20Abi from "@/app/ChamaPayABI/ERC20.json";
 import { processCheckout } from "../Blockchain/TokenTransfer";
@@ -34,7 +40,7 @@ const CUSDPay = ({
   const { writeContractAsync } = useWriteContract();
   const [amount, setAmount] = useState("");
   const [isCalculating, setIsCalculating] = useState(false);
-  const {isFarcaster, setIsFarcaster} = useIsFarcaster();
+  const { isFarcaster, setIsFarcaster } = useIsFarcaster();
 
   const {
     data: balanceData,
@@ -47,7 +53,6 @@ const CUSDPay = ({
     abi: erc20Abi,
     args: [address],
   });
-
 
   const handlePayment = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,7 +80,6 @@ const CUSDPay = ({
       return;
     }
     const amountInWei = parseEther(totalAmount.toString());
- 
 
     try {
       setIsLoading(true);
@@ -87,7 +91,12 @@ const CUSDPay = ({
       });
       if (txHash) {
         const depositArgs = [BigInt(chamaBlockchainId), amountInWei];
-        const hash = await registrationTx("depositCash", depositArgs);
+        const hash = await registrationTx(
+          "depositCash",
+          depositArgs,
+          false,
+          BigInt(0)
+        );
         if (!hash) {
           showToast("unable to write to bc. try again.", "error");
           return;
