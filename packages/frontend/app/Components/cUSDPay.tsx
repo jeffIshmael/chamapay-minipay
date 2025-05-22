@@ -93,7 +93,7 @@ const CUSDPay = ({
       const txHash= true;
       if (txHash) {
         const depositArgs = [BigInt(chamaBlockchainId), amountInWei];
-        const hash = await registrationTx("depositCash",depositArgs,true,amountInWei);
+        const hash = await registrationTx("depositCash",depositArgs,false,amountInWei);
         // const hash = await writeContractAsync({
         //   address: contractAddress,
         //   abi: contractAbi,
