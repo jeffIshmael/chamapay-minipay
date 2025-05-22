@@ -120,12 +120,13 @@ const CreatePublic = () => {
     //function to send the lock amount
     try {
       setProcessing(true);
-      const txHash = await writeContractAsync({
-        address: cUSDContractAddress,
-        abi: ERC2OAbi,
-        functionName: "approve",
-        args: [contractAddress, amountInWei],
-      });
+      // const txHash = await writeContractAsync({
+      //   address: cUSDContractAddress,
+      //   abi: ERC2OAbi,
+      //   functionName: "approve",
+      //   args: [contractAddress, amountInWei],
+      // });
+      const txHash= true;
       if (txHash) {
         setProcessing(false);
         setLoading(true);
@@ -140,7 +141,13 @@ const CreatePublic = () => {
           true,
         ];
 
-        const hash = await registrationTx("registerChama", chamaArgs,true,amountInWei);
+        // const hash = await registrationTx("registerChama", chamaArgs,true,amountInWei);
+        const hash = await writeContractAsync({
+          address: contractAddress,
+          abi: contractAbi,
+          functionName: "registerChama",
+          args: chamaArgs,
+        });
         if (hash) {
           const formData = new FormData();
           const localDateTime = new Date(startDate);
@@ -157,7 +164,7 @@ const CreatePublic = () => {
             "Public",
             address,
             blockchainId,
-            txHash
+            hash
           );
           showToast(`${filledData.name} created successfully.`, "success");
           setLoading(false);
