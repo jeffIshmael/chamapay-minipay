@@ -83,13 +83,14 @@ const CUSDPay = ({
 
     try {
       setIsLoading(true);
-      const txHash = await writeContractAsync({
-        address: cUSDContractAddress,
-        abi: erc20Abi,
-        functionName: "approve",
-        args: [contractAddress, amountInWei],
-      });
+      // const txHash = await writeContractAsync({
+      //   address: cUSDContractAddress,
+      //   abi: erc20Abi,
+      //   functionName: "approve",
+      //   args: [contractAddress, amountInWei],
+      // });
       // await txHash;
+      const txHash= true;
       if (txHash) {
         const depositArgs = [BigInt(chamaBlockchainId), amountInWei];
         const hash = await writeContractAsync({
