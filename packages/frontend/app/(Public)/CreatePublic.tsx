@@ -143,15 +143,17 @@ const CreatePublic = () => {
         const hash = await registrationTx("registerChama", chamaArgs);
         if (hash) {
           const formData = new FormData();
+          const localDateTime = new Date(startDate);
+          const startDateUTC = localDateTime.toISOString();
           formData.append("name", filledData.name);
           formData.append("amount", filledData.amount);
           formData.append("cycleTime", filledData.cycleTime);
           formData.append("maxNumber", filledData.maxNumber);
-          formData.append("startDate", startDate);
+          formData.append("startDate", startDateUTC);
 
           await createChama(
             formData,
-            startDate,
+            startDateUTC,
             "Public",
             address,
             blockchainId,

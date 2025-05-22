@@ -165,8 +165,10 @@ const Page = () => {
           showToast(`Failed to add ${userData.name} to ${chamaName}`);
           console.log(error);
         }
-      } else {
+      } else if (action === "reject") {
         showToast(`Request successfully rejected`, "error");
+      }else{
+        showToast("No action taken.","info");
       }
 
       // Refetch data

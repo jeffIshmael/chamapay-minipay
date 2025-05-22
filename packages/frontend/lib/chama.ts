@@ -582,6 +582,15 @@ export async function requestToJoinChama(address: string, chamaId: number) {
 
   // Send notification to the admin
   if (chama) {
+    // notify the user sending
+    if (user?.isFarcaster && user.fid) {
+      const fid = [user.fid];
+      await sendFarcasterNotification(
+        fid,
+        "♻Join request sent",
+        `Request to join ${chama.name} successfully sent to the admin.`
+      );
+    }
     await createNotification(
       chama.admin.id,
       `${user?.name} has requested to join your chama ${chama.name}.`,
@@ -589,6 +598,14 @@ export async function requestToJoinChama(address: string, chamaId: number) {
       request.id,
       chamaId
     );
+    if (chama.admin.isFarcaster && chama.admin.fid) {
+      const fid = [chama.admin.fid];
+      await sendFarcasterNotification(
+        fid,
+        `📬${chama.name} join request.`,
+        `${user?.name} has requested to join ${chama.name}. Head over and approve.`
+      );
+    }
   }
 
   return false;
@@ -653,6 +670,13 @@ export async function handleJoinRequest(
       requestId,
       chamaId
     );
+    if (request.user.isFarcaster && request.user.fid) {
+      await sendFarcasterNotification(
+        [request.user.fid],
+        `✅ ${request.chama.name} chama request approved.`,
+        `Congratulations. You are now a member of ${request.chama.name} chama.`
+      );
+    }
   } else if (action === "reject") {
     // Update request status to rejected
     await prisma.chamaRequest.update({
@@ -668,6 +692,13 @@ export async function handleJoinRequest(
       requestId,
       chamaId
     );
+    if (request.user.isFarcaster && request.user.fid) {
+      await sendFarcasterNotification(
+        [request.user.fid],
+        `${request.chama.name} chama request declined.`,
+        `Unfortunately, Your ${request.chama.name} chama join request has been declined.`
+      );
+    }
   }
 }
 

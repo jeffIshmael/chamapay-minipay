@@ -7,6 +7,7 @@ import {
   contractAddress,
   cUSDContractAddress,
 } from "@/app/ChamaPayABI/ChamaPayContract";
+import erc20Abi from "@/app/ChamaPayABI/ERC20.json"
 
 export const registrationTx = async (functionName, args) => {
   try {
@@ -57,7 +58,7 @@ export const registrationTokenTx = async (receiverAddress, amount, functionName)
     const account = getAccount(config);
 
     const functionData = encodeFunctionData({
-      abi: cUSDContractAddress,
+      abi: erc20Abi,
       functionName,
       args: [receiverAddress, amount],
     });

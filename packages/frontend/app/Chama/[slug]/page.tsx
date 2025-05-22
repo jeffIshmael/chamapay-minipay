@@ -34,7 +34,6 @@ import { useIsFarcaster } from "@/app/context/isFarcasterContext";
 import { registrationTx } from "@/lib/divviRegistration";
 import ChamaSchedule from "@/app/Components/chamaSchedule";
 
-
 interface User {
   chamaId: number;
   id: number;
@@ -96,6 +95,7 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
   const [processing, setProcessing] = useState(false);
   const [hasRequest, setHasRequest] = useState(false);
   const { isFarcaster, setIsFarcaster } = useIsFarcaster();
+  const [isFull, setIsFull] = useState(false);
   const router = useRouter();
 
   const togglePayModal = () => {
@@ -118,6 +118,9 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
           data.chama?.id ?? 0
         );
         setHasRequest(result);
+        if ((data.chama?.members?.length ?? 0) >= (data.chama?.maxNo ?? 0)) {
+          setIsFull(true);
+        }
       }
     };
     fetchChama();
@@ -136,7 +139,10 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
         chama?.id ?? 0
       );
       if (!request) {
-        showToast("Join request sent to admin. wait for approval.", "success");
+        showToast(
+          "✅ Join request sent to admin. wait for approval.",
+          "success"
+        );
         return;
       }
       showToast("You already sent a request.", "warning");
@@ -348,7 +354,11 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
                       }`}
                     ></span>
                     <span>
-                      {chama.canJoin ? "Open membership" : "Observer only"}
+                      {chama.canJoin && !isFull
+                        ? "Open membership"
+                        : isFull
+                        ? ""
+                        : "Observer only"}
                     </span>
                   </>
                 )}
@@ -397,14 +407,14 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
                       ? () => setShowModal(true)
                       : joinChama
                   }
-                  disabled={hasRequest}
+                  disabled={hasRequest || isFull}
                   className={`bg-downy-500 px-16 rounded-md py-2 text-white font-semibold text-center  transition-all ${
-                    hasRequest
+                    hasRequest || isFull
                       ? "bg-opacity-50 cursor-not-allowed "
                       : "hover:bg-downy-700"
                   }`}
                 >
-                  {hasRequest ? "Request sent" : "Join"}
+                  {hasRequest ? "Request sent" : isFull ? "🔒 full" : "Join"}
                 </button>
               ) : (
                 <button
@@ -518,7 +528,11 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
       )}
 
       {activeSection === "Schedule" && (
-        <Schedule chama={chama} type={chamaType} payoutOrder={ chama.payOutOrder ? chama.payOutOrder : null} />
+        <Schedule
+          chama={chama}
+          type={chamaType}
+          payoutOrder={chama.payOutOrder ? chama.payOutOrder : null}
+        />
       )}
 
       {activeSection !== "Chats" && (
@@ -528,7 +542,12 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
           isMember={included}
         />
       )}
-      {activeSection === "Wallet" && <ChamaSchedule chama={chama} payoutOrder={ chama.payOutOrder ? chama.payOutOrder : null } />}
+      {activeSection === "Wallet" && (
+        <ChamaSchedule
+          chama={chama}
+          payoutOrder={chama.payOutOrder ? chama.payOutOrder : null}
+        />
+      )}
       {isOpen && (
         <>
           <div

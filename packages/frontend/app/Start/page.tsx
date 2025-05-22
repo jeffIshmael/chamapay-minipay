@@ -340,14 +340,14 @@ const Page = () => {
             },
             {
               icon: <FiGlobe className="text-downy-600 text-xl" />,
-              title: "Public Chamas",
-              desc: "Join Communities",
+              title: "Public Groups",
+              desc: "Global Communities",
               bg: "bg-gradient-to-br from-green-100 to-green-200",
             },
             {
               icon: <FiShield className="text-downy-600 text-xl" />,
               title: "Secure",
-              desc: "Blockchain Backed",
+              desc: "Blockchain Protected",
               bg: "bg-gradient-to-br from-purple-100 to-purple-200",
             },
             {
@@ -397,17 +397,24 @@ const Page = () => {
           {[
             {
               icon: <RiHandCoinLine className="text-downy-600 text-2xl" />,
-              title: "Community Trust",
+              title: "Built on Trust",
               description:
-                "Trusted by many users across Kenya for their group savings needs.",
-              highlight: "Many users",
+                "Empowering communities around the world with a secure and transparent platform for collective savings.",
+              highlight: "Trusted globally",
             },
             {
               icon: <FiZap className="text-downy-600 text-2xl" />,
-              title: "Lightning Fast",
+              title: "Truly Borderless",
               description:
-                "Instant settlements with our optimized blockchain technology.",
-              highlight: "Instant settlements",
+                "Experience lightning-fast international transactions with near-zero fees — no matter where your group members are.",
+              highlight: "Global reach",
+            },
+            {
+              icon: <FiGlobe className="text-downy-600 text-2xl" />,
+              title: "Stablecoin Integration",
+              description:
+                "Seamlessly contribute and withdraw using stablecoins, enabling smooth cross-border participation.",
+              highlight: "Currency flexibility",
             },
           ].map((item, index) => (
             <motion.div
@@ -453,22 +460,28 @@ const Page = () => {
           <div className="space-y-4">
             {[
               {
-                question: "How do I create a chama?",
+                question: "How do I start a savings group?",
                 answer:
-                  "Simply click 'Create Chama', set your rules (contribution amount, frequency, etc.), and invite members via WhatsApp or email. Setup takes less than 2 minutes!",
+                  "Tap on 'Create Group', customize your rules (amount, duration, start date), and invite members across the globe. It takes less than 2 minutes to set up.",
                 icon: <FiUsers className="text-downy-600" />,
               },
               {
                 question: "What are the fees?",
                 answer:
-                  "ChamaPay is free to use. We only charge minimal blockchain transaction fees (typically less than 0.1 cUSD per transaction). No hidden costs!",
+                  "ChamaPay runs on the blockchain, meaning you only pay minimal transaction fees — usually less than $0.01. And 5% on all transfer functions.",
                 icon: <FiDollarSign className="text-downy-600" />,
               },
               {
-                question: "Can I use mobile money?",
+                question: "Which currency does ChamaPay support?",
                 answer:
-                  "Yes! We support M-Pesa integration for easy deposits and withdrawals. Funds are converted to stable cUSD tokens automatically.",
-                icon: <FiZap className="text-downy-600" />,
+                  "Currently, ChamaPay supports cUSD (a stablecoin), ensuring stable and borderless contributions no matter where you're located.",
+                icon: <FiGlobe className="text-downy-600" />,
+              },
+              {
+                question: "Is there a maximum number of members per group?",
+                answer:
+                  "Yes. To maintain fairness, speed, and smooth fund rotation, each Chama group is limited to a maximum of 15 members. This ensures an efficient and rewarding experience for everyone involved.",
+                icon: <FiGlobe className="text-downy-600" />,
               },
             ].map((item, index) => (
               <div
@@ -642,7 +655,8 @@ const Page = () => {
               {/* MiniPay branding */}
               <div className="bg-gray-50 px-6 py-3 border-t border-gray-200 flex items-center justify-center">
                 <p className="text-sm text-gray-500">
-                  Secured by <span className="font-medium">MiniPay</span>
+                  Secured by{" "}
+                  <span className="font-medium">Blockchain Technology</span>
                 </p>
               </div>
             </motion.div>

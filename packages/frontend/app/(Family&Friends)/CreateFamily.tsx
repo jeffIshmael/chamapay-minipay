@@ -89,18 +89,6 @@ const CreateFamily = () => {
           false,
         ];
 
-        // const hash = await writeContractAsync({
-        //   address: contractAddress,
-        //   abi: contractAbi,
-        //   functionName: "registerChama",
-        //   args: [
-        //     parseEther(data.amount as string),
-        //     BigInt(Number(data.cycleTime)),
-        //     BigInt(dateInMilliseconds),
-        //     BigInt(Number(0)), //no max members
-        //     false,
-        //   ],
-        // });
         const hash = await registrationTx("registerChama", chamaArgs);
 
         if (hash) {

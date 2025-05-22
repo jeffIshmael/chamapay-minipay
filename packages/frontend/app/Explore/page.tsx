@@ -45,22 +45,37 @@ const ChamaCard = ({ chama }: { chama: Chama }) => {
 
   return (
     <Link href={`/Chama/${chama.slug}`} className="block h-full">
-      <div className="border p-4 rounded-2xl shadow-sm hover:shadow-lg transition-all bg-white flex flex-col   h-full group">
-        {/* Status */}
+      <div className="border p-4 rounded-2xl shadow-sm hover:shadow-lg transition-all bg-white flex flex-col h-full group relative">
+        {/* Status - Updated to show Full status */}
         <div className="flex justify-end">
           <span
             className={`text-xs font-medium px-2 py-1 rounded-full ${
-              chama.started
-                ? "bg-green-100 text-green-600"
-                : "bg-red-100 text-red-600"
+              chama.members.length >= chama.maxNo
+                ? "bg-purple-100 text-purple-600" // Full style
+                : chama.started
+                ? "bg-green-100 text-green-600" // Started style
+                : "bg-red-100 text-red-600" // Not started style
             }`}
           >
-            {chama.started ? "Started" : "Not Started"}
+            {chama.members.length >= chama.maxNo
+              ? "Full"
+              : chama.started
+              ? "Started"
+              : "Not Started"}
           </span>
         </div>
 
+        {/*Full banner overlay */}
+        {chama.members.length >= chama.maxNo && (
+          <div className="absolute inset-0 bg-white/80 backdrop-blur-sm rounded-2xl flex items-center justify-center z-10">
+            <span className="bg-purple-600 text-white px-3 py-1 rounded-full font-medium text-sm">
+              Group Full
+            </span>
+          </div>
+        )}
+
         {/* Profile and Name */}
-        <div className="flex flex-col mt-2 ">
+        <div className="flex flex-col mt-2">
           <Image
             src={`https://ipfs.io/ipfs/Qmd1VFua3zc65LT93Sv81VVu6BGa2QEuAakAFJexmRDGtX/${getPicture(
               Number(chama.id)
@@ -68,21 +83,38 @@ const ChamaCard = ({ chama }: { chama: Chama }) => {
             alt="Chama Profile"
             width={100}
             height={100}
-            className="rounded-full border border-gray-200"
+            className={`rounded-full border-2 ${
+              chama.members.length >= chama.maxNo
+                ? "border-purple-200 opacity-80"
+                : "border-gray-200"
+            }`}
             priority={false}
             loading="lazy"
           />
-          <h1 className="text-lg font-semibold text-gray-800 truncate">
+          <h1
+            className={`text-lg font-semibold truncate ${
+              chama.members.length >= chama.maxNo
+                ? "text-gray-500"
+                : "text-gray-800"
+            }`}
+          >
             {chama.name}
           </h1>
         </div>
 
         {/* Details */}
-        <div className="mt-2 space-y-2 text-sm text-gray-600">
+        <div
+          className={`mt-2 space-y-2 text-sm ${
+            chama.members.length >= chama.maxNo
+              ? "text-gray-400"
+              : "text-gray-600"
+          }`}
+        >
           <div className="flex items-center gap-2">
             <IoMdPeople className="text-downy-600" />
             <span>
               {chama.members.length} / {chama.maxNo} Members
+              {chama.members.length >= chama.maxNo && " (Full)"}
             </span>
           </div>
 
@@ -90,15 +122,13 @@ const ChamaCard = ({ chama }: { chama: Chama }) => {
             <IoMdCash className="text-downy-600" />
             <span>{formatEther(chama.amount)} cUSD</span>
           </div>
+
           <div className="flex items-center gap-2">
             <IoMdTime className="text-downy-600" />
-            {chamaDuration && (
-              <span className=" text-gray-500">{chamaDuration}</span>
-            )}
+            {chamaDuration && <span>{chamaDuration}</span>}
           </div>
-          <IoMdTime />
 
-          <div className="text-sm text-gray-500">
+          <div className="text-sm">
             {chama.started
               ? `Next Pay: ${utcToLocalTime(chama.payDate)}`
               : `Starts on: ${utcToLocalTime(chama.startDate)}`}
