@@ -307,10 +307,10 @@ const Schedule = ({
             waveAmplitude={1}
             gradient
             circleStyle={{
-              fill: "#06b6d4",
+              fill: "#66d9d0",
             }}
             waveStyle={{
-              fill: "#06b6d4",
+              fill: "#66d9d0",
             }}
             textRenderer={() => null} // Disable default text
           />
