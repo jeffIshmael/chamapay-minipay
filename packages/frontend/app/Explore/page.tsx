@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { getPublicNotMember } from "../../lib/chama";
 import Link from "next/link";
 import Image from "next/image";
-import { duration as getDuration, utcToLocalTime } from "@/utils/duration";
+import { duration as getDuration, getPicture, utcToLocalTime } from "@/utils/duration";
 import BottomNavbar from "../Components/BottomNavbar";
 import { formatEther } from "viem";
 import { IoMdCash, IoMdPeople, IoMdTime } from "react-icons/io";
