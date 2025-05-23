@@ -181,12 +181,6 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
           chama?.amount ?? BigInt(0),
         ];
         const hash = await registrationTx("addPublicMember", addPublicArgs);
-        // const hash = await writeContractAsync({
-        //   address: contractAddress,
-        //   abi: contractAbi,
-        //   functionName: "addPublicMember",
-        //   args: addPublicArgs,
-        // });
         if (hash) {
           await addMemberToPublicChama(
             address as string,
@@ -546,6 +540,12 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
           payoutOrder={chama.payOutOrder ? chama.payOutOrder : null}
         />
       )}
+      {activeSection === "Wallet" && (
+        <ChamaSchedule
+          chama={chama}
+          payoutOrder={chama.payOutOrder ? chama.payOutOrder : null}
+        />
+      )}
 
       {activeSection !== "Chats" && (
         <ChamaNavbar
@@ -554,12 +554,7 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
           isMember={included}
         />
       )}
-      {activeSection === "Wallet" && (
-        <ChamaSchedule
-          chama={chama}
-          payoutOrder={chama.payOutOrder ? chama.payOutOrder : null}
-        />
-      )}
+
       {isOpen && (
         <>
           <div

@@ -24,7 +24,7 @@ interface User {
   };
   userId: number;
   isPaid: boolean;
-  incognito:boolean;
+  incognito: boolean;
 }
 
 interface Chama {
@@ -46,7 +46,13 @@ interface Chama {
   type: string;
 }
 
-const ChamaSchedule = ({ chama, payoutOrder }: { chama: Chama,payoutOrder: string | null }) => {
+const ChamaSchedule = ({
+  chama,
+  payoutOrder,
+}: {
+  chama: Chama;
+  payoutOrder: string | null;
+}) => {
   const getMemberPayoutDate = (index: number): Date => {
     const payoutDate = new Date(chama.startDate);
     payoutDate.setDate(payoutDate.getDate() + chama.cycleTime * index);
@@ -54,7 +60,9 @@ const ChamaSchedule = ({ chama, payoutOrder }: { chama: Chama,payoutOrder: strin
   };
 
   const now = new Date();
-  const payoutOrderArray: User[] = payoutOrder ? JSON.parse(payoutOrder) : chama.members;
+  const payoutOrderArray: User[] = payoutOrder
+    ? JSON.parse(payoutOrder)
+    : chama.members;
 
   const sortedMembers = payoutOrderArray
     .map((member, index) => ({
@@ -68,7 +76,7 @@ const ChamaSchedule = ({ chama, payoutOrder }: { chama: Chama,payoutOrder: strin
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-downy-200 via-gray-200 to-downy-100 py-8 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-downy-200 via-gray-200 to-downy-100 pb-20 py-8 px-4">
       <div className="max-w-4xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -82,7 +90,9 @@ const ChamaSchedule = ({ chama, payoutOrder }: { chama: Chama,payoutOrder: strin
           </div>
           <p className="text-gray-600 mt-1">
             <span className="font-medium text-gray-800">Total Members:</span>{" "}
-            {chama.members.length} <span className="font-medium text-gray-800"> • Cycle:</span> {chama.cycleTime} days
+            {chama.members.length}{" "}
+            <span className="font-medium text-gray-800"> • Cycle:</span>{" "}
+            {chama.cycleTime} days
           </p>
           <h3 className="text-xl font-semibold text-gray-800 mt-4">
             Payout Schedule
@@ -93,7 +103,7 @@ const ChamaSchedule = ({ chama, payoutOrder }: { chama: Chama,payoutOrder: strin
           <div className="absolute left-3 top-0 h-full w-1 bg-downy-300 rounded-full"></div>
 
           {sortedMembers.map((member, index) => {
-            const isPaid = dayjs().isAfter(member.payoutDate, "day");
+            const isPaid = member.isPaid;
             const isNext = index === nextMemberIndex;
             const isCurrent =
               isNext && dayjs().isSame(member.payoutDate, "day");
@@ -141,17 +151,21 @@ const ChamaSchedule = ({ chama, payoutOrder }: { chama: Chama,payoutOrder: strin
                     <div>
                       <h4 className={`${differentColors}`}>#{index + 1}</h4>
                       <h3 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
-                        {member.user.name || `Member ${index + 1}`}
+                        {chama.started
+                          ? member.user.name || `Member ${index + 1}`
+                          : "Pending..."}
                         {isCurrent && (
                           <span className="px-2 py-1 text-xs font-bold bg-indigo-100 text-indigo-700 rounded-full">
                             TODAY
                           </span>
                         )}
                       </h3>
-                      <p className="text-gray-500 text-sm mt-1">
-                        {member.user.address.slice(0, 6)}...
-                        {member.user.address.slice(-4)}
-                      </p>
+                      {chama.started && (
+                        <p className="text-gray-500 text-sm mt-1">
+                          {member.user.address.slice(0, 6)}...
+                          {member.user.address.slice(-4)}
+                        </p>
+                      )}
                     </div>
 
                     <div className="text-right">

@@ -230,7 +230,7 @@ const Schedule = ({
   const renderProgressIndicator = () => {
     if (!chama.started) {
       return (
-        <div className="relative mx-auto w-[200px] h-[200px]">
+        <div className="relative w-[250px] h-[250px] rounded-full bg-white flex justify-center items-center">
           <div
             className="absolute w-full h-full rounded-full"
           >
