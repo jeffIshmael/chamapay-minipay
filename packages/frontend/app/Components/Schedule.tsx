@@ -233,9 +233,6 @@ const Schedule = ({
         <div className="relative w-64 h-64 rounded-full bg-white shadow-lg">
           <div
             className="absolute inset-0 rounded-full"
-            style={{
-              background: `conic-gradient(#66d9d0 0% 100%, #d1f6f1 0% 100%)`,
-            }}
           />
           <div className="absolute inset-2 bg-white rounded-full flex flex-col items-center justify-center shadow-inner">
             <FiClock className="text-downy-500 mb-2 animate-pulse" size={28} />
