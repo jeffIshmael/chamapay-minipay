@@ -21,6 +21,7 @@ export default function Home() {
     const setReady = async () => {
       if (isInterfaceReady) {
         await sdk.actions.ready();
+        await sdk.actions.addFrame();
       }
     };
     setReady();

@@ -145,13 +145,6 @@ const CreatePublic = () => {
           true,
         ];
         const hash = await registrationTx("registerChama", chamaArgs);
-        // const hash = await writeContractAsync({
-        //   address: contractAddress,
-        //   abi: contractAbi,
-        //   functionName: "registerChama",
-        //   args: chamaArgs,
-        //   value: amountInWei
-        // });
         if (hash) {
           const formData = new FormData();
           const localDateTime = new Date(startDate);

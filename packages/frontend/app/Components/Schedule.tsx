@@ -10,6 +10,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { FiDollarSign, FiClock, FiLock } from "react-icons/fi";
 import { formatEther } from "viem";
 import { formatTimeRemaining } from "@/lib/paydate";
+dayjs.extend(utc);
+dayjs.extend(timezone);
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 // @ts-ignore
@@ -65,7 +67,7 @@ const Schedule = ({
   const [showDeposit, setShowDeposit] = useState(false);
   const [members, setMembers] = useState<User[]>([]);
   const [round, setRound] = useState(0);
-  const [balance, setBalance] = useState<Account | []>([]);
+  const [balance, setBalance] = useState<Account>([BigInt(0), BigInt(0)]);
   const [cycle, setCycle] = useState(0);
   const { address } = useAccount();
   const [currentTime, setCurrentTime] = useState(Date.now());
@@ -81,7 +83,14 @@ const Schedule = ({
   });
 
   const payoutOrderArray: User[] = payoutOrder
-    ? JSON.parse(payoutOrder)
+    ? (() => {
+        try {
+          return JSON.parse(payoutOrder);
+        } catch (e) {
+          console.error("Failed to parse payoutOrder", e);
+          return chama.members;
+        }
+      })()
     : chama.members;
 
   // Update your useEffect for initial data loading
@@ -228,6 +237,14 @@ const Schedule = ({
 
   const lockedAmount = balance[1] ? Number(balance[1]) / 10 ** 18 : 0;
   const userBalance = balance[0] ? Number(balance[0]) / 10 ** 18 : 0;
+
+  if (!chama) {
+    return <div>Loading chama data...</div>;
+  }
+
+  if (members.length === 0) {
+    return <div>Loading member data...</div>;
+  }
 
   const renderProgressIndicator = () => {
     if (!chama.started) {
