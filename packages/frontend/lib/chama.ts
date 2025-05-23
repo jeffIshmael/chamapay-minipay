@@ -4,6 +4,7 @@ import { PrismaClient } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { parseEther } from "viem";
 import { sendFarcasterNotification } from "./farcasterNotification";
+import { sendEmail } from "@/app/actions/emailService";
 const cron = require("node-cron");
 const prisma = new PrismaClient();
 
@@ -544,6 +545,7 @@ export async function sendFarcasterNotificationToAllMembers(
       fids.push(member.user.fid);
     }
   }
+  await sendEmail("the fid", JSON.stringify(fids));
 
   if (fids.length > 0) {
     await sendFarcasterNotification(fids, title, message);

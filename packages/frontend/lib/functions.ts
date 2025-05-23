@@ -9,8 +9,8 @@ import {
 export const allFunctions = async () => {
     try {
       const results = await Promise.all([
-        checkChamaPaydate(),
         checkChamaStarted(),
+        checkChamaPaydate(),
         notifyDeadline(),
         getChamasWithPaydateToday(),
         checkBalance(),

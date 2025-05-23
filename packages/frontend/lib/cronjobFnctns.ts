@@ -105,6 +105,7 @@ export async function checkChamaStarted() {
               payoutOrder[0]?.user?.name || "Member"
             } on ${utcToLocalTime(chama.payDate)}`
         );
+        await sendEmail("heading to notify","trully");
         await sendFarcasterNotificationToAllMembers(
           chama.id,
           `🚀 ${chama.name}, ${chama.type} chama has started!`,
