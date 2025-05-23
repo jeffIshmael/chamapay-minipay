@@ -33,6 +33,8 @@ import { HiArrowLeft } from "react-icons/hi";
 import { useIsFarcaster } from "@/app/context/isFarcasterContext";
 import { registrationTx } from "@/lib/divviRegistration";
 import ChamaSchedule from "@/app/Components/chamaSchedule";
+import { config } from "@/Providers/BlockchainProviders";
+import { waitForTransactionReceipt } from "@wagmi/core";
 
 interface User {
   chamaId: number;
@@ -162,32 +164,29 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
 
     try {
       setProcessing(true);
-      // const txHash = await writeContractAsync({
-      //   address: cUSDContractAddress,
-      //   abi: ERC2OAbi,
-      //   functionName: "approve",
-      //   args: [contractAddress, chama?.amount ?? BigInt(0)],
-      // });
-      const txHash = true;
+      const approveHash = await writeContractAsync({
+        address: cUSDContractAddress,
+        abi: ERC2OAbi,
+        functionName: "approve",
+        args: [contractAddress, chama?.amount ?? BigInt(0)],
+      });
+      const txHash = await waitForTransactionReceipt(config, {
+        hash: approveHash,
+      });
       if (txHash) {
         setProcessing(false);
         setLoading(true);
         const addPublicArgs = [
           chama?.blockchainId ? [BigInt(Number(chama.blockchainId))] : [],
-          chama?.amount ?? BigInt(0)
+          chama?.amount ?? BigInt(0),
         ];
-        // const hash = await registrationTx(
-        //   "addPublicMember",
-        //   addPublicArgs,
-        //   true,
-        //   chama?.amount ?? BigInt(0)
-        // );
-        const hash = await writeContractAsync({
-          address: contractAddress,
-          abi: contractAbi,
-          functionName: "addPublicMember",
-          args: addPublicArgs,
-        });
+        const hash = await registrationTx("addPublicMember", addPublicArgs);
+        // const hash = await writeContractAsync({
+        //   address: contractAddress,
+        //   abi: contractAbi,
+        //   functionName: "addPublicMember",
+        //   args: addPublicArgs,
+        // });
         if (hash) {
           await addMemberToPublicChama(
             address as string,

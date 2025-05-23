@@ -22,6 +22,8 @@ import { showToast } from "../Components/Toast";
 import { getDataSuffix, submitReferral } from "@divvi/referral-sdk";
 import { useIsFarcaster } from "../context/isFarcasterContext";
 import { registrationTx } from "@/lib/divviRegistration";
+import { config } from "@/Providers/BlockchainProviders";
+import { waitForTransactionReceipt } from "@wagmi/core";
 
 interface Form {
   amount: string;
@@ -120,13 +122,15 @@ const CreatePublic = () => {
     //function to send the lock amount
     try {
       setProcessing(true);
-      // const txHash = await writeContractAsync({
-      //   address: cUSDContractAddress,
-      //   abi: ERC2OAbi,
-      //   functionName: "approve",
-      //   args: [contractAddress, amountInWei],
-      // });
-      const txHash= true;
+      const approveHash = await writeContractAsync({
+        address: cUSDContractAddress,
+        abi: ERC2OAbi,
+        functionName: "approve",
+        args: [contractAddress, amountInWei],
+      });
+      const txHash = await waitForTransactionReceipt(config, {
+        hash: approveHash,
+      });
       if (txHash) {
         setProcessing(false);
         setLoading(true);
@@ -140,15 +144,14 @@ const CreatePublic = () => {
           BigInt(Number(filledData.maxNumber)),
           true,
         ];
-
-        // const hash = await registrationTx("registerChama", chamaArgs,true,amountInWei);
-        const hash = await writeContractAsync({
-          address: contractAddress,
-          abi: contractAbi,
-          functionName: "registerChama",
-          args: chamaArgs,
-          value: amountInWei
-        });
+        const hash = await registrationTx("registerChama", chamaArgs);
+        // const hash = await writeContractAsync({
+        //   address: contractAddress,
+        //   abi: contractAbi,
+        //   functionName: "registerChama",
+        //   args: chamaArgs,
+        //   value: amountInWei
+        // });
         if (hash) {
           const formData = new FormData();
           const localDateTime = new Date(startDate);
