@@ -83,14 +83,14 @@ const CUSDPay = ({
 
     try {
       setIsLoading(true);
-      // const txHash = await writeContractAsync({
-      //   address: cUSDContractAddress,
-      //   abi: erc20Abi,
-      //   functionName: "approve",
-      //   args: [contractAddress, amountInWei],
-      // });
-      // await txHash;
-      const txHash= true;
+      const txHash = await writeContractAsync({
+        address: cUSDContractAddress,
+        abi: erc20Abi,
+        functionName: "approve",
+        args: [contractAddress, amountInWei],
+      });
+      await txHash;
+      // const txHash= true;
       if (txHash) {
         const depositArgs = [BigInt(chamaBlockchainId), amountInWei];
         // const hash = await registrationTx("depositCash",depositArgs);
@@ -120,7 +120,7 @@ const CUSDPay = ({
     } catch (error: any) {
       console.error("Payment error:", error);
       showToast(
-        error.message || "A problem occurred. Please try again.",
+       "A problem occurred. Please try again.",
         "error"
       );
     } finally {
