@@ -37,15 +37,14 @@ const Withdrawals = ({ chamaId }: { chamaId: number }) => {
     setUserNames(namesMap);
   };
 
-
   useEffect(() => {
-    const fetchPayouts = async () =>{
+    const fetchPayouts = async () => {
       const results = await getChamaPayouts(chamaId);
       if (results) {
         setWithdrawals(results);
         fetchUserNames(results);
       }
-    }
+    };
     fetchPayouts();
   }, []);
 
@@ -61,7 +60,7 @@ const Withdrawals = ({ chamaId }: { chamaId: number }) => {
   };
 
   return (
-    <div className="p-4 bg-white rounded-lg shadow-md">
+    <div>
       <h2 className="text-xl font-semibold mb-4 text-gray-700">
         Payouts History
       </h2>
@@ -97,13 +96,13 @@ const Withdrawals = ({ chamaId }: { chamaId: number }) => {
               </p>
             </div>
             <p className="text-sm text-gray-500">
-            {new Date(withdrawal.doneAt).toLocaleDateString("en-GB", {
-                          day: "numeric",
-                          month: "short",
-                          year: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
+              {new Date(withdrawal.doneAt).toLocaleDateString("en-GB", {
+                day: "numeric",
+                month: "short",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
             </p>
           </div>
           <div className="flex justify-between items-center">
