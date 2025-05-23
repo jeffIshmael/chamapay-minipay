@@ -230,26 +230,24 @@ const Schedule = ({
   const renderProgressIndicator = () => {
     if (!chama.started) {
       return (
-        <div
-            className="relative w-[250px] h-[250px] rounded-full bg-white"
-            style={{
-              background: `conic-gradient(#66d9d0 100%, #d1f6f1 0% 100%)`,
-            }}
-          >
+        <div className="relative w-64 h-64 rounded-full bg-white shadow-lg">
           <div
-            className="absolute w-full h-full rounded-full"
-          >
-            <div className="absolute inset-4 bg-white rounded-full flex flex-col items-center justify-center shadow-inner">
-              <div className="flex flex-col items-center">
-                <FiClock className="text-downy-500 mb-2" size={24} />
-                <p className="text-sm text-gray-500">Starts in</p>
-                <p className="text-xl text-downy-500 mt-1">{timeUntilStart}</p>
-              </div>
-            </div>
+            className="absolute inset-0 rounded-full"
+            style={{
+              background: `conic-gradient(#66d9d0 0% 100%, #d1f6f1 0% 100%)`,
+            }}
+          />
+          <div className="absolute inset-2 bg-white rounded-full flex flex-col items-center justify-center shadow-inner">
+            <FiClock className="text-downy-500 mb-2 animate-pulse" size={28} />
+            <p className="text-sm text-gray-500">Starts in</p>
+            <p className="text-2xl font-semibold text-downy-600 mt-1">
+              {timeUntilStart}
+            </p>
           </div>
         </div>
       );
     }
+    
 
     // Only render liquid gauge if we have valid user data
     const userIndex = chama.members.findIndex(

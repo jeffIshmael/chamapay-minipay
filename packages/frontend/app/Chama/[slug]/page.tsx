@@ -540,7 +540,7 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
           payoutOrder={chama.payOutOrder ? chama.payOutOrder : null}
         />
       )}
-      {activeSection === "Wallet" && (
+      {activeSection === "chamaSchedule" && (
         <ChamaSchedule
           chama={chama}
           payoutOrder={chama.payOutOrder ? chama.payOutOrder : null}
