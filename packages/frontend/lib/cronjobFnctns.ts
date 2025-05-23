@@ -150,6 +150,7 @@ export async function getChamasWithPaydateToday() {
         },
       },
     });
+    await sendEmail("The chamas to be payed today are:", JSON.stringify(chamasToBePayedToday));
   } catch (error) {
     console.error("Error fetching chamas:", error);
     await sendEmail(
