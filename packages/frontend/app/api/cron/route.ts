@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import dotenv from 'dotenv';
 import { initializeCronJobs } from '@/lib/cronJobs';
+import { allFunctions } from '@/lib/functions';
 
 dotenv.config();
 
@@ -11,7 +12,7 @@ export async function GET(request: Request) {
   }
 
   // 2. Your cron logic
-  await initializeCronJobs();
+  await allFunctions();
   console.log('Cron job executed at:', new Date().toISOString());
   
   return NextResponse.json({ success: true });
