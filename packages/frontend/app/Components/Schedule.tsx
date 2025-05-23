@@ -80,7 +80,9 @@ const Schedule = ({
     args: [BigInt(Number(chama.blockchainId)), address],
   });
 
-  const payoutOrderArray: User[] = payoutOrder ? JSON.parse(payoutOrder) : chama.members;
+  const payoutOrderArray: User[] = payoutOrder
+    ? JSON.parse(payoutOrder)
+    : chama.members;
 
   // Update your useEffect for initial data loading
   useEffect(() => {
@@ -230,21 +232,52 @@ const Schedule = ({
   const renderProgressIndicator = () => {
     if (!chama.started) {
       return (
-        <div className="relative w-64 h-64 rounded-full bg-white shadow-lg">
-          <div
-            className="absolute inset-0 rounded-full"
-          />
-          <div className="absolute inset-2 bg-white rounded-full flex flex-col items-center justify-center shadow-inner">
-            <FiClock className="text-downy-500 mb-2 animate-pulse" size={28} />
-            <p className="text-sm text-gray-500">Starts in</p>
-            <p className="text-2xl font-semibold text-downy-600 mt-1">
-              {timeUntilStart}
-            </p>
+        <div className="relative w-64 h-64 mx-auto">
+          {/* Outer ring with subtle animation */}
+          <div className="absolute inset-0 rounded-full border-4 border-downy-200 animate-pulse shadow-inner" />
+
+          {/* Inner circle with gradient */}
+          <div className="absolute inset-4 rounded-full bg-gradient-to-br from-downy-50 to-downy-100 flex flex-col items-center justify-center shadow-md">
+            {/* Clock icon with subtle bounce */}
+            <motion.div
+              animate={{
+                y: [0, -5, 0],
+                rotate: [0, 5, -5, 0],
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                repeatType: "reverse",
+              }}
+            >
+              <FiClock className="text-downy-500 mb-2" size={32} />
+            </motion.div>
+
+            {/* Text with better typography */}
+            <div className="text-center px-4">
+              <p className="text-sm font-medium text-gray-500 mb-1">
+                Starts in
+              </p>
+              <motion.p
+                className="text-2xl font-bold text-downy-600"
+                animate={{
+                  scale: [1, 1.05, 1],
+                }}
+                transition={{
+                  duration: 3,
+                  repeat: Infinity,
+                }}
+              >
+                {timeUntilStart}
+              </motion.p>
+              <p className="text-xs text-gray-400 mt-2">
+                {dayjs(chama.startDate).format("MMM D, YYYY h:mm A")}
+              </p>
+            </div>
           </div>
         </div>
       );
     }
-    
 
     // Only render liquid gauge if we have valid user data
     const userIndex = chama.members.findIndex(

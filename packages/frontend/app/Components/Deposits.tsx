@@ -15,11 +15,10 @@ interface Deposit {
 
 const Deposits = ({ chamaId }: { chamaId: number }) => {
   const [deposits, setDeposits] = useState<Deposit[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchDeposits = async () => {
-      setLoading(true);
       const results: Deposit[] = await getPaymentsById(chamaId);
       if (results) {
         setDeposits(results);
