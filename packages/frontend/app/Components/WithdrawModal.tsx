@@ -20,7 +20,7 @@ export default function WithdrawModal({
   isOpen: boolean;
   onClose: () => void;
   balance: number;
-  isFarcaster:boolean;
+  isFarcaster: boolean;
 }) {
   const [amount, setAmount] = useState("");
   const [isWithdrawing, setIsWithdrawing] = useState(false);
@@ -58,7 +58,11 @@ export default function WithdrawModal({
     try {
       setIsWithdrawing(true);
       const parsedAmount = parseEther(amount);
-      const sent = await registrationTokenTx(receiver, parsedAmount, "transfer");
+      const sent = await registrationTokenTx(
+        receiver,
+        parsedAmount,
+        "transfer"
+      );
       if (!sent) {
         showToast("Unable to withdraw. Please try again.", "error");
         return;
@@ -175,43 +179,44 @@ export default function WithdrawModal({
 
             {destination === "crypto" && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Wallet Address
-                </label>
-                <input
-                  type="text"
-                  value={receiver}
-                  onChange={(e) => setReceiver(e.target.value)}
-                  placeholder="0x..."
-                  className="w-full rounded-lg border-gray-300 focus:border-downy-500 focus:ring-downy-500"
-                />
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mt-4">
-                  <p className="text-yellow-800 text-sm">
-                    <strong>Note:</strong> Only send to an address that is on
-                    the celo network. Sending to other networks may result in
-                    permanent loss.
-                  </p>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Wallet Address
+                  </label>
+                  <input
+                    type="text"
+                    value={receiver}
+                    onChange={(e) => setReceiver(e.target.value)}
+                    placeholder="0x..."
+                    className="w-full rounded-lg border-gray-300 focus:border-downy-500 focus:ring-downy-500"
+                  />
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mt-4">
+                    <p className="text-yellow-800 text-sm">
+                      <strong>Note:</strong> Only send to an address that is on
+                      the celo network. Sending to other networks may result in
+                      permanent loss.
+                    </p>
+                  </div>
+                </div>
+                <div className="pt-2 flex space-x-3">
+                  <button
+                    onClick={onClose}
+                    className="flex-1 border border-gray-300 text-gray-700 py-2 rounded-lg font-medium hover:bg-gray-50 transition"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleWithdraw}
+                    disabled={isWithdrawing}
+                    className={`flex-1 bg-downy-600 text-white py-2 rounded-lg font-medium hover:bg-downy-700 transition ${
+                      isWithdrawing ? "opacity-70 cursor-not-allowed" : ""
+                    }`}
+                  >
+                    {isWithdrawing ? "Processing..." : "Withdraw"}
+                  </button>
                 </div>
               </div>
             )}
-
-            <div className="pt-2 flex space-x-3">
-              <button
-                onClick={onClose}
-                className="flex-1 border border-gray-300 text-gray-700 py-2 rounded-lg font-medium hover:bg-gray-50 transition"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleWithdraw}
-                disabled={isWithdrawing}
-                className={`flex-1 bg-downy-600 text-white py-2 rounded-lg font-medium hover:bg-downy-700 transition ${
-                  isWithdrawing ? "opacity-70 cursor-not-allowed" : ""
-                }`}
-              >
-                {isWithdrawing ? "Processing..." : "Withdraw"}
-              </button>
-            </div>
           </div>
         </Dialog.Panel>
       </div>
