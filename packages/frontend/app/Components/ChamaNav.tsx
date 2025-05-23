@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
-import { FiRotateCw } from "react-icons/fi";
+import { FiList } from "react-icons/fi";
 
 export default function ChamaNavbar({
   activeSection,
@@ -150,7 +150,7 @@ export default function ChamaNavbar({
                 : "text-gray-500"
             } hover:text-black`}
           >
-            <FiRotateCw
+            <FiList
               className={`bg-transparent hover:bg-transparent ${
                 activeSection === "chamaSchedule"
                   ? "text-downy-500"
