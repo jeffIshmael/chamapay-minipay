@@ -5,6 +5,7 @@ import {
     getChamasWithPaydateToday,
     checkBalance,
   } from "./cronjobFnctns";
+import { sendFarcasterNotification } from "./farcasterNotification";
 // export all  functions without cron
 export const allFunctions = async () => {
     try {
@@ -14,6 +15,7 @@ export const allFunctions = async () => {
         notifyDeadline(),
         getChamasWithPaydateToday(),
         checkBalance(),
+        sendFarcasterNotification([1077932], "Trial notification","Trying to send to one")
       ]);
       return results;
     } catch (error) {
