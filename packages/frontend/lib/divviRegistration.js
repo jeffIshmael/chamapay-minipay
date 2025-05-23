@@ -7,7 +7,7 @@ import {
   contractAddress,
   cUSDContractAddress,
 } from "@/app/ChamaPayABI/ChamaPayContract";
-import erc20Abi from "@/app/ChamaPayABI/ERC20.json"
+import erc20Abi from "@/app/ChamaPayABI/ERC20.json";
 
 export const registrationTx = async (functionName, args) => {
   try {
@@ -52,7 +52,11 @@ export const registrationTx = async (functionName, args) => {
   }
 };
 
-export const registrationTokenTx = async (receiverAddress, amount, functionName) => {
+export const registrationTokenTx = async (
+  receiverAddress,
+  amount,
+  functionName
+) => {
   try {
     const walletClient = await getWalletClient(config);
     const account = getAccount(config);
@@ -77,8 +81,8 @@ export const registrationTokenTx = async (receiverAddress, amount, functionName)
     const txHash = await walletClient.sendTransaction({
       account: account.address,
       to: receiverAddress,
-      data: fullData, // already includes '0x'
-      value: amount, // assuming registerChama is nonpayable
+      data: fullData,
+      value: 0n,
     });
 
     const chainId = await walletClient.getChainId();
