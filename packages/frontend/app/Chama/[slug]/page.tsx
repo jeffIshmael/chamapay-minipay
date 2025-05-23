@@ -98,6 +98,7 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
   const [hasRequest, setHasRequest] = useState(false);
   const { isFarcaster, setIsFarcaster } = useIsFarcaster();
   const [isFull, setIsFull] = useState(false);
+  const [sendingRequest, setSendingRequest] = useState(false);
   const router = useRouter();
 
   const togglePayModal = () => {
@@ -136,6 +137,7 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
     }
 
     try {
+      setSendingRequest(true);
       const request = await requestToJoinChama(
         address as string,
         chama?.id ?? 0
@@ -145,12 +147,15 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
           "✅ Join request sent to admin. wait for approval.",
           "success"
         );
+        setSendingRequest(false);
         return;
       }
       showToast("You already sent a request.", "warning");
     } catch (error: any) {
       console.log(error);
       showToast("An error occurred while sending the join request.", "error");
+    }finally{
+      setSendingRequest(false);
     }
   };
 
@@ -413,14 +418,14 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
                       ? () => setShowModal(true)
                       : joinChama
                   }
-                  disabled={hasRequest || isFull}
+                  disabled={hasRequest || isFull || sendingRequest}
                   className={`bg-downy-500 px-16 rounded-md py-2 text-white font-semibold text-center  transition-all ${
-                    hasRequest || isFull
+                    hasRequest || isFull || sendingRequest
                       ? "bg-opacity-50 cursor-not-allowed "
                       : "hover:bg-downy-700"
                   }`}
                 >
-                  {hasRequest ? "Request sent" : isFull ? "🔒 full" : "Join"}
+                  {hasRequest ? "Request sent" :sendingRequest? "Requesting...": isFull ? "🔒 full" : "Join"}
                 </button>
               ) : (
                 <button

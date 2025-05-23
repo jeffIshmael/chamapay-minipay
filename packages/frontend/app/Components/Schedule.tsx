@@ -238,12 +238,70 @@ const Schedule = ({
   const lockedAmount = balance[1] ? Number(balance[1]) / 10 ** 18 : 0;
   const userBalance = balance[0] ? Number(balance[0]) / 10 ** 18 : 0;
 
-  if (!chama) {
-    return <div>Loading chama data...</div>;
-  }
+  if (!chama || members.length === 0) {
+    return (
+      <div className="min-h-screen bg-downy-100 pb-20">
+        {/* Header Skeleton */}
+        <div className="bg-gradient-to-r from-downy-600 to-downy-700 px-6 pt-8 pb-6 rounded-b-3xl shadow-lg">
+          <div className="flex justify-between items-start">
+            <div className="space-y-2">
+              <div className="h-8 w-48 bg-downy-500 rounded-md animate-pulse"></div>
+              <div className="h-4 w-32 bg-downy-400 rounded-md animate-pulse"></div>
+            </div>
+            {/* Balance Card Skeleton */}
+            <div className="bg-white bg-opacity-20 backdrop-blur-sm p-3 rounded-xl w-32">
+              <div className="space-y-2">
+                <div className="h-4 w-full bg-white/50 rounded animate-pulse"></div>
+                <div className="h-6 w-full bg-white rounded animate-pulse"></div>
+              </div>
+            </div>
+          </div>
+        </div>
 
-  if (members.length === 0) {
-    return <div>Loading member data...</div>;
+        {/* Main Content Skeleton */}
+        <div className="px-2 mt-4">
+          <div className="bg-white p-6 rounded-2xl shadow-md border border-gray-100">
+            {/* Progress Indicator Skeleton */}
+            <div className="flex flex-col items-center space-y-4">
+              <div className="w-64 h-64 rounded-full bg-downy-50 animate-pulse"></div>
+              <div className="w-48 h-4 bg-gray-200 rounded animate-pulse"></div>
+            </div>
+
+            {/* Stats Skeleton */}
+            <div className="grid grid-cols-3 gap-4 mt-8">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="bg-downy-50 p-4 rounded-lg space-y-2">
+                  <div className="h-6 w-6 mx-auto bg-downy-200 rounded-full animate-pulse"></div>
+                  <div className="h-4 w-16 mx-auto bg-gray-300 rounded animate-pulse"></div>
+                  <div className="h-4 w-full bg-gray-200 rounded animate-pulse"></div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Payment History Skeleton */}
+        <div className="px-2 mt-4">
+          <div className="bg-white p-4 rounded-2xl shadow-md border border-gray-100">
+            {/* Tabs Skeleton */}
+            <div className="flex border-b border-gray-200 pb-2 mb-4">
+              <div className="flex-1 h-10 bg-gray-100 rounded-md animate-pulse"></div>
+              <div className="flex-1 h-10 bg-gray-100 rounded-md animate-pulse ml-2"></div>
+            </div>
+
+            {/* Content Skeleton */}
+            <div className="space-y-3">
+              {[...Array(5)].map((_, i) => (
+                <div
+                  key={i}
+                  className="h-12 bg-gray-50 rounded-md animate-pulse"
+                ></div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   const renderProgressIndicator = () => {
