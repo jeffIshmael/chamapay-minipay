@@ -20,6 +20,8 @@ import { parseEther } from "viem";
 import { showToast } from "./Toast";
 import { useIsFarcaster } from "../context/isFarcasterContext";
 import { registrationTx } from "@/lib/divviRegistration";
+import { waitForTransactionReceipt } from "@wagmi/core";
+import { config } from "@/Providers/BlockchainProviders";
 
 const CUSDPay = ({
   chamaId,
@@ -83,13 +85,15 @@ const CUSDPay = ({
 
     try {
       setIsLoading(true);
-      const txHash = await writeContractAsync({
+      const approveHash = await writeContractAsync({
         address: cUSDContractAddress,
         abi: erc20Abi,
         functionName: "approve",
         args: [contractAddress, amountInWei],
       });
-      await txHash;
+      const txHash = await waitForTransactionReceipt(config, {
+        hash: approveHash,
+      });
       // const txHash= true;
       if (txHash) {
         const depositArgs = [BigInt(chamaBlockchainId), amountInWei];
@@ -119,10 +123,7 @@ const CUSDPay = ({
       }
     } catch (error: any) {
       console.error("Payment error:", error);
-      showToast(
-       "A problem occurred. Please try again.",
-        "error"
-      );
+      showToast("A problem occurred. Please try again.", "error");
     } finally {
       setIsLoading(false);
       setIsCalculating(false);
