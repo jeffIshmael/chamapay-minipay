@@ -57,7 +57,13 @@ export default function SendModal({
     try {
       setIsSending(true);
       const parsedAmount = parseEther(amount);
-      const sent = await registrationTokenTx(recipient, parsedAmount,"transfer");
+      // const sent = await registrationTokenTx(recipient, parsedAmount,"transfer");
+      const sent = await writeContractAsync({
+        address: cUSDContractAddress,
+        abi: erc20Abi,
+        functionName: "transfer",
+        args: [recipient, parsedAmount],
+      });
       if (!sent) {
         showToast("Unable to send payment. Please try again.", "error");
         return;

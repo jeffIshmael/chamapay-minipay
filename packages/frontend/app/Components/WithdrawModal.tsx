@@ -58,11 +58,17 @@ export default function WithdrawModal({
     try {
       setIsWithdrawing(true);
       const parsedAmount = parseEther(amount);
-      const sent = await registrationTokenTx(
-        receiver,
-        parsedAmount,
-        "transfer"
-      );
+      // const sent = await registrationTokenTx(
+      //   receiver,
+      //   parsedAmount,
+      //   "transfer"
+      // );
+      const sent = await writeContractAsync({
+        address: cUSDContractAddress,
+        abi: erc20Abi,
+        functionName: "transfer",
+        args: [receiver, parsedAmount],
+      });
       if (!sent) {
         showToast("Unable to withdraw. Please try again.", "error");
         return;
@@ -86,7 +92,7 @@ export default function WithdrawModal({
   };
 
   return (
-    <Dialog open={isOpen} onClose={onClose} className="relative z-50">
+    <Dialog open={isOpen} onClose={onClose} className="relative">
       <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
       <div className="fixed inset-0 flex items-center justify-center p-4">
         <Dialog.Panel className="w-full max-w-sm rounded-2xl bg-white p-6">
