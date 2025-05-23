@@ -89,7 +89,7 @@ const CreateFamily = () => {
           false,
         ];
 
-        const hash = await registrationTx("registerChama", chamaArgs, false, BigInt(0));
+        const hash = await registrationTx("registerChama", chamaArgs);
 
         if (hash) {
           await createChama(

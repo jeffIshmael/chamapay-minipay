@@ -147,6 +147,7 @@ const CreatePublic = () => {
           abi: contractAbi,
           functionName: "registerChama",
           args: chamaArgs,
+          value: amountInWei
         });
         if (hash) {
           const formData = new FormData();
