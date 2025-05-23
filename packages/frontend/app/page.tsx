@@ -1,7 +1,6 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
-import { allFunctions } from "../lib/functions";
 import { useEffect, useState } from "react";
 import { sdk } from "@farcaster/frame-sdk";
 import Head from "next/head";
@@ -11,7 +10,6 @@ export default function Home() {
 
   useEffect(() => {
     const initializeApp = async () => {
-      await allFunctions();
       setIsInterfaceReady(true);
     };
     initializeApp();

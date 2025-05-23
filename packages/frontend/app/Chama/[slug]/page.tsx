@@ -6,7 +6,6 @@ import ChamaNavbar from "@/app/Components/ChamaNav";
 import Members from "@/app/Components/Members";
 import Chat from "@/app/Components/Chat";
 import Schedule from "@/app/Components/Schedule";
-import Wallet from "@/app/Components/Wallet";
 import {
   getChama,
   requestToJoinChama,
@@ -154,7 +153,7 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
     } catch (error: any) {
       console.log(error);
       showToast("An error occurred while sending the join request.", "error");
-    }finally{
+    } finally {
       setSendingRequest(false);
     }
   };
@@ -398,7 +397,8 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
               {formatEther(chama.amount)} cUSD/{cycle}
             </h2>
             <h3 className="text-lg text-gray-500 text-center mb-2">
-              {chama.members ? chama.members.length : "Loading..."} Member
+              {chama.members ? chama.members.length : "Loading..."}/{" "}
+              {chama.maxNo} Member
               <span>
                 {chama.members && chama.members.length > 1 ? "s" : ""}
               </span>
@@ -425,7 +425,13 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
                       : "hover:bg-downy-700"
                   }`}
                 >
-                  {hasRequest ? "Request sent" :sendingRequest? "Requesting...": isFull ? "🔒 full" : "Join"}
+                  {hasRequest
+                    ? "Request sent"
+                    : sendingRequest
+                    ? "Requesting..."
+                    : isFull
+                    ? "🔒 full"
+                    : "Join"}
                 </button>
               ) : (
                 <button

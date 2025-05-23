@@ -18,7 +18,7 @@ import { getAgentWalletBalance, performPayout } from "./PayOut";
 import { getFundsDisbursedEventLogs } from "./readFunctions";
 import { formatEther } from "viem";
 import { sendEmail } from "../app/actions/emailService";
-import { utcToLocalTime } from "@/utils/duration";
+import { utcToEAT, utcToLocalTime } from "@/utils/duration";
 
 const prisma = new PrismaClient();
 
@@ -103,15 +103,14 @@ export async function checkChamaStarted() {
           `🚀 ${chama.name}, ${chama.type} chama has started!\n\n` +
             `🥇 First payout: ${
               payoutOrder[0]?.user?.name || "Member"
-            } on ${utcToLocalTime(chama.payDate)}`
+            } on ${utcToEAT(chama.payDate)} (EAT / GMT+3)`
         );
-        await sendEmail("heading to notify","trully");
         await sendFarcasterNotificationToAllMembers(
           chama.id,
           `🚀 ${chama.name}, ${chama.type} chama has started!`,
           `🥇 First payout: ${
             payoutOrder[0]?.user?.name || "Member"
-          } on ${utcToLocalTime(chama.payDate)}`
+          } on ${utcToEAT(chama.payDate)} (EAT / GMT+3)`
         );
       }
     });
@@ -326,7 +325,7 @@ export async function notifyDeadline() {
           `⏰ FINAL REMINDER\n\n` +
             `${chama.name} payment due in 24 hours!\n` +
             `Amount: ${formatEther(chama.amount)} cUSD\n` +
-            `Pay by: ${utcToLocalTime(chama.payDate)}`
+            `Pay by: ${utcToEAT(chama.payDate)} (EAT / GMT+3)`
         );
         await sendFarcasterNotificationToAllMembers(
           chama.id,
@@ -335,7 +334,7 @@ export async function notifyDeadline() {
             chama.name
           } chama payment is due in 24 hours!Please pay ${formatEther(
             chama.amount
-          )} cUSD by ${utcToLocalTime(chama.payDate)} `
+          )} cUSD by ${utcToEAT(chama.payDate)} (EAT / GMT+3)`
         );
       })
     );

@@ -41,6 +41,17 @@ export const utcToLocalTime = (utcDate: Date) => {
   }).format(date);
 };
 
+//this function changes time from UTC to EAT
+export const utcToEAT = (utcDate: Date) => {
+  const date = new Date(utcDate);
+
+  return new Intl.DateTimeFormat("en-GB", {
+    dateStyle: "medium",
+    timeStyle: "short",
+    timeZone: "Africa/Nairobi",
+  }).format(date);
+};
+
 
 // this function will is to loop between the pictures
 export const getPicture = (id: number): string => {

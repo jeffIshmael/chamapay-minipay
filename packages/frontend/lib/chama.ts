@@ -1,5 +1,6 @@
 // this file contains prisma functions for the chama
 "use server";
+
 import { PrismaClient } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { parseEther } from "viem";
@@ -545,7 +546,6 @@ export async function sendFarcasterNotificationToAllMembers(
       fids.push(member.user.fid);
     }
   }
-  await sendEmail("the fid", JSON.stringify(fids));
 
   if (fids.length > 0) {
     await sendFarcasterNotification(fids, title, message);
@@ -589,7 +589,7 @@ export async function requestToJoinChama(address: string, chamaId: number) {
       const fid = [user.fid];
       await sendFarcasterNotification(
         fid,
-        "♻Join request sent",
+        "✅ Join request sent",
         `Request to join ${chama.name} successfully sent to the admin.`
       );
     }
@@ -604,7 +604,7 @@ export async function requestToJoinChama(address: string, chamaId: number) {
       const fid = [chama.admin.fid];
       await sendFarcasterNotification(
         fid,
-        `📬${chama.name} join request.`,
+        `📬 ${chama.name} join request.`,
         `${user?.name} has requested to join ${chama.name}. Head over and approve.`
       );
     }

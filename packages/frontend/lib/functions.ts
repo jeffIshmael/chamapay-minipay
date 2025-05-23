@@ -14,8 +14,7 @@ export const allFunctions = async () => {
         checkChamaPaydate(),
         notifyDeadline(),
         getChamasWithPaydateToday(),
-        checkBalance(),
-        sendFarcasterNotification([1077932], "Trial notification","Trying to send to one")
+        checkBalance()
       ]);
       return results;
     } catch (error) {
