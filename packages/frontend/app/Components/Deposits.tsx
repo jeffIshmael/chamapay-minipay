@@ -14,7 +14,7 @@ interface Deposit {
 }
 
 const Deposits = ({ chamaId }: { chamaId: number }) => {
-  const [deposits, setDeposits] = useState<Deposit[]>([]);
+  const [deposits, setDeposits] = useState<Deposit[] | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -41,7 +41,7 @@ const Deposits = ({ chamaId }: { chamaId: number }) => {
         Deposits History
       </h2>
 
-      {deposits.length === 0 && (
+      {deposits?.length === 0 && (
         <div className="flex items-center">
           <h2>No deposits made.</h2>
         </div>
@@ -52,7 +52,7 @@ const Deposits = ({ chamaId }: { chamaId: number }) => {
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900"></div>
         </div>
       ) : (
-        deposits.map((deposit: Deposit, index: number) => (
+        deposits?.map((deposit: Deposit, index: number) => (
           <div
             key={index}
             className="p-4 mb-4 border border-gray-300 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
