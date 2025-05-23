@@ -186,7 +186,6 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
           abi: contractAbi,
           functionName: "addPublicMember",
           args: addPublicArgs,
-          value: chama?.amount ?? BigInt(0),
         });
         if (hash) {
           await addMemberToPublicChama(
