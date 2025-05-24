@@ -57,13 +57,49 @@ export const getAgentWalletBalance = async () => {
 };
 
 // function to perform payout smart contract function
-export const performPayout = async (chamaId: number) : Promise<string | Error> => {
+export const performPayout = async (
+  chamaId: number
+): Promise<string | Error> => {
   const chamaIds = [BigInt(chamaId)];
   try {
     const functionData = encodeFunctionData({
       abi: contractAbi,
       functionName: "checkPayDate",
-      args: [chamaIds],
+      args: chamaIds,
+    });
+    const fullData = functionData + dataSuffix.replace(/^0x/, "");
+
+    const txHash = await walletClient.sendTransaction({
+      account: agentWalletAccount.address,
+      to: contractAddress,
+      data: fullData as `0x${string}`, // already includes '0x'
+      value: 0n, // assuming registerChama is nonpayable
+    });
+
+    const chainId = await walletClient.getChainId();
+
+    await submitReferral({
+      txHash,
+      chainId,
+    });
+
+    return txHash;
+  } catch (error) {
+    console.log(error);
+    return error as Error;
+  }
+};
+
+// function to set the payout order
+export const setBcPayoutOrder = async (
+  chamaId: BigInt,
+  addressArray: `0x${string}`[]
+): Promise<string | Error> => {
+  try {
+    const functionData = encodeFunctionData({
+      abi: contractAbi,
+      functionName: "setPayoutOrder",
+      args: [chamaId, addressArray],
     });
     const fullData = functionData + dataSuffix.replace(/^0x/, "");
 

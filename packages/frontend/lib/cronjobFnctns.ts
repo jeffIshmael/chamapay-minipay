@@ -14,7 +14,7 @@ import {
   setPaid,
   setAllUnpaid,
 } from "./chama";
-import { getAgentWalletBalance, performPayout } from "./PayOut";
+import { getAgentWalletBalance, performPayout, setBcPayoutOrder } from "./PayOut";
 import { getFundsDisbursedEventLogs } from "./readFunctions";
 import { formatEther } from "viem";
 import { sendEmail } from "../app/actions/emailService";
@@ -87,6 +87,18 @@ export async function checkChamaStarted() {
         for (let i = payoutOrder.length - 1; i > 0; i--) {
           const j = Math.floor(Math.random() * (i + 1));
           [payoutOrder[i], payoutOrder[j]] = [payoutOrder[j], payoutOrder[i]];
+        }
+
+        // set the payout order to b.c
+        // function that will extrcact address from payoutOrder
+        const addressArray = payoutOrder.map((m)=> m.user.address as `0x${string}`);
+        const setOrderTxHash = await setBcPayoutOrder(BigInt(Number(chama.blockchainId)), addressArray);
+
+        if (!setOrderTxHash || setOrderTxHash instanceof Error) {
+          await sendEmail(
+            "An error occured in processPayout",
+            JSON.stringify(setOrderTxHash)
+          );
         }
 
         await tx.chama.update({
