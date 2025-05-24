@@ -75,6 +75,8 @@ contract ChamaPay is Ownable,ReentrancyGuard {
     event RefundUpdated( uint indexed _chamaId);
     event aiAgentSet(address indexed _aiAgent);
     event PaydateChecked(uint indexed _chamaId, bool output);
+    event DebugAmount(uint _available, uint _totalPay);
+    event DebugPay(address recipient, uint totalPay);
 
    
    // Register a new chama
@@ -208,6 +210,8 @@ contract ChamaPay is Ownable,ReentrancyGuard {
         address recipient = chama.payoutOrder[chama.cycle % chama.payoutOrder.length];
         uint totalPay = chama.amount * chama.payoutOrder.length;
 
+        emit DebugPay(recipient, totalPay);
+
         // Calculate total available funds: sum of all balances + sum of all lockedAmounts (for public chamas)
         uint totalAvailable = 0;
         for (uint i = 0; i < chama.payoutOrder.length; i++) {
@@ -218,7 +222,7 @@ contract ChamaPay is Ownable,ReentrancyGuard {
             }
         }
         require(totalAvailable >= totalPay, "Not enough funds to disburse");
-
+        emit DebugAmount(totalAvailable, totalPay);
         // Ensure each member has contributed their amount, using lockedAmounts if necessary (only for public chamas)
         for (uint i = 0; i < chama.payoutOrder.length; i++) {
             address member = chama.payoutOrder[i];

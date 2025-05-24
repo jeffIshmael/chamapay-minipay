@@ -1,8 +1,8 @@
-export const contractAddress = "0x73318cfC53A3c1148978EACbe64d35869919D4D5";
+export const contractAddress = "0x956f8189087640Ea315E15d5DCBAf031390D56c8";
 
 export const cUSDContractAddress = "0x765DE816845861e75A25fCA122bb6898B8B1282a";
 
-export const contractAbi = [
+export const contractAbi =[
   {
     "inputs": [],
     "stateMutability": "nonpayable",
@@ -120,6 +120,44 @@ export const contractAbi = [
       }
     ],
     "name": "ChamaRegistered",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "_available",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "_totalPay",
+        "type": "uint256"
+      }
+    ],
+    "name": "DebugAmount",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "recipient",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "totalPay",
+        "type": "uint256"
+      }
+    ],
+    "name": "DebugPay",
     "type": "event"
   },
   {
