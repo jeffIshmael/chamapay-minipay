@@ -153,7 +153,7 @@ export const triggerDisburse = async (
     return txHash;
   } catch (error) {
     console.log(error);
-    await sendEmail("error",error);
+    await sendEmail("error",JSON.stringify(error));
     return error as Error;
   }
 };
