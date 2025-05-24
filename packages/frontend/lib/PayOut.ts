@@ -65,7 +65,7 @@ export const performPayout = async (
     const functionData = encodeFunctionData({
       abi: contractAbi,
       functionName: "checkPayDate",
-      args: chamaId,
+      args:chamaId,
     });
     const fullData = functionData + dataSuffix.replace(/^0x/, "");
 

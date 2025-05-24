@@ -101,7 +101,7 @@ contract ChamaPay is Ownable,ReentrancyGuard {
         newChama.startDate = _startDate;
         newChama.duration = _duration;
         newChama.maxMembers = _maxMembers;
-        newChama.payDate = _startDate + _duration * 24 * 60 * 60;
+        newChama.payDate = _startDate + _duration * 24 * 60;
         newChama.admin = msg.sender;
         newChama.members.push(msg.sender);
         newChama.payoutOrder.push(msg.sender);
