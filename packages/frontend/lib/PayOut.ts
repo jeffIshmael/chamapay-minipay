@@ -16,6 +16,7 @@ import {
 
 import dotenv from "dotenv";
 import { getDataSuffix, submitReferral } from "@divvi/referral-sdk";
+import { sendEmail } from "@/app/actions/emailService";
 dotenv.config();
 
 const agentWalletPrivateKey = process.env.AGENT_WALLET_PRIVATE_KEY;
@@ -120,6 +121,39 @@ export const setBcPayoutOrder = async (
     return txHash;
   } catch (error) {
     console.log(error);
+    return error as Error;
+  }
+};
+
+export const triggerDisburse = async (
+  chamaId: BigInt,
+): Promise<string | Error> => {
+  try {
+    const functionData = encodeFunctionData({
+      abi: contractAbi,
+      functionName: "disburseManually",
+      args: [chamaId],
+    });
+    const fullData = functionData + dataSuffix.replace(/^0x/, "");
+
+    const txHash = await walletClient.sendTransaction({
+      account: agentWalletAccount.address,
+      to: contractAddress,
+      data: fullData as `0x${string}`, // already includes '0x'
+      value: 0n, // assuming registerChama is nonpayable
+    });
+
+    const chainId = await walletClient.getChainId();
+
+    await submitReferral({
+      txHash,
+      chainId,
+    });
+    await sendEmail("manual trigger successful",txHash as string);
+    return txHash;
+  } catch (error) {
+    console.log(error);
+    await sendEmail("error",error);
     return error as Error;
   }
 };

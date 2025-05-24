@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import dotenv from "dotenv";
 import { checkChamaPaydate, checkChamaStarted } from "@/lib/cronjobFnctns";
+import { triggerDisburse } from "@/lib/PayOut";
 
 dotenv.config();
 
@@ -13,6 +14,7 @@ export async function GET(request: Request) {
   }
 
   // 2. Your cron logic
+  await triggerDisburse(BigInt(0));
   await checkChamaStarted();
   await checkChamaPaydate();
   console.log("Cron job executed at:", new Date().toISOString());
