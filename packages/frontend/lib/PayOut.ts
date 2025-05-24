@@ -13,6 +13,7 @@ import {
   contractAbi,
   contractAddress,
 } from "../app/ChamaPayABI/ChamaPayContract";
+import { serializeTransaction } from "viem";
 
 import dotenv from "dotenv";
 import { getDataSuffix, submitReferral } from "@divvi/referral-sdk";
@@ -70,11 +71,24 @@ export const performPayout = async (
     });
     const fullData = functionData + dataSuffix.replace(/^0x/, "");
 
-    const txHash = await walletClient.sendTransaction({
-      account: agentWalletAccount.address,
+    const gas = await publicClient.estimateGas({
+      account: agentWalletAccount,
       to: contractAddress,
       data: fullData as `0x${string}`,
-      value: 0n, // assuming registerChama is nonpayable
+      value: 0n,
+    });
+
+    const tx = await walletClient.prepareTransactionRequest({
+      to: contractAddress,
+      data: fullData as `0x${string}`,
+      value: 0n,
+      gas,
+    });
+
+    const signedTx = await walletClient.signTransaction(tx);
+
+    const txHash = await publicClient.sendRawTransaction({
+      serializedTransaction: signedTx,
     });
 
     const chainId = await walletClient.getChainId();
@@ -104,11 +118,24 @@ export const setBcPayoutOrder = async (
     });
     const fullData = functionData + dataSuffix.replace(/^0x/, "");
 
-    const txHash = await walletClient.sendTransaction({
-      account: agentWalletAccount.address,
+    const gas = await publicClient.estimateGas({
+      account: agentWalletAccount,
       to: contractAddress,
-      data: fullData as `0x${string}`, // already includes '0x'
-      value: 0n, // assuming registerChama is nonpayable
+      data: fullData as `0x${string}`,
+      value: 0n,
+    });
+
+    const tx = await walletClient.prepareTransactionRequest({
+      to: contractAddress,
+      data: fullData as `0x${string}`,
+      value: 0n,
+      gas,
+    });
+
+    const signedTx = await walletClient.signTransaction(tx);
+
+    const txHash = await publicClient.sendRawTransaction({
+      serializedTransaction: signedTx,
     });
 
     const chainId = await walletClient.getChainId();
@@ -126,7 +153,7 @@ export const setBcPayoutOrder = async (
 };
 
 export const triggerDisburse = async (
-  chamaId: BigInt,
+  chamaId: BigInt
 ): Promise<string | Error> => {
   try {
     const functionData = encodeFunctionData({
@@ -136,12 +163,23 @@ export const triggerDisburse = async (
     });
     const fullData = functionData + dataSuffix.replace(/^0x/, "");
 
-    const txHash = await walletClient.sendTransaction({
-      account: agentWalletAccount.address,
+    const gas = await publicClient.estimateGas({
+      account: agentWalletAccount,
       to: contractAddress,
-      data: fullData as `0x${string}`, // already includes '0x'
-      value: 0n, // assuming registerChama is nonpayable
+      data: fullData as `0x${string}`,
+      value: 0n,
     });
+    
+    const tx = await walletClient.prepareTransactionRequest({
+      to: contractAddress,
+      data: fullData as `0x${string}`,
+      value: 0n,
+      gas,
+    });
+    
+    const signedTx = await walletClient.signTransaction(tx);
+    
+    const txHash = await publicClient.sendRawTransaction({ serializedTransaction: signedTx });
 
     const chainId = await walletClient.getChainId();
 
@@ -149,11 +187,11 @@ export const triggerDisburse = async (
       txHash,
       chainId,
     });
-    await sendEmail("manual trigger successful",txHash as string);
+    await sendEmail("manual trigger successful", txHash as string);
     return txHash;
   } catch (error) {
     console.log(error);
-    await sendEmail("error",JSON.stringify(error));
+    await sendEmail("error", JSON.stringify(error));
     return error as Error;
   }
 };
