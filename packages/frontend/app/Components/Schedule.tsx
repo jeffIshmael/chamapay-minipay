@@ -173,7 +173,7 @@ const Schedule = ({
     if (!chama.started || !address) return;
 
     const updateUserPayoutInfo = async () => {
-      const userIndex = chama.members.findIndex(
+      const userIndex = payoutOrderArray.findIndex(
         (m) => m.user.address === address
       );
       if (userIndex === -1) return;
@@ -200,7 +200,7 @@ const Schedule = ({
     updateUserPayoutInfo();
     const interval = setInterval(updateUserPayoutInfo, 1000);
     return () => clearInterval(interval);
-  }, [chama, address, currentTime]);
+  }, [chama, address, currentTime, payoutOrderArray]);
 
   // Calculate member position around the circle
   const calculateMemberPosition = (index: number) => {

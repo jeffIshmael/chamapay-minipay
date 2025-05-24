@@ -49,13 +49,15 @@ interface Chama {
 const ChamaSchedule = ({
   chama,
   payoutOrder,
+  address,
 }: {
   chama: Chama;
   payoutOrder: string | null;
+  address: string;
 }) => {
   const getMemberPayoutDate = (index: number): Date => {
     const payoutDate = new Date(chama.startDate);
-    payoutDate.setDate(payoutDate.getDate() + chama.cycleTime * index);
+    payoutDate.setDate(payoutDate.getDate() + chama.cycleTime * (index + 1));
     return payoutDate;
   };
 
@@ -149,15 +151,17 @@ const ChamaSchedule = ({
                   <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div>
                       <h4 className={`${differentColors}`}>#{index + 1}</h4>
+                      {isCurrent && (
+                        <span className="px-2 py-1 text-xs font-bold bg-indigo-100 text-indigo-700 rounded-full">
+                          TODAY
+                        </span>
+                      )}
                       <h3 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
-                        {chama.started
-                          ? member.user.name || `Member ${index + 1}`
-                          : "Pending..."}
-                        {isCurrent && (
-                          <span className="px-2 py-1 text-xs font-bold bg-indigo-100 text-indigo-700 rounded-full">
-                            TODAY
-                          </span>
-                        )}
+                        {chama.started && address === member.user.address
+                          ? "You"
+                          : !chama.started
+                          ? "Pending..."
+                          : member.user.name || `Member ${index + 1}`}
                       </h3>
                       {chama.started && (
                         <p className="text-gray-500 text-sm mt-1">
@@ -176,7 +180,10 @@ const ChamaSchedule = ({
                       </p>
                       <p className="text-sm text-gray-500 flex items-center gap-1 mt-1">
                         <FiClock className={`text-lg ${differentColors}`} />
-                        {dayjs(member.payDate).utc().local().format("MMM D, YYYY")}
+                        {dayjs(member.payDate)
+                          .utc()
+                          .local()
+                          .format("MMM D, YYYY")}
                       </p>
                     </div>
                   </div>
