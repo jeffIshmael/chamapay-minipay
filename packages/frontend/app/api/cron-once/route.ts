@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import dotenv from "dotenv";
 import { initializeCronJobs } from "@/lib/cronJobs";
 import { allFunctions } from "@/lib/functions";
-import { getChamasWithPaydateToday, notifyDeadline } from "@/lib/cronjobFnctns";
+import {  notifyDeadline, runDailyPayouts } from "@/lib/cronjobFnctns";
 
 dotenv.config();
 
@@ -15,8 +15,9 @@ export async function GET(request: Request) {
   }
 
   // 2. Your cron logic
-  await getChamasWithPaydateToday()
   await notifyDeadline();
+  await runDailyPayouts()
+
   console.log("Cron job executed at:", new Date().toISOString());
 
   return NextResponse.json({ success: true });

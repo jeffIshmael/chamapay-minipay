@@ -1,9 +1,7 @@
 const cron = require("node-cron");
 import {
-  checkChamaPaydate,
   checkChamaStarted,
   notifyDeadline,
-  getChamasWithPaydateToday,
   checkBalance,
 } from "./cronjobFnctns";
 
@@ -20,8 +18,6 @@ export const initializeCronJobs = async () => {
     // 1. Initial immediate executions
     await Promise.allSettled([
       checkChamaStarted(),
-      getChamasWithPaydateToday(),
-      checkChamaPaydate(),
       notifyDeadline(),
       checkBalance(),
     ]);

@@ -1,8 +1,6 @@
 import {
-    checkChamaPaydate,
     checkChamaStarted,
     notifyDeadline,
-    getChamasWithPaydateToday,
     checkBalance,
   } from "./cronjobFnctns";
 import { sendFarcasterNotification } from "./farcasterNotification";
@@ -11,9 +9,7 @@ export const allFunctions = async () => {
     try {
       const results = await Promise.all([
         checkChamaStarted(),
-        checkChamaPaydate(),
         notifyDeadline(),
-        getChamasWithPaydateToday(),
         checkBalance()
       ]);
       return results;
