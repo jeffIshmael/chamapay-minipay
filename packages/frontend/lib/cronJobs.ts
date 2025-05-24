@@ -29,17 +29,6 @@ export const initializeCronJobs = async () => {
       await checkChamaStarted().catch(console.error);
     });
 
-    cron.schedule("0 0 * * *", async () => {
-      // Midnight UTC
-      console.log("[CRON] Running getChamasWithPaydateToday");
-      await getChamasWithPaydateToday().catch(console.error);
-    });
-
-    cron.schedule("*/30 * * * *", async () => {
-      // Every 30 mins
-      console.log("[CRON] Running checkChamaPaydate");
-      await checkChamaPaydate().catch(console.error);
-    });
 
     cron.schedule("0 9 * * *", async () => {
       // 9 AM UTC daily
