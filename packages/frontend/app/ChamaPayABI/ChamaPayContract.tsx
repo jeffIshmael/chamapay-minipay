@@ -1,8 +1,8 @@
-export const contractAddress = "0xF4ad70Fc47dB9dAbb2d58556Bb231c154C643580";
+export const contractAddress = "0x1a2DD767B3d4eb3BBE0D818ce87aA733D9513A57";
 
 export const cUSDContractAddress = "0x765DE816845861e75A25fCA122bb6898B8B1282a";
 
-export const contractAbi = [
+export const contractAbi =  [
   {
     "inputs": [],
     "stateMutability": "nonpayable",
@@ -466,9 +466,9 @@ export const contractAbi = [
   {
     "inputs": [
       {
-        "internalType": "uint256[]",
-        "name": "chamaIds",
-        "type": "uint256[]"
+        "internalType": "uint256",
+        "name": "_chamaId",
+        "type": "uint256"
       }
     ],
     "name": "checkPayDate",

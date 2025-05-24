@@ -101,7 +101,7 @@ contract ChamaPay is Ownable,ReentrancyGuard {
         newChama.startDate = _startDate;
         newChama.duration = _duration;
         newChama.maxMembers = _maxMembers;
-        newChama.payDate = _startDate + _duration;
+        newChama.payDate = _startDate + _duration * 24 * 60 * 60;
         newChama.admin = msg.sender;
         newChama.members.push(msg.sender);
         newChama.payoutOrder.push(msg.sender);
@@ -362,22 +362,21 @@ contract ChamaPay is Ownable,ReentrancyGuard {
     }
 
    // Check pay date and trigger payout or refund
-    function checkPayDate(uint[] memory chamaIds) public onlyAiAgent nonReentrant {
-        for (uint i = 0; i < chamaIds.length; i++) {
-            uint chamaId = chamaIds[i];
-            require(chamaId < totalChamas, "Chama does not exist");
+    function checkPayDate(uint _chamaId) public onlyAiAgent nonReentrant {
+      
+            require(_chamaId < totalChamas, "Chama does not exist");
 
-            Chama storage chama = chamas[chamaId];
+            Chama storage chama = chamas[_chamaId];
 
             // Check if the current time has passed the pay date
             if (block.timestamp >= chama.payDate) {
-                if (allMembersContributed(chamaId)) {
-                    disburse(chamaId); // Disburse funds if everyone has paid
+                if (allMembersContributed(_chamaId)) {
+                    disburse(_chamaId); // Disburse funds if everyone has paid
                 } else {
-                    refund(chamaId); // Refund if not everyone has paid
+                    refund(_chamaId); // Refund if not everyone has paid
                 }
             }
-        }
+        
     }
 
    // Function to check the balance of a specific address in a specific chama
@@ -486,7 +485,7 @@ contract ChamaPay is Ownable,ReentrancyGuard {
     bool
     ) {
         Chama storage chama = chamas[_chamaId];
-        return (chama.chamaId,chama.amount,chama.startDate,chama.duration,chama.round,chama.cycle,chama.admin,chama.members,chama.isPublic);
+        return (chama.payDate,chama.amount,chama.startDate,chama.duration,chama.round,chama.cycle,chama.admin,chama.members,chama.isPublic);
     }
 
     //function to get a chama payout order
@@ -527,6 +526,8 @@ contract ChamaPay is Ownable,ReentrancyGuard {
 
    //function to set aiAgent
    function setAiAgent(address _aiAgent) public onlyOwner {
+    require (_aiAgent != address(0),"Invalid wallet address");
+    require(_aiAgent != aiAgent,"You are already the agent");
        aiAgent = _aiAgent;
        emit aiAgentSet(_aiAgent);
    }

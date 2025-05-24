@@ -58,14 +58,14 @@ export const getAgentWalletBalance = async () => {
 
 // function to perform payout smart contract function
 export const performPayout = async (
-  chamaId: number
+  chamaBlockchainId: number
 ): Promise<string | Error> => {
-  const chamaIds = [BigInt(chamaId)];
+  const chamaId = BigInt(chamaBlockchainId);
   try {
     const functionData = encodeFunctionData({
       abi: contractAbi,
       functionName: "checkPayDate",
-      args: chamaIds,
+      args: chamaId,
     });
     const fullData = functionData + dataSuffix.replace(/^0x/, "");
 
