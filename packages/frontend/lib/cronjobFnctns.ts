@@ -164,7 +164,6 @@ export async function checkChamaStarted() {
 }
 
 // a functtion to return chamas whose paydate is today i.e only the date not the time
-// this will run once a day
 export async function runDailyPayouts() {
   const now = new Date();
 
