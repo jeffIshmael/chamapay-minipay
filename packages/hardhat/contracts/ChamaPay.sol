@@ -74,6 +74,7 @@ contract ChamaPay is Ownable,ReentrancyGuard {
     event WithdrawalRecorded(uint indexed _chamaId, address indexed _receiver, uint  _amount);
     event RefundUpdated( uint indexed _chamaId);
     event aiAgentSet(address indexed _aiAgent);
+    event PaydateChecked(uint indexed _chamaId, bool output);
 
    
    // Register a new chama
@@ -190,14 +191,14 @@ contract ChamaPay is Ownable,ReentrancyGuard {
     // Check if all members in the payout have contributed
     function allMembersContributed(uint _chamaId) internal view returns (bool) {
         Chama storage chama = chamas[_chamaId];
-        
+
         for (uint i = 0; i < chama.payoutOrder.length; i++) {
             uint membersBalance = chama.balances[chama.payoutOrder[i]] + chama.lockedAmounts[chama.payoutOrder[i]];
             if (membersBalance < chama.amount) {
                 return false;
             }
         }
-        return true;
+        return true;   
     }
 
     // Disburse funds to a member
@@ -367,16 +368,17 @@ contract ChamaPay is Ownable,ReentrancyGuard {
             require(_chamaId < totalChamas, "Chama does not exist");
 
             Chama storage chama = chamas[_chamaId];
+            bool output = allMembersContributed(_chamaId);
 
             // Check if the current time has passed the pay date
             if (block.timestamp >= chama.payDate) {
-                if (allMembersContributed(_chamaId)) {
+                if (output) {
                     disburse(_chamaId); // Disburse funds if everyone has paid
                 } else {
                     refund(_chamaId); // Refund if not everyone has paid
                 }
             }
-        
+        emit PaydateChecked(_chamaId, output);
     }
 
    // Function to check the balance of a specific address in a specific chama

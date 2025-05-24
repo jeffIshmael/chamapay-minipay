@@ -1,8 +1,8 @@
-export const contractAddress = "0x36182F64A6dad4C43e5142a32c5539d3645c2B86";
+export const contractAddress = "0x73318cfC53A3c1148978EACbe64d35869919D4D5";
 
 export const cUSDContractAddress = "0x765DE816845861e75A25fCA122bb6898B8B1282a";
 
-export const contractAbi =[
+export const contractAbi = [
   {
     "inputs": [],
     "stateMutability": "nonpayable",
@@ -221,6 +221,25 @@ export const contractAbi =[
       }
     ],
     "name": "PayOutProcessed",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "_chamaId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "output",
+        "type": "bool"
+      }
+    ],
+    "name": "PaydateChecked",
     "type": "event"
   },
   {
