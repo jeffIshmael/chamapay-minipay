@@ -65,14 +65,14 @@ export const performPayout = async (
     const functionData = encodeFunctionData({
       abi: contractAbi,
       functionName: "checkPayDate",
-      args:chamaId,
+      args: [chamaId],
     });
     const fullData = functionData + dataSuffix.replace(/^0x/, "");
 
     const txHash = await walletClient.sendTransaction({
       account: agentWalletAccount.address,
       to: contractAddress,
-      data: fullData as `0x${string}`, 
+      data: fullData as `0x${string}`,
       value: 0n, // assuming registerChama is nonpayable
     });
 
