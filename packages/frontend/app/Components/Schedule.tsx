@@ -355,7 +355,7 @@ const Schedule = ({
     }
 
     // Only render liquid gauge if we have valid user data
-    const userIndex = chama.members.findIndex(
+    const userIndex = payoutOrderArray.findIndex(
       (m) => m.user.address === address
     );
     if (userIndex === -1) {

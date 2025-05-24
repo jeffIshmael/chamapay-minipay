@@ -78,6 +78,8 @@ const Page = () => {
   const { writeContractAsync } = useWriteContract();
   const { isConnected, address } = useAccount();
   const { isFarcaster, setIsFarcaster } = useIsFarcaster();
+  const [rejecting, setRejecting] = useState(false);
+  const [approving, setApproving] = useState(false);
 
   // Fetch user details
   useEffect(() => {
@@ -144,6 +146,7 @@ const Page = () => {
 
       if (action === "approve") {
         try {
+          setApproving(true);
           const txHash = await writeContractAsync({
             address: contractAddress,
             abi: contractAbi,
@@ -164,15 +167,19 @@ const Page = () => {
               `${userData.name} successfully added to ${chamaName}`,
               "success"
             );
+            setApproving(false);
           }
         } catch (error) {
           showToast(`Failed to add ${userData.name} to ${chamaName}`);
           console.log(error);
+          setApproving(false);
         }
       } else if (action === "reject") {
+        setRejecting(true);
         // setSenderDetails(userData);
         await handleJoinRequest(requestId, action, userId, chamaId, canJoin);
         showToast(`Request successfully rejected`, "error");
+        setRejecting(false);
       } else {
         showToast("No action taken.", "info");
       }
@@ -194,6 +201,8 @@ const Page = () => {
       console.log(error);
     } finally {
       setLoading(false);
+      setRejecting(false);
+      setApproving(false);
     }
   };
 
@@ -212,7 +221,7 @@ const Page = () => {
 
   return (
     <div className="max-w-md mx-auto">
-      <div className="bg-gradient-to-b from-downy-50 to-white min-h-screen p-4">
+      <div className="bg-gradient-to-b from-white to-downy-50 min-h-screen p-4">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold text-gray-800 flex items-center">
@@ -220,30 +229,10 @@ const Page = () => {
             Notifications
           </h1>
           <div className="flex items-center space-x-2">
-            {isFarcaster ? (
-              <button
-                onClick={() => addFrameToWarpcast()}
-                className="flex items-center gap-2 p-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition"
-              >
-                Notify via
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="30"
-                  height="30"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    fill="currentColor"
-                    d="M18.24.24H5.76A5.76 5.76 0 0 0 0 6v12a5.76 5.76 0 0 0 5.76 5.76h12.48A5.76 5.76 0 0 0 24 18V6A5.76 5.76 0 0 0 18.24.24m.816 17.166v.504a.49.49 0 0 1 .543.48v.568h-5.143v-.569A.49.49 0 0 1 15 17.91v-.504c0-.22.153-.402.358-.458l-.01-4.364c-.158-1.737-1.64-3.098-3.443-3.098s-3.285 1.361-3.443 3.098l-.01 4.358c.228.042.532.208.54.464v.504a.49.49 0 0 1 .543.48v.568H4.392v-.569a.49.49 0 0 1 .543-.479v-.504c0-.253.201-.454.454-.472V9.039h-.49l-.61-2.031H6.93V5.042h9.95v1.966h2.822l-.61 2.03h-.49v7.896c.252.017.453.22.453.472"
-                  />
-                </svg>
-              </button>
-            ) : (
-              notifications.length > 0 && (
-                <span className="bg-downy-100 text-downy-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
-                  {notifications.length} new
-                </span>
-              )
+            {!isFarcaster && notifications.length > 0 && (
+              <span className="bg-downy-100 text-downy-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                {notifications.length} new
+              </span>
             )}
           </div>
         </div>
@@ -344,13 +333,15 @@ const Page = () => {
                                     : false
                                 )
                               }
-                              disabled={loading}
+                              disabled={loading || approving || rejecting}
                               className={`flex items-center px-3 py-1.5 bg-downy-600 text-white rounded-lg hover:bg-downy-700 transition-colors ${
-                                loading ? "opacity-70" : ""
+                                loading || approving || rejecting
+                                  ? "opacity-70"
+                                  : ""
                               }`}
                             >
                               <FiCheck className="mr-1" size={14} />
-                              Approve
+                              {approving ? "Approving..." : "Approve"}
                             </button>
                             <button
                               onClick={() =>
@@ -370,13 +361,15 @@ const Page = () => {
                                     : false
                                 )
                               }
-                              disabled={loading}
+                              disabled={loading || approving || rejecting}
                               className={`flex items-center px-3 py-1.5 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors ${
-                                loading ? "opacity-70" : ""
+                                loading || approving || rejecting
+                                  ? "opacity-70"
+                                  : ""
                               }`}
                             >
                               <FiX className="mr-1" size={14} />
-                              Reject
+                              {rejecting ? "rejecting..." : "Reject"}
                             </button>
                           </div>
                         )}

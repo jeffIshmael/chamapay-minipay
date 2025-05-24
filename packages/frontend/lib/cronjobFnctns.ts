@@ -135,7 +135,7 @@ export async function getChamasWithPaydateToday() {
   endOfDay.setUTCDate(startOfDay.getUTCDate() + 1);
 
   try {
-    chamasToBePayedToday = await prisma.chama.findMany({
+    const chamas = await prisma.chama.findMany({
       where: {
         payDate: {
           gte: startOfDay,
@@ -150,6 +150,7 @@ export async function getChamasWithPaydateToday() {
         },
       },
     });
+    chamasToBePayedToday = chamas;
     await sendEmail("The chamas to be payed today are:", JSON.stringify(chamasToBePayedToday));
   } catch (error) {
     console.error("Error fetching chamas:", error);

@@ -105,8 +105,7 @@ const ChamaSchedule = ({
           {sortedMembers.map((member, index) => {
             const isPaid = member.isPaid;
             const isNext = index === nextMemberIndex;
-            const isCurrent =
-              isNext && dayjs().isSame(member.payoutDate, "day");
+            const isCurrent = dayjs().isSame(member.payoutDate, "day");
 
             const differentColors = isPaid
               ? "text-downy-500"
@@ -177,7 +176,7 @@ const ChamaSchedule = ({
                       </p>
                       <p className="text-sm text-gray-500 flex items-center gap-1 mt-1">
                         <FiClock className={`text-lg ${differentColors}`} />
-                        {dayjs(member.payoutDate).format("MMM D, YYYY")}
+                        {dayjs(member.payDate).utc().local().format("MMM D, YYYY")}
                       </p>
                     </div>
                   </div>

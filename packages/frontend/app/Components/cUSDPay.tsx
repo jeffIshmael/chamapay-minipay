@@ -85,18 +85,25 @@ const CUSDPay = ({
 
     try {
       setIsLoading(true);
+      let txHash: string | null = null;
       const approveHash = await writeContractAsync({
         address: cUSDContractAddress,
         abi: erc20Abi,
         functionName: "approve",
         args: [contractAddress, amountInWei],
       });
-      const txHash = await waitForTransactionReceipt(config, {
-        hash: approveHash,
-      });
+      if (isFarcaster) {
+        const transactionHash = await waitForTransactionReceipt(config, {
+          hash: approveHash,
+        });
+        txHash = transactionHash.transactionHash;
+      } else {
+        txHash = approveHash;
+      }
+
       if (txHash) {
         const depositArgs = [BigInt(chamaBlockchainId), amountInWei];
-        const hash = await registrationTx("depositCash",depositArgs);
+        const hash = await registrationTx("depositCash", depositArgs);
         if (!hash) {
           showToast("unable to write to bc. try again.", "error");
           return;

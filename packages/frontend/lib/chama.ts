@@ -673,6 +673,7 @@ export async function handleJoinRequest(
       chamaId
     );
     if (request.user.isFarcaster && request.user.fid) {
+      await sendEmail("approval test", "about to run sendFarcater notif")
       await sendFarcasterNotification(
         [request.user.fid],
         `✅ ${request.chama.name} chama request approved.`,

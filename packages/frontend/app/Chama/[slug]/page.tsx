@@ -195,13 +195,16 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
           );
           showToast(`successfully joined ${chama?.name}`, "success");
           setLoading(false);
+          setShowModal(false);
           router.refresh();
         } else {
           // toast.error("Something happened, please try again");
           setError("Something happened, please try again.");
+          setLoading(false);
         }
       } else {
         setError("Ensure you have enough funds in your wallet.");
+        setLoading(false);
       }
     } catch (error) {
       console.log("error", error);
@@ -209,6 +212,7 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
       setError("Oops! Something went wrong. Try again.");
     } finally {
       setProcessing(false);
+      setLoading(false);
     }
   };
 
@@ -342,7 +346,7 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
             {/* Back icon */}
             <button
               className="px-2 py-1 bg-downy-300 rounded-md mr-12 flex justify-start"
-              onClick={() => router.push("/MyChamas")}
+              onClick={() => router.back()}
             >
               <HiArrowLeft className="flex justify-self-start text-gray-700 cursor-pointer" />
             </button>
@@ -355,7 +359,7 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
                   }`}
                 ></span>
                 <span>{chama.started ? "Started" : "Not started"}</span>
-                {chama.started && (
+                {chama.started && !isFull && (
                   <>
                     <span className="mx-1.5 text-gray-300">|</span>
                     <span
@@ -366,8 +370,6 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
                     <span>
                       {chama.canJoin && !isFull
                         ? "Open membership"
-                        : isFull
-                        ? ""
                         : "Observer only"}
                     </span>
                   </>
@@ -398,11 +400,7 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
             </h2>
             <h3 className="text-lg text-gray-500 text-center mb-2">
               {chama.members ? chama.members.length : "Loading..."}/{" "}
-              {chama.maxNo} Member
-              <span>
-                {chama.members && chama.members.length > 1 ? "s" : ""}
-              </span>
-              {/* {chamaDetails[5]} */}
+              {chama.maxNo} Members
             </h3>
             <h3 className="text-lg text-gray-500 text-center mb-2">
               {chama.started == true
