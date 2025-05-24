@@ -261,6 +261,64 @@ contract ChamaPay is Ownable,ReentrancyGuard {
         emit FundsDisbursed(_chamaId, recipient, totalPay);
     }
 
+     // Disburse funds to a member
+    function disburseManually(uint _chamaId) public onlyAiAgent() nonReentrant {
+        Chama storage chama = chamas[_chamaId];        
+        require(chama.payoutOrder.length > 0, "Payout order is empty");
+        address recipient = chama.payoutOrder[chama.cycle % chama.payoutOrder.length];
+        uint totalPay = chama.amount * chama.payoutOrder.length;
+
+        emit DebugPay(recipient, totalPay);
+
+        // Calculate total available funds: sum of all balances + sum of all lockedAmounts (for public chamas)
+        uint totalAvailable = 0;
+        for (uint i = 0; i < chama.payoutOrder.length; i++) {
+            address member = chama.payoutOrder[i];
+            totalAvailable += chama.balances[member];
+            if(chama.isPublic){
+                totalAvailable += chama.lockedAmounts[member];
+            }
+        }
+        require(totalAvailable >= totalPay, "Not enough funds to disburse");
+        emit DebugAmount(totalAvailable, totalPay);
+        // Ensure each member has contributed their amount, using lockedAmounts if necessary (only for public chamas)
+        for (uint i = 0; i < chama.payoutOrder.length; i++) {
+            address member = chama.payoutOrder[i];
+            if (chama.balances[member] < chama.amount) {
+                require(chama.isPublic, "Member has not contributed and it's a private chama.");
+                uint deficit = chama.amount - chama.balances[member];
+                require(chama.lockedAmounts[member] >= deficit, "Member does not have enough locked funds.");
+
+                // Deduct from lockedAmounts and add to balances
+                chama.lockedAmounts[member] -= deficit;
+                chama.balances[member] += deficit;
+                chama.hasSent[member] = true;
+            }
+        }
+
+        // Now, all members have contributed their required amount
+        // Proceed to transfer totalPay to recipient
+        processPayout(recipient, totalPay);
+
+        // Record the withdrawal
+        recordWithdrawal(_chamaId, recipient, totalPay);
+
+        // Reset payment status for the next round and deduct balances
+        for (uint i = 0; i < chama.payoutOrder.length; i++) {
+            chama.hasSent[chama.payoutOrder[i]] = false;
+            chama.balances[chama.payoutOrder[i]] -= chama.amount;
+        }
+
+        // Check if we have completed a rotation
+        if (chama.cycle + 1 > chama.payoutOrder.length) {
+            chama.round += 1; // Increment the round after one rotation
+        }
+        chama.payDate += chama.duration;
+        chama.cycle++;
+
+        emit FundsDisbursed(_chamaId, recipient, totalPay);
+    }
+
     // Function to delete a member (admin or self)
     function deleteMember(uint _chamaId, address _member) public onlyMembers(_chamaId) {
         Chama storage chama = chamas[_chamaId];

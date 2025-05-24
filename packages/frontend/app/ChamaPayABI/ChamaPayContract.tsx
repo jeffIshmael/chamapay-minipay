@@ -1,8 +1,8 @@
-export const contractAddress = "0x956f8189087640Ea315E15d5DCBAf031390D56c8";
+export const contractAddress = "0x59212d9D6B3846b135791E5031eA88270fffAcC3";
 
 export const cUSDContractAddress = "0x765DE816845861e75A25fCA122bb6898B8B1282a";
 
-export const contractAbi =[
+export const contractAbi = [
   {
     "inputs": [],
     "stateMutability": "nonpayable",
@@ -578,6 +578,19 @@ export const contractAbi =[
       }
     ],
     "name": "depositCash",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_chamaId",
+        "type": "uint256"
+      }
+    ],
+    "name": "disburseManually",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
