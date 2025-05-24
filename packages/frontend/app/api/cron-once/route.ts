@@ -15,7 +15,8 @@ export async function GET(request: Request) {
   }
 
   // 2. Your cron logic
-  await Promise.all([getChamasWithPaydateToday(), notifyDeadline()]);
+  await getChamasWithPaydateToday()
+  await notifyDeadline();
   console.log("Cron job executed at:", new Date().toISOString());
 
   return NextResponse.json({ success: true });
