@@ -72,7 +72,7 @@ export const performPayout = async (
     const txHash = await walletClient.sendTransaction({
       account: agentWalletAccount.address,
       to: contractAddress,
-      data: fullData as `0x${string}`, // already includes '0x'
+      data: fullData as `0x${string}`, 
       value: 0n, // assuming registerChama is nonpayable
     });
 
