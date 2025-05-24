@@ -1,10 +1,14 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { getPublicNotMember } from "../../lib/chama";
+import { getPublicChamas, getPublicNotMember } from "../../lib/chama";
 import Link from "next/link";
 import Image from "next/image";
-import { duration as getDuration, getPicture, utcToLocalTime } from "@/utils/duration";
+import {
+  duration as getDuration,
+  getPicture,
+  utcToLocalTime,
+} from "@/utils/duration";
 import BottomNavbar from "../Components/BottomNavbar";
 import { formatEther } from "viem";
 import { IoMdCash, IoMdPeople, IoMdTime } from "react-icons/io";
@@ -66,13 +70,13 @@ const ChamaCard = ({ chama }: { chama: Chama }) => {
         </div>
 
         {/*Full banner overlay */}
-        {chama.members.length >= chama.maxNo && (
+        {/* {chama.members.length >= chama.maxNo && (
           <div className="absolute inset-0 bg-white/80 backdrop-blur-sm rounded-2xl flex items-center justify-center z-10">
             <span className="bg-purple-600 text-white px-3 py-1 rounded-full font-medium text-sm">
               Group Full
             </span>
           </div>
-        )}
+        )} */}
 
         {/* Profile and Name */}
         <div className="flex flex-col mt-2">
@@ -142,12 +146,17 @@ const ChamaCard = ({ chama }: { chama: Chama }) => {
 const Page = () => {
   const [chamas, setChamas] = useState<Chama[]>([]);
   const [loading, setLoading] = useState<boolean>(true); // New loading state
-  const { address } = useAccount();
+  const { address, isConnected } = useAccount();
 
   useEffect(() => {
     const fetchChamas = async () => {
       try {
         setLoading(true); // Start loading
+        if (!isConnected || !address) {
+          const AllPublic = await getPublicChamas();
+          setChamas(AllPublic);
+          return;
+        }
         const data = await getPublicNotMember(address as string);
         setChamas(data);
         console.log(data);
@@ -159,7 +168,7 @@ const Page = () => {
     };
 
     fetchChamas();
-  }, []);
+  }, [address]);
 
   const publicChamas = chamas.filter((chama) => chama.type === "Public");
 

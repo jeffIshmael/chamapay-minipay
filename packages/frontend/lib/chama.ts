@@ -397,6 +397,18 @@ export async function getPublicNotMember(userAddress: string) {
   return chamas;
 }
 
+//function to get public chamas that user is not member
+export async function getPublicChamas() {
+  
+  const chamas = await prisma.chama.findMany({
+    where: {
+      type: "Public",
+    },
+    include: { members: true },
+  });
+  return chamas;
+}
+
 //get user from id
 export async function getUserById(userId: number) {
   const user = await prisma.user.findUnique({

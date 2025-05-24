@@ -553,6 +553,7 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
         <ChamaSchedule
           chama={chama}
           payoutOrder={chama.payOutOrder ? chama.payOutOrder : null}
+          address={address as string}
         />
       )}
 
