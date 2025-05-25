@@ -19,7 +19,7 @@ import { makePayment } from "../../lib/chama";
 import { parseEther } from "viem";
 import { showToast } from "./Toast";
 import { useIsFarcaster } from "../context/isFarcasterContext";
-import { registrationTx } from "@/lib/divviRegistration";
+import { approveTx, registrationTx } from "@/lib/divviRegistration";
 import { waitForTransactionReceipt } from "@wagmi/core";
 import { config } from "@/Providers/BlockchainProviders";
 
@@ -86,19 +86,20 @@ const CUSDPay = ({
     try {
       setIsLoading(true);
       let txHash: string | null = null;
-      const approveHash = await writeContractAsync({
-        address: cUSDContractAddress,
-        abi: erc20Abi,
-        functionName: "approve",
-        args: [contractAddress, amountInWei],
-      });
       if (isFarcaster) {
+        const approveHash = await writeContractAsync({
+          address: cUSDContractAddress,
+          abi: erc20Abi,
+          functionName: "approve",
+          args: [contractAddress, amountInWei],
+        });
         const transactionHash = await waitForTransactionReceipt(config, {
           hash: approveHash,
         });
         txHash = transactionHash.transactionHash;
       } else {
-        txHash = approveHash;
+        const approveTxHash = await approveTx(contractAddress, amountInWei);
+        txHash = approveTxHash;
       }
 
       if (txHash) {

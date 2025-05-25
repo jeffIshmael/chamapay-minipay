@@ -98,3 +98,23 @@ export const registrationTokenTx = async (
     return null;
   }
 };
+
+// approve tx using viem
+export const approveTx = async (address, amountInWei) => {
+  try {
+    const walletClient = await getWalletClient(config);
+    const account = getAccount(config);
+
+    const txHash = await walletClient.writeContract({
+      address: cUSDContractAddress,
+      abi: erc20Abi,
+      functionName: "approve",
+      args: [address, amountInWei],
+      account,
+    });
+    return txHash;
+  } catch (error) {
+    console.log("The error", error);
+    return null;
+  }
+};
