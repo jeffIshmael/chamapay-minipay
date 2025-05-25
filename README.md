@@ -111,8 +111,8 @@ Here’s a preview of the ChamaPay platform:
 4. **Rotary Disbursement:**  
    Funds are distributed to each member in turns.
 
-5. **Withdrawal:**  
-   Members can claim their funds when it’s their turn, and the smart contract ensures they receive the correct amount.
+5. **Payout:**  
+   Members receive their payout automatically once its time.
 
 ---
 
@@ -128,11 +128,15 @@ Here’s a preview of the ChamaPay platform:
 
 ## Implemented Features
 
-- ✅ Smart contract deployment (Celo Alfajores) [View smart contract](https://celoscan.io/address/0x284240b2B7A9Fa5dCA3a5a2fDcf5b4257B8583db)
+
 - ✅ Chama creation (public/private)
 - ✅ Join public chamas
 - ✅ Deposit funds (cUSD via M-Pesa or wallet)
 - ✅ Automated payouts
+- ✅ chamapay smart contract deployment (Celo) [View smart contract](https://celoscan.io/address/0xdE7beFec6b7507761A7cBE85Ada85609575605CD)
+- ✅ Farcaster Integration: Successfully implemented Farcaster transforming it into a seamless mini-app experience.
+
+
 
 ## Upcoming Features
 
@@ -143,10 +147,6 @@ Here’s a preview of the ChamaPay platform:
 🛠 **M-pesa integration**
 
 - Enable users to pay for chamas via m-pesa.
-
-🛠 **Deploy to mainnet**
-
-- Deploy the smart contract to celo mainnet.
 
 ---
 

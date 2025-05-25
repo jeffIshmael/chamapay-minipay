@@ -1,4 +1,4 @@
-export const contractAddress = "0x59212d9D6B3846b135791E5031eA88270fffAcC3";
+export const contractAddress = "0xdE7beFec6b7507761A7cBE85Ada85609575605CD";
 
 export const cUSDContractAddress = "0x765DE816845861e75A25fCA122bb6898B8B1282a";
 
@@ -585,19 +585,6 @@ export const contractAbi = [
   {
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "_chamaId",
-        "type": "uint256"
-      }
-    ],
-    "name": "disburseManually",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "address",
         "name": "_address",
         "type": "address"
@@ -710,6 +697,25 @@ export const contractAbi = [
         "internalType": "address[]",
         "name": "",
         "type": "address[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_chamaId",
+        "type": "uint256"
+      }
+    ],
+    "name": "getChamaPayoutOrderLength",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",

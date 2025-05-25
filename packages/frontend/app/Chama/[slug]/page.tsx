@@ -196,7 +196,7 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
           showToast(`successfully joined ${chama?.name}`, "success");
           setLoading(false);
           setShowModal(false);
-          router.refresh();
+          router.push("/MyChamas");
         } else {
           // toast.error("Something happened, please try again");
           setError("Something happened, please try again.");
