@@ -22,6 +22,7 @@ import { useIsFarcaster } from "../context/isFarcasterContext";
 import { approveTx, registrationTx } from "@/lib/divviRegistration";
 import { waitForTransactionReceipt } from "@wagmi/core";
 import { config } from "@/Providers/BlockchainProviders";
+import { approveViemTx } from "./ViemApprove";
 
 const CUSDPay = ({
   chamaId,
@@ -98,7 +99,11 @@ const CUSDPay = ({
         });
         txHash = transactionHash.transactionHash;
       } else {
-        const approveTxHash = await approveTx(contractAddress, amountInWei);
+        const approveTxHash = await approveViemTx(contractAddress, amountInWei);
+        if (!approveTxHash) {
+          txHash = null;
+          return;
+        }
         txHash = approveTxHash;
       }
 
