@@ -300,6 +300,7 @@ export async function addMemberToPublicChama(
       incognito: canJoin ? false : true,
     },
   });
+
   //get user
   const user = await getUser(address);
   //create payment
@@ -311,6 +312,29 @@ export async function addMemberToPublicChama(
       userId: user?.id || 0,
     },
   });
+  //if canjoin, add member to payout
+  if (canJoin) {
+    const chamaPayout = await prisma.chama.findUnique({
+      where: {
+        id: chamaId,
+      },
+      select: {
+        payOutOrder: true,
+      },
+    });
+    if (chamaPayout && chamaPayout.payOutOrder) {
+      const payoutArray = JSON.parse(chamaPayout.payOutOrder);
+      payoutArray.push(user);
+      await prisma.chama.update({
+        where: {
+          id: chamaId,
+        },
+        data: {
+          payOutOrder: JSON.stringify(payoutArray),
+        },
+      });
+    }
+  }
 }
 
 //function to set a chama can join
@@ -399,7 +423,6 @@ export async function getPublicNotMember(userAddress: string) {
 
 //function to get public chamas that user is not member
 export async function getPublicChamas() {
-  
   const chamas = await prisma.chama.findMany({
     where: {
       type: "Public",
@@ -685,12 +708,35 @@ export async function handleJoinRequest(
       chamaId
     );
     if (request.user.isFarcaster && request.user.fid) {
-      await sendEmail("approval test", "about to run sendFarcater notif")
+      await sendEmail("approval test", "about to run sendFarcater notif");
       await sendFarcasterNotification(
         [request.user.fid],
         `✅ ${request.chama.name} chama request approved.`,
         `Congratulations. You are now a member of ${request.chama.name} chama.`
       );
+    }
+    //if canjoin, add member to payout
+    if (canJoin) {
+      const chamaPayout = await prisma.chama.findUnique({
+        where: {
+          id: chamaId,
+        },
+        select: {
+          payOutOrder: true,
+        },
+      });
+      if (chamaPayout && chamaPayout.payOutOrder) {
+        const payoutArray = JSON.parse(chamaPayout.payOutOrder);
+        payoutArray.push(request.user);
+        await prisma.chama.update({
+          where: {
+            id: chamaId,
+          },
+          data: {
+            payOutOrder: JSON.stringify(payoutArray),
+          },
+        });
+      }
     }
   } else if (action === "reject") {
     // Update request status to rejected
