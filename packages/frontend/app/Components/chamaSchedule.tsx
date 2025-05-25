@@ -180,10 +180,10 @@ const ChamaSchedule = ({
                       </p>
                       <p className="text-sm text-gray-500 flex items-center gap-1 mt-1">
                         <FiClock className={`text-lg ${differentColors}`} />
-                        {dayjs(member.payDate)
+                        {dayjs(member.payoutDate)
                           .utc()
                           .local()
-                          .format("MMM D, YYYY")}
+                          .format("MMM D, YYYY HH:mm")}
                       </p>
                     </div>
                   </div>

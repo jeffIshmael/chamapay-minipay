@@ -22,7 +22,7 @@ import { useIsFarcaster } from "../context/isFarcasterContext";
 import { approveTx, registrationTx } from "@/lib/divviRegistration";
 import { waitForTransactionReceipt } from "@wagmi/core";
 import { config } from "@/Providers/BlockchainProviders";
-import { approveViemTx } from "./ViemApprove";
+import { approveViemTx } from "../../lib/ViemApprove";
 
 const CUSDPay = ({
   chamaId,

@@ -1,7 +1,7 @@
 import { createPublicClient, createWalletClient, custom, http } from "viem";
 import { celo } from "viem/chains";
 import { toast } from "sonner";
-import { cUSDContractAddress } from "../ChamaPayABI/ChamaPayContract";
+import { cUSDContractAddress } from "../app/ChamaPayABI/ChamaPayContract";
 import ERC20Abi from "@/app/ChamaPayABI/ERC20.json";
 
 export const approveViemTx = async (
