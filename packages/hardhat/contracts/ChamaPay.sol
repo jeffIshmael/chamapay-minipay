@@ -80,6 +80,8 @@ contract ChamaPay is Ownable,ReentrancyGuard {
     event TransferDone(address recipient, uint amount, bool success, uint contractBalance, uint recipientBalanceBefore);
     event ObserverAddedToPayout(uint indexed chamaId, address indexed observers, uint timestamp);
     event ObserversAdded(uint indexed chamaId);
+    event RunningPaydate(bool output);
+    event AllFound(bool output, bool isPast);
 
    
    // Register a new chama
@@ -259,7 +261,65 @@ contract ChamaPay is Ownable,ReentrancyGuard {
         emit FundsDisbursed(_chamaId, recipient, totalPay);
     }
 
+ // Disburse funds to a member
+    function manuallyDisburse(uint _chamaId) public nonReentrant {
+        Chama storage chama = chamas[_chamaId];        
+        require(chama.payoutOrder.length > 0, "Payout order is empty");
+        address recipient = chama.payoutOrder[(chama.round - 1) % chama.payoutOrder.length];
+        uint totalPay = chama.amount * chama.payoutOrder.length;
 
+        emit DebugPay(recipient, totalPay);
+
+        // Calculate total available funds: sum of all balances + sum of all lockedAmounts (for public chamas)
+        uint totalAvailable = 0;
+        for (uint i = 0; i < chama.payoutOrder.length; i++) {
+            address member = chama.payoutOrder[i];
+            totalAvailable += chama.balances[member];
+            if(chama.isPublic){
+                totalAvailable += chama.lockedAmounts[member];
+            }
+        }
+        require(totalAvailable >= totalPay, "Not enough funds to disburse");
+        emit DebugAmount(totalAvailable, totalPay);
+        // Ensure each member has contributed their amount, using lockedAmounts if necessary (only for public chamas)
+        for (uint i = 0; i < chama.payoutOrder.length; i++) {
+            address member = chama.payoutOrder[i];
+            if (chama.balances[member] < chama.amount) {
+                require(chama.isPublic, "Member has not contributed and it's a private chama.");
+                uint deficit = chama.amount - chama.balances[member];
+                require(chama.lockedAmounts[member] >= deficit, "Member does not have enough locked funds.");
+
+                // Deduct from lockedAmounts and add to balances
+                chama.lockedAmounts[member] -= deficit;
+                chama.balances[member] += deficit;
+                chama.hasSent[member] = true;
+            }
+        }
+
+        // Now, all members have contributed their required amount
+        // Proceed to transfer totalPay to recipient
+        processPayout(recipient, totalPay);
+
+        // Record the withdrawal
+        recordWithdrawal(_chamaId, recipient, totalPay);
+
+        // Reset payment status for the next round and deduct balances
+        for (uint i = 0; i < chama.payoutOrder.length; i++) {
+            chama.hasSent[chama.payoutOrder[i]] = false;
+            chama.balances[chama.payoutOrder[i]] -= chama.amount;
+        }
+
+        // Check if we have completed a rotation
+        if (chama.round + 1 > chama.payoutOrder.length) {
+            chama.cycle += 1; // Increment the cycle after one rotation
+            chama.round = 1;
+        }else{
+            chama.round++;
+        }
+        chama.payDate += chama.duration * 24 * 60 * 60;
+        
+        emit FundsDisbursed(_chamaId, recipient, totalPay);
+    }
 
     // Function to delete a member (admin or self)
     function deleteMember(uint _chamaId, address _member) public onlyMembers(_chamaId) {
@@ -379,9 +439,12 @@ contract ChamaPay is Ownable,ReentrancyGuard {
 
             Chama storage chama = chamas[_chamaId];
             bool output = allMembersContributed(_chamaId);
+            bool isPast = block.timestamp >= chama.payDate;
+            emit AllFound(output,isPast);
             // Check if the current time has passed the pay date
-            if (block.timestamp >= chama.payDate) {
+            if (isPast) {
                 if (output) {
+                    emit RunningPaydate(output);
                     disburse(_chamaId); // Disburse funds if everyone has paid
                 } else {
                     refund(_chamaId); // Refund if not everyone has paid
