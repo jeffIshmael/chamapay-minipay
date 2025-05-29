@@ -1,8 +1,8 @@
-export const contractAddress = "0xdE7beFec6b7507761A7cBE85Ada85609575605CD";
+export const contractAddress = "0xb53499f1FcEEa09F28c77EB78738F55dc1b5a337";
 
 export const cUSDContractAddress = "0x765DE816845861e75A25fCA122bb6898B8B1282a";
 
-export const contractAbi = [
+export const contractAbi =  [
   {
     "inputs": [],
     "stateMutability": "nonpayable",
@@ -228,6 +228,44 @@ export const contractAbi = [
     "inputs": [
       {
         "indexed": true,
+        "internalType": "uint256",
+        "name": "chamaId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "observers",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "timestamp",
+        "type": "uint256"
+      }
+    ],
+    "name": "ObserverAddedToPayout",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "chamaId",
+        "type": "uint256"
+      }
+    ],
+    "name": "ObserversAdded",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
         "internalType": "address",
         "name": "previousOwner",
         "type": "address"
@@ -341,6 +379,43 @@ export const contractAbi = [
     "anonymous": false,
     "inputs": [
       {
+        "indexed": false,
+        "internalType": "address",
+        "name": "recipient",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "success",
+        "type": "bool"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "contractBalance",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "recipientBalanceBefore",
+        "type": "uint256"
+      }
+    ],
+    "name": "TransferDone",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
         "indexed": true,
         "internalType": "uint256",
         "name": "_chamaId",
@@ -408,6 +483,24 @@ export const contractAbi = [
       }
     ],
     "name": "addMember",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_chamaId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address[]",
+        "name": "_observers",
+        "type": "address[]"
+      }
+    ],
+    "name": "addObserversToPayout",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
