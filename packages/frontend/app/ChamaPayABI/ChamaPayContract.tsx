@@ -1,8 +1,9 @@
-export const contractAddress = "0x03f3d28855C44709F5640E0A364935434ec8Ed64";
-
+export const contractAddress = "0x16C5090A3e606Ea569e72DcDa110e85726268006";
+//0x03f3d28855C44709F5640E0A364935434ec8Ed64 - the current
+//0x16C5090A3e606Ea569e72DcDa110e85726268006
 export const cUSDContractAddress = "0x765DE816845861e75A25fCA122bb6898B8B1282a";
 
-export const contractAbi =[
+export const contractAbi = [
   {
     "inputs": [],
     "stateMutability": "nonpayable",
@@ -1006,6 +1007,24 @@ export const contractAbi =[
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_receiver",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "processPayout",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {

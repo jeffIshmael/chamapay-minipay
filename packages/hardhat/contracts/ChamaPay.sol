@@ -298,7 +298,7 @@ contract ChamaPay is Ownable,ReentrancyGuard {
 
         // Now, all members have contributed their required amount
         // Proceed to transfer totalPay to recipient
-        processPayout(recipient, totalPay);
+        // processPayout(recipient, totalPay);
 
         // Record the withdrawal
         recordWithdrawal(_chamaId, recipient, totalPay);
@@ -374,7 +374,7 @@ contract ChamaPay is Ownable,ReentrancyGuard {
     }
 
     //function to process payout
-    function processPayout(address _receiver, uint _amount) internal nonReentrant {
+    function processPayout(address _receiver, uint _amount) public nonReentrant {
         require(cUSDToken.balanceOf(address(this)) >= _amount, "Contract does not have enough cUSD");
         uint contractBal = cUSDToken.balanceOf(address(this));
         uint receiverBalBefore = cUSDToken.balanceOf(_receiver);
@@ -499,7 +499,7 @@ contract ChamaPay is Ownable,ReentrancyGuard {
             uint refundAmount = chama.balances[member];
             if (refundAmount > 0) {
                 //transfer the money back to the member
-                processPayout(member, refundAmount);
+                // processPayout(member, refundAmount);
 
                 //record the withdrawal
                 recordWithdrawal(_chamaId, member, refundAmount);
