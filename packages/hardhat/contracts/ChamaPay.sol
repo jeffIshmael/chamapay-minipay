@@ -74,14 +74,6 @@ contract ChamaPay is Ownable,ReentrancyGuard {
     event WithdrawalRecorded(uint indexed _chamaId, address indexed _receiver, uint  _amount);
     event RefundUpdated( uint indexed _chamaId);
     event aiAgentSet(address indexed _aiAgent);
-    event PaydateChecked(uint indexed _chamaId, bool output);
-    event DebugAmount(uint _available, uint _totalPay);
-    event DebugPay(address recipient, uint totalPay);
-    event TransferDone(address recipient, uint amount, bool success, uint contractBalance, uint recipientBalanceBefore);
-    event ObserverAddedToPayout(uint indexed chamaId, address indexed observers, uint timestamp);
-    event ObserversAdded(uint indexed chamaId);
-    event RunningPaydate(bool output);
-    event AllFound(bool output, bool isPast);
 
    
    // Register a new chama
@@ -90,18 +82,10 @@ contract ChamaPay is Ownable,ReentrancyGuard {
         uint _duration, 
         uint _startDate, 
         uint _maxMembers, 
-        bool _isPublic ) public nonReentrant {
+        bool _isPublic ) public {
         require(_startDate >= block.timestamp, "Start date must be in the future.");
         require(_duration > 0, "Duration must be greater than 0.");
         require(_amount > 0, "Amount must be greater than 0.");
-        require(_maxMembers <= 15,"Maximum number of members is 15.");
-        if(_isPublic){
-             // Transfer cUSD tokens from sender to this contract
-        require(
-            cUSDToken.transferFrom(msg.sender, address(this), _amount),
-            "Token transfer failed"
-        );
-        }
 
         Chama storage newChama = chamas.push();
         newChama.chamaId = totalChamas;
@@ -109,9 +93,10 @@ contract ChamaPay is Ownable,ReentrancyGuard {
         newChama.startDate = _startDate;
         newChama.duration = _duration;
         newChama.maxMembers = _maxMembers;
-        newChama.payDate = _startDate + _duration * 24 * 60 ;
+        newChama.payDate = _startDate + _duration;
         newChama.admin = msg.sender;
         newChama.members.push(msg.sender);
+        newChama.payoutOrder.push(msg.sender);
         newChama.cycle = 1;
         newChama.round = 1;
         newChama.balances[msg.sender] = 0;
@@ -135,80 +120,73 @@ contract ChamaPay is Ownable,ReentrancyGuard {
             msg.sender
         );
     }
-        
+    
+    
     // Add a member to the chama(Private)
     function addMember(address _address, uint _chamaId) public onlyAdmin(_chamaId) {
         require(_chamaId < chamas.length, "The chamaId does not exist");
         Chama storage chama = chamas[_chamaId];
-        require(chama.members.length < 15, "Chama already has max members.");
+        // require(chama.members.length < chama.maxMembers, "Chama already has max members");
         chama.members.push(_address);
+        if(block.timestamp > chama.startDate){
+            chama.payoutOrder.push(_address);
+        }
         emit MemberAdded(_chamaId, _address);
     }
 
     //add a member to a public Chama
-     function addPublicMember(uint _chamaId, uint _amount) public nonReentrant {
+     function addPublicMember(uint _chamaId) public {
         require(_chamaId < chamas.length, "The chamaId does not exist");
         Chama storage chama = chamas[_chamaId];
         require(chama.isPublic, "This is not a public chama.");
         require(chama.members.length < chama.maxMembers, "Chama already has max members");
         require(!isMember(_chamaId, msg.sender), "Already a member of the chama.");
-        require(_amount >= chama.amount,"Amount too small.");
-         // Transfer cUSD tokens from sender to this contract
-        require(
-            cUSDToken.transferFrom(msg.sender, address(this), _amount),
-            "Token transfer failed"
-        );
         chama.members.push(msg.sender);
         chama.lockedAmounts[msg.sender] += chama.amount;
+        if(block.timestamp > chama.startDate){
+            chama.payoutOrder.push(msg.sender);
+        }
         emit MemberAdded(_chamaId, msg.sender);
     }
 
     // Deposit cash to a chama
-      function depositCash(uint _chamaId, uint _amount) public onlyMembers(_chamaId) nonReentrant {
+    function depositCash(uint _chamaId, uint _amount) public onlyMembers(_chamaId) nonReentrant {
+        // Ensure the chama exists
         require(_chamaId < totalChamas, "Chama does not exist");
+
         Chama storage chama = chamas[_chamaId];
         
-        require(_amount > 0, "Amount must be greater than 0");
-        
-        // Transfer cUSD tokens from sender to this contract
-        require(
-            cUSDToken.transferFrom(msg.sender, address(this), _amount),
-            "Token transfer failed"
-        );
 
-        // Update balance
+        // Update balance for the sender
         chama.balances[msg.sender] += _amount;
 
-        // Mark as paid if reached required amount
+        // Mark the user as having sent their payment if they have reached the required amount
         if (chama.balances[msg.sender] >= chama.amount) {
             chama.hasSent[msg.sender] = true;
         }
-        
+        // Emit an event for the cash deposit
         emit CashDeposited(_chamaId, msg.sender, _amount);
     }
 
-
-    // Check if all members in the payout have contributed
+    // Check if all members have contributed
     function allMembersContributed(uint _chamaId) internal view returns (bool) {
         Chama storage chama = chamas[_chamaId];
-
-        for (uint i = 0; i < chama.payoutOrder.length; i++) {
-            uint membersBalance = chama.balances[chama.payoutOrder[i]] + chama.lockedAmounts[chama.payoutOrder[i]];
+        
+        for (uint i = 0; i < chama.members.length; i++) {
+            uint membersBalance = chama.balances[chama.members[i]] + chama.lockedAmounts[chama.members[i]];
             if (membersBalance < chama.amount) {
                 return false;
             }
         }
-        return true;   
+        return true;
     }
 
     // Disburse funds to a member
     function disburse(uint _chamaId) internal nonReentrant {
         Chama storage chama = chamas[_chamaId];        
         require(chama.payoutOrder.length > 0, "Payout order is empty");
-        address recipient = chama.payoutOrder[(chama.round - 1) % chama.payoutOrder.length];
-        uint totalPay = chama.amount * chama.payoutOrder.length;
-
-        emit DebugPay(recipient, totalPay);
+        address recipient = chama.members[chama.cycle % chama.payoutOrder.length];
+        uint totalPay = chama.amount * chama.members.length;
 
         // Calculate total available funds: sum of all balances + sum of all lockedAmounts (for public chamas)
         uint totalAvailable = 0;
@@ -220,7 +198,7 @@ contract ChamaPay is Ownable,ReentrancyGuard {
             }
         }
         require(totalAvailable >= totalPay, "Not enough funds to disburse");
-        emit DebugAmount(totalAvailable, totalPay);
+
         // Ensure each member has contributed their amount, using lockedAmounts if necessary (only for public chamas)
         for (uint i = 0; i < chama.payoutOrder.length; i++) {
             address member = chama.payoutOrder[i];
@@ -250,74 +228,12 @@ contract ChamaPay is Ownable,ReentrancyGuard {
         }
 
         // Check if we have completed a rotation
-        if (chama.round + 1 > chama.payoutOrder.length) {
-            chama.cycle += 1; // Increment the cycle after one rotation
-            chama.round = 1;
-        }else{
-            chama.round++;
+        if (chama.cycle + 1 > chama.payoutOrder.length) {
+            chama.round += 1; // Increment the round after one rotation
         }
-        chama.payDate += chama.duration * 24 * 60 * 60;
-        
-        emit FundsDisbursed(_chamaId, recipient, totalPay);
-    }
+        chama.payDate += chama.duration;
+        chama.cycle++;
 
- // Disburse funds to a member
-    function manuallyDisburse(uint _chamaId) public nonReentrant {
-        Chama storage chama = chamas[_chamaId];        
-        require(chama.payoutOrder.length > 0, "Payout order is empty");
-        address recipient = chama.payoutOrder[(chama.round - 1) % chama.payoutOrder.length];
-        uint totalPay = chama.amount * chama.payoutOrder.length;
-
-        emit DebugPay(recipient, totalPay);
-
-        // Calculate total available funds: sum of all balances + sum of all lockedAmounts (for public chamas)
-        uint totalAvailable = 0;
-        for (uint i = 0; i < chama.payoutOrder.length; i++) {
-            address member = chama.payoutOrder[i];
-            totalAvailable += chama.balances[member];
-            if(chama.isPublic){
-                totalAvailable += chama.lockedAmounts[member];
-            }
-        }
-        require(totalAvailable >= totalPay, "Not enough funds to disburse");
-        emit DebugAmount(totalAvailable, totalPay);
-        // Ensure each member has contributed their amount, using lockedAmounts if necessary (only for public chamas)
-        for (uint i = 0; i < chama.payoutOrder.length; i++) {
-            address member = chama.payoutOrder[i];
-            if (chama.balances[member] < chama.amount) {
-                require(chama.isPublic, "Member has not contributed and it's a private chama.");
-                uint deficit = chama.amount - chama.balances[member];
-                require(chama.lockedAmounts[member] >= deficit, "Member does not have enough locked funds.");
-
-                // Deduct from lockedAmounts and add to balances
-                chama.lockedAmounts[member] -= deficit;
-                chama.balances[member] += deficit;
-                chama.hasSent[member] = true;
-            }
-        }
-
-        // Now, all members have contributed their required amount
-        // Proceed to transfer totalPay to recipient
-        // processPayout(recipient, totalPay);
-
-        // Record the withdrawal
-        recordWithdrawal(_chamaId, recipient, totalPay);
-
-        // Reset payment status for the next round and deduct balances
-        for (uint i = 0; i < chama.payoutOrder.length; i++) {
-            chama.hasSent[chama.payoutOrder[i]] = false;
-            chama.balances[chama.payoutOrder[i]] -= chama.amount;
-        }
-
-        // Check if we have completed a rotation
-        if (chama.round + 1 > chama.payoutOrder.length) {
-            chama.cycle += 1; // Increment the cycle after one rotation
-            chama.round = 1;
-        }else{
-            chama.round++;
-        }
-        chama.payDate += chama.duration * 24 * 60 * 60;
-        
         emit FundsDisbursed(_chamaId, recipient, totalPay);
     }
 
@@ -374,15 +290,9 @@ contract ChamaPay is Ownable,ReentrancyGuard {
     }
 
     //function to process payout
-    function processPayout(address _receiver, uint _amount) public nonReentrant {
-        require(cUSDToken.balanceOf(address(this)) >= _amount, "Contract does not have enough cUSD");
-        uint contractBal = cUSDToken.balanceOf(address(this));
-        uint receiverBalBefore = cUSDToken.balanceOf(_receiver);
-
-        bool success = cUSDToken.transfer(_receiver, _amount);
-
-        emit TransferDone(_receiver, _amount, success, contractBal, receiverBalBefore);
-        require(success, "Transfer failed");
+    function processPayout(address _receiver, uint _amount) internal nonReentrant {
+        require(cUSDToken.balanceOf(address(this)) >= _amount, "Contract does not have enough cKES");
+        require(cUSDToken.transfer(_receiver, _amount), "Transfer failed");
         emit PayOutProcessed(_receiver, _amount);
         
     }
@@ -432,25 +342,24 @@ contract ChamaPay is Ownable,ReentrancyGuard {
         emit ChamaDeleted(_chamaId);
     }
 
-   // Check pay date and trigger payout or refund
-    function checkPayDate(uint _chamaId) public onlyAiAgent nonReentrant {
-      
-            require(_chamaId < totalChamas, "Chama does not exist");
 
-            Chama storage chama = chamas[_chamaId];
-            bool output = allMembersContributed(_chamaId);
-            bool isPast = block.timestamp >= chama.payDate;
-            emit AllFound(output,isPast);
+   // Check pay date and trigger payout or refund
+    function checkPayDate(uint[] memory chamaIds) public onlyAiAgent nonReentrant {
+        for (uint i = 0; i < chamaIds.length; i++) {
+            uint chamaId = chamaIds[i];
+            require(chamaId < totalChamas, "Chama does not exist");
+
+            Chama storage chama = chamas[chamaId];
+
             // Check if the current time has passed the pay date
-            if (isPast) {
-                if (output) {
-                    emit RunningPaydate(output);
-                    disburse(_chamaId); // Disburse funds if everyone has paid
+            if (block.timestamp >= chama.payDate) {
+                if (allMembersContributed(chamaId)) {
+                    disburse(chamaId); // Disburse funds if everyone has paid
                 } else {
-                    refund(_chamaId); // Refund if not everyone has paid
+                    refund(chamaId); // Refund if not everyone has paid
                 }
             }
-        emit PaydateChecked(_chamaId, output);
+        }
     }
 
    // Function to check the balance of a specific address in a specific chama
@@ -478,18 +387,6 @@ contract ChamaPay is Ownable,ReentrancyGuard {
         emit PayoutOrderSet(_chamaId, _payoutOrder);
     }
 
-    // function to add members to the payout order
-    function addObserversToPayout(uint _chamaId, address[] memory _observers) public onlyAiAgent(){
-        require(_chamaId < totalChamas, "Such a chama doesnt exist");
-        Chama storage chama = chamas[_chamaId];
-        for(uint i = 0; i < _observers.length; i++){
-            require(isMember(_chamaId,_observers[i]),"The address is not a member");
-            chama.payoutOrder.push(_observers[i]);
-            emit ObserverAddedToPayout(_chamaId,_observers[i], block.timestamp);
-        }
-        emit ObserversAdded(_chamaId);
-    }
-
     // Refund the cash if the startDate passes and not all members have paid
     function refund(uint _chamaId) internal {
         Chama storage chama = chamas[_chamaId];
@@ -499,7 +396,7 @@ contract ChamaPay is Ownable,ReentrancyGuard {
             uint refundAmount = chama.balances[member];
             if (refundAmount > 0) {
                 //transfer the money back to the member
-                // processPayout(member, refundAmount);
+                processPayout(member, refundAmount);
 
                 //record the withdrawal
                 recordWithdrawal(_chamaId, member, refundAmount);
@@ -513,8 +410,11 @@ contract ChamaPay is Ownable,ReentrancyGuard {
         for (uint i = 0; i < chama.members.length; i++) {
             chama.hasSent[chama.members[i]] = false;
         }
-        chama.payDate += chama.duration * 24 * 60 * 60;
-
+         if (chama.cycle + 1 > chama.members.length) {
+        chama.round += 1; // Increment the round after one rotation
+        }
+        chama.payDate += chama.duration;
+        chama.cycle++;
         emit RefundUpdated( _chamaId);
 
     }
@@ -568,7 +468,7 @@ contract ChamaPay is Ownable,ReentrancyGuard {
     bool
     ) {
         Chama storage chama = chamas[_chamaId];
-        return (chama.payDate,chama.amount,chama.startDate,chama.duration,chama.round,chama.cycle,chama.admin,chama.members,chama.isPublic);
+        return (chama.chamaId,chama.amount,chama.startDate,chama.duration,chama.round,chama.cycle,chama.admin,chama.members,chama.isPublic);
     }
 
     //function to get a chama payout order
@@ -602,21 +502,13 @@ contract ChamaPay is Ownable,ReentrancyGuard {
     }
 
     //function to withdraw from the contract
-   function emergencyWithdraw(address _address, uint256 _amount) public onlyOwner {
-       cUSDToken.transfer(_address, _amount);
-       emit amountWithdrawn(_address, _amount);
+   function emergencyWithdraw(address _address) public onlyOwner {
+       cUSDToken.transfer(_address, cUSDToken.balanceOf(address(this)));
+       emit amountWithdrawn(_address, cUSDToken.balanceOf(address(this)));
    }
-
-   // function to get chamapayout length
-   function getChamaPayoutOrderLength(uint _chamaId) public view returns (uint) {
-        Chama storage chama = chamas[_chamaId];
-        return chama.payoutOrder.length;
-    }
 
    //function to set aiAgent
    function setAiAgent(address _aiAgent) public onlyOwner {
-    require (_aiAgent != address(0),"Invalid wallet address");
-    require(_aiAgent != aiAgent,"You are already the agent");
        aiAgent = _aiAgent;
        emit aiAgentSet(_aiAgent);
    }
