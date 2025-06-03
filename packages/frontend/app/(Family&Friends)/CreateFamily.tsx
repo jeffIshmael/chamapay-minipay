@@ -73,7 +73,7 @@ const CreateFamily = () => {
       if (address && isConnected) {
         const dateObject = new Date(startDate as string);
 
-        const dateInMilliseconds = dateObject.getTime();
+        const dateInSeconds = Math.floor(dateObject.getTime() / 1000);;
         // get the current blockchain id from the blockchain
         const chamaIdToUse = await getLatestChamaId();
         const localDateTime = new Date(`${startDateDate}T${startDateTime}`);
@@ -84,7 +84,7 @@ const CreateFamily = () => {
         const chamaArgs = [
           parseEther(data.amount as string),
           BigInt(Number(data.cycleTime)),
-          BigInt(dateInMilliseconds),
+          BigInt(dateInSeconds),
           BigInt(Number(0)), //no max members
           false,
         ];
