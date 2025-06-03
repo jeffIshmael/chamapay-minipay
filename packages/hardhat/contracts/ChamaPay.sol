@@ -74,7 +74,9 @@ contract ChamaPay is Ownable,ReentrancyGuard {
     event WithdrawalRecorded(uint indexed _chamaId, address indexed _receiver, uint  _amount);
     event RefundUpdated( uint indexed _chamaId);
     event aiAgentSet(address indexed _aiAgent);
-
+    event PayDateChecked(uint indexed _chamaId, bool _isPastPayDate, bool _isAllMembersContributed);
+    event TransferDone(address indexed _receiver, uint _amount, bool _success, uint _contractBal, uint _receiverBalBefore); 
+    event PayoutDone(uint indexed _chamaId, address indexed _receiver, uint _amount);
    
    // Register a new chama
     function registerChama(
@@ -93,7 +95,7 @@ contract ChamaPay is Ownable,ReentrancyGuard {
         newChama.startDate = _startDate;
         newChama.duration = _duration;
         newChama.maxMembers = _maxMembers;
-        newChama.payDate = _startDate + _duration;
+        newChama.payDate = _startDate + _duration  * 24 * 60;
         newChama.admin = msg.sender;
         newChama.members.push(msg.sender);
         newChama.payoutOrder.push(msg.sender);
@@ -119,8 +121,7 @@ contract ChamaPay is Ownable,ReentrancyGuard {
             _isPublic,  
             msg.sender
         );
-    }
-    
+    }    
     
     // Add a member to the chama(Private)
     function addMember(address _address, uint _chamaId) public onlyAdmin(_chamaId) {
@@ -181,6 +182,37 @@ contract ChamaPay is Ownable,ReentrancyGuard {
         return true;
     }
 
+    //function to process payout
+    function processPayout(address _receiver, uint _amount) internal nonReentrant {
+        require(cUSDToken.balanceOf(address(this)) >= _amount, "Contract does not have enough cUSD");
+        uint contractBal = cUSDToken.balanceOf(address(this));
+        uint receiverBalBefore = cUSDToken.balanceOf(_receiver);
+
+        bool success = cUSDToken.transfer(_receiver, _amount);
+
+        emit TransferDone(_receiver, _amount, success, contractBal, receiverBalBefore);
+        require(success, "Transfer failed");
+        emit PayOutProcessed(_receiver, _amount);
+        
+    }
+
+    //function to record all withdrawal function
+    function recordWithdrawal(uint _chamaId, address _receiver, uint _amount) internal {
+         // Record the payment
+        payments.push(Payment({
+        id: totalPayments,
+        chamaId: _chamaId,
+        receiver: _receiver,
+        amount: _amount,
+        timestamp: block.timestamp
+        }));
+
+        totalPayments++;
+
+        emit WithdrawalRecorded(_chamaId, _receiver, _amount);
+        
+    }
+
     // Disburse funds to a member
     function disburse(uint _chamaId) internal nonReentrant {
         Chama storage chama = chamas[_chamaId];        
@@ -231,7 +263,7 @@ contract ChamaPay is Ownable,ReentrancyGuard {
         if (chama.cycle + 1 > chama.payoutOrder.length) {
             chama.round += 1; // Increment the round after one rotation
         }
-        chama.payDate += chama.duration;
+        chama.payDate += chama.duration  * 24 * 60 * 60;
         chama.cycle++;
 
         emit FundsDisbursed(_chamaId, recipient, totalPay);
@@ -289,31 +321,6 @@ contract ChamaPay is Ownable,ReentrancyGuard {
         emit MemberRemoved(_chamaId, _member);
     }
 
-    //function to process payout
-    function processPayout(address _receiver, uint _amount) internal nonReentrant {
-        require(cUSDToken.balanceOf(address(this)) >= _amount, "Contract does not have enough cKES");
-        require(cUSDToken.transfer(_receiver, _amount), "Transfer failed");
-        emit PayOutProcessed(_receiver, _amount);
-        
-    }
-
-    //function to record all withdrawal function
-    function recordWithdrawal(uint _chamaId, address _receiver, uint _amount) internal {
-         // Record the payment
-        payments.push(Payment({
-        id: totalPayments,
-        chamaId: _chamaId,
-        receiver: _receiver,
-        amount: _amount,
-        timestamp: block.timestamp
-        }));
-
-        totalPayments++;
-
-        emit WithdrawalRecorded(_chamaId, _receiver, _amount);
-        
-    }
-
     // Function to delete a chama (admin only)
     function deleteChama(uint _chamaId) public onlyAdmin(_chamaId) {
         Chama storage chama = chamas[_chamaId];
@@ -342,23 +349,25 @@ contract ChamaPay is Ownable,ReentrancyGuard {
         emit ChamaDeleted(_chamaId);
     }
 
-
    // Check pay date and trigger payout or refund
     function checkPayDate(uint[] memory chamaIds) public onlyAiAgent nonReentrant {
         for (uint i = 0; i < chamaIds.length; i++) {
             uint chamaId = chamaIds[i];
             require(chamaId < totalChamas, "Chama does not exist");
-
             Chama storage chama = chamas[chamaId];
+            bool isPastPayDate = block.timestamp >= chama.payDate;
+            bool isAllMembersContributed = allMembersContributed(chamaId);
+            require(isPastPayDate, "Pay date has not passed");
 
             // Check if the current time has passed the pay date
-            if (block.timestamp >= chama.payDate) {
-                if (allMembersContributed(chamaId)) {
+            if (isPastPayDate) {
+                if (isAllMembersContributed) {
                     disburse(chamaId); // Disburse funds if everyone has paid
                 } else {
                     refund(chamaId); // Refund if not everyone has paid
                 }
             }
+            emit PayDateChecked(chamaId, isPastPayDate, isAllMembersContributed);
         }
     }
 
@@ -413,7 +422,7 @@ contract ChamaPay is Ownable,ReentrancyGuard {
          if (chama.cycle + 1 > chama.members.length) {
         chama.round += 1; // Increment the round after one rotation
         }
-        chama.payDate += chama.duration;
+        chama.payDate += chama.duration  * 24 * 60 * 60;
         chama.cycle++;
         emit RefundUpdated( _chamaId);
 

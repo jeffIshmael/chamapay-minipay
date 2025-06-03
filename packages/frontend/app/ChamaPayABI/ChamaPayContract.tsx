@@ -1,9 +1,9 @@
-export const contractAddress = "0x03f3d28855C44709F5640E0A364935434ec8Ed64";
+export const contractAddress = "0x165e8B8D2BD6634ED4Ddf443c87F99059C8EFBC6";
 //0x03f3d28855C44709F5640E0A364935434ec8Ed64 - the current
 //0x16C5090A3e606Ea569e72DcDa110e85726268006
 export const cUSDContractAddress = "0x765DE816845861e75A25fCA122bb6898B8B1282a";
 
-export const contractAbi =  [
+export const contractAbi =   [
   {
     "inputs": [],
     "stateMutability": "nonpayable",
@@ -210,6 +210,31 @@ export const contractAbi =  [
     "inputs": [
       {
         "indexed": true,
+        "internalType": "uint256",
+        "name": "_chamaId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "_isPastPayDate",
+        "type": "bool"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "_isAllMembersContributed",
+        "type": "bool"
+      }
+    ],
+    "name": "PayDateChecked",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
         "internalType": "address",
         "name": "_receiver",
         "type": "address"
@@ -222,6 +247,31 @@ export const contractAbi =  [
       }
     ],
     "name": "PayOutProcessed",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "_chamaId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "_receiver",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "_amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "PayoutDone",
     "type": "event"
   },
   {
@@ -279,6 +329,43 @@ export const contractAbi =  [
       }
     ],
     "name": "RefundUpdated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "_receiver",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "_amount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "_success",
+        "type": "bool"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "_contractBal",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "_receiverBalBefore",
+        "type": "uint256"
+      }
+    ],
+    "name": "TransferDone",
     "type": "event"
   },
   {
