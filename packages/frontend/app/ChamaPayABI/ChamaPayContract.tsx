@@ -1,9 +1,9 @@
-export const contractAddress = "0xC2744A1e0E396bAb47764EaB63B9bF404c5E913c";
+export const contractAddress = "0x79ee5A5AcDF2Eb94412448df9A481f00481CbC5a";
 //0x03f3d28855C44709F5640E0A364935434ec8Ed64 - all the current
 //0x16C5090A3e606Ea569e72DcDa110e85726268006
 export const cUSDContractAddress = "0x765DE816845861e75A25fCA122bb6898B8B1282a";
 
-export const contractAbi =  [
+export const contractAbi = [
   {
     "inputs": [],
     "stateMutability": "nonpayable",

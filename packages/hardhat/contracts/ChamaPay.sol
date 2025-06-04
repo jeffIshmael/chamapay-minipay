@@ -214,7 +214,7 @@ contract ChamaPay is Ownable,ReentrancyGuard {
     }
 
     // Disburse funds to a member
-    function disburse(uint _chamaId) internal nonReentrant {
+    function disburse(uint _chamaId) internal {
         Chama storage chama = chamas[_chamaId];        
         require(chama.payoutOrder.length > 0, "Payout order is empty");
         address recipient = chama.members[chama.cycle % chama.payoutOrder.length];
