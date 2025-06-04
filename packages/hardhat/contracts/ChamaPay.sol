@@ -350,7 +350,7 @@ contract ChamaPay is Ownable,ReentrancyGuard {
     }
 
    // Check pay date and trigger payout or refund
-    function checkPayDate(uint[] memory chamaIds) public onlyAiAgent nonReentrant {
+    function checkPayDate(uint[] memory chamaIds) public onlyAiAgent {
         for (uint i = 0; i < chamaIds.length; i++) {
             uint chamaId = chamaIds[i];
             require(chamaId < totalChamas, "Chama does not exist");
@@ -477,7 +477,7 @@ contract ChamaPay is Ownable,ReentrancyGuard {
     bool
     ) {
         Chama storage chama = chamas[_chamaId];
-        return (chama.chamaId,chama.amount,chama.startDate,chama.duration,chama.round,chama.cycle,chama.admin,chama.members,chama.isPublic);
+        return (chama.payDate,chama.amount,chama.startDate,chama.duration,chama.round,chama.cycle,chama.admin,chama.members,chama.isPublic);
     }
 
     //function to get a chama payout order
