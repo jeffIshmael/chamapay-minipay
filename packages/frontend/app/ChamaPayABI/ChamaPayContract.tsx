@@ -1,9 +1,8 @@
-export const contractAddress = "0x79ee5A5AcDF2Eb94412448df9A481f00481CbC5a";
-//0x03f3d28855C44709F5640E0A364935434ec8Ed64 - all the current
-//0x16C5090A3e606Ea569e72DcDa110e85726268006
+export const contractAddress = "0x367266EAfb2DD67A844648f86CD1F880AE100e09";
+
 export const cUSDContractAddress = "0x765DE816845861e75A25fCA122bb6898B8B1282a";
 
-export const contractAbi = [
+export const contractAbi =[
   {
     "inputs": [],
     "stateMutability": "nonpayable",
@@ -165,6 +164,25 @@ export const contractAbi = [
       }
     ],
     "name": "MemberAdded",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "_chamaId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address[]",
+        "name": "_member",
+        "type": "address[]"
+      }
+    ],
+    "name": "MemberAddedToPayoutOrder",
     "type": "event"
   },
   {
@@ -448,6 +466,29 @@ export const contractAbi = [
       {
         "internalType": "uint256",
         "name": "_chamaId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address[]",
+        "name": "_member",
+        "type": "address[]"
+      }
+    ],
+    "name": "addMemberToPayoutOrder",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_chamaId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_amount",
         "type": "uint256"
       }
     ],
