@@ -13,6 +13,7 @@ import {
   sendFarcasterNotificationToAllMembers,
   setPaid,
   setAllUnpaid,
+  sendBalanceNotification,
 } from "./chama";
 import {
   getAgentWalletBalance,
@@ -365,6 +366,7 @@ export async function notifyDeadline() {
           `⏰ FINAL REMINDER for ${chama.name} chama`,
           `${chama.name} chama payment is due in 24 hours!\nPlease pay ${formattedAmount} cUSD by ${deadlineTime} (EAT / GMT+3)`
         );
+        await sendBalanceNotification(chama.id, Number(chama.blockchainId),Number(chama.amount),chama.type,chama.name, deadlineTime);
       })
     );
   } catch (error) {
