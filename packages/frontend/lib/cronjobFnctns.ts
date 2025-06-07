@@ -60,7 +60,6 @@ interface EventLog {
   };
 }
 
-let chamasToBePayedToday: Chama[] = [];
 
 export async function checkChamaStarted() {
   const now = new Date(); // already in UTC by default

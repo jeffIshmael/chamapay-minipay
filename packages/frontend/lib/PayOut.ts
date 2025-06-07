@@ -62,7 +62,7 @@ export const getAgentWalletBalance = async () => {
 export const performPayout = async (
   chamaBlockchainId: number
 ): Promise<string | Error> => {
-  const chamaId = BigInt(chamaBlockchainId);
+  const chamaId = [BigInt(chamaBlockchainId)];
   try {
     const { request } = await publicClient.simulateContract({
       account: agentWalletAccount,

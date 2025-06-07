@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import { parseEther } from "viem";
 import { sendFarcasterNotification } from "./farcasterNotification";
 import { sendEmail } from "@/app/actions/emailService";
+import { getIndividualBalance } from "./readFunctions";
 const cron = require("node-cron");
 const prisma = new PrismaClient();
 
@@ -586,6 +587,70 @@ export async function sendFarcasterNotificationToAllMembers(
     await sendFarcasterNotification(fids, title, message);
   } else {
     console.log("No Farcaster users found in this Chama.");
+  }
+}
+
+//function to send balance notif to user
+export async function sendBalanceNotification(
+  chamaId: number,
+  chamaBlockchainId: number,
+  chamaAmount: number,
+  chamaType: string,
+  chamaName: string,
+  time: string
+) {
+  // Fetch all non-incognito members of the Chama with their wallet address and user info
+  const members = await prisma.chamaMember.findMany({
+    where: { chamaId, incognito: false },
+    include: {
+      user: {
+        select: {
+          address: true,
+          fid: true,
+          id: true,
+        },
+      },
+    },
+  });
+
+  for (const member of members) {
+    const userAddress = member.user.address as `0x${string}`;
+
+    // Get locked and unlocked balances for this user
+    const [lockedRaw, availableRaw] = (await getIndividualBalance(
+      chamaBlockchainId,
+      userAddress
+    )) as [bigint, bigint];
+
+    const lockedAmount = Number(lockedRaw) / 1e18;
+    const availableBalance = Number(availableRaw) / 1e18;
+
+    const remainingLocked = chamaAmount - lockedAmount;
+    const remainingToPay = chamaAmount - availableBalance;
+
+    // If any payment or lock is remaining, notify the user
+    if (remainingLocked > 0 || remainingToPay > 0) {
+      const title = "⏰ Arrears Reminder";
+      const userId = member.user.id;
+      const fid = member.user.fid;
+
+      const message =
+        chamaType === "Public"
+          ? `You have an outstanding balance in **${chamaName}**.\n\n🔹 Please pay **${remainingToPay.toFixed(
+              2
+            )} cUSD**${
+              remainingLocked > 0
+                ? `\n🔒 And lock **${remainingLocked.toFixed(2)} cUSD**`
+                : ""
+            }\n⏳ Deadline: **${time} (EAT / GMT+3)**\n\nLet's keep your spot secure. Contribute now!`
+          : `You're yet to complete your payment to **${chamaName}**.\n\n🔹 Amount due: **${remainingToPay.toFixed(
+              2
+            )} cUSD**\n⏳ Deadline: **${time} (EAT / GMT+3)**\n\nMake sure to fulfill your commitment before the deadline.`;
+      await sendNotificationToUserIds([userId], message);
+      if (fid) {
+        await sendFarcasterNotification([fid], title, message);
+      }
+    }
   }
 }
 
