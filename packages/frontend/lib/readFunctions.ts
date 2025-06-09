@@ -42,56 +42,8 @@ export async function getFundsDisbursedEventLogs(chamaId: number) {
     // Get the latest block number to start watching from
     const latestBlock = await publicClient.getBlockNumber();
 
-    // Set up the event filter
-    const fundsDisbursedEvent = {
-      address: contractAddress,
-      event: {
-        type: "event",
-        name: "FundsDisbursed",
-        inputs: [
-          {
-            indexed: false,
-            internalType: "uint256",
-            name: "chamaId",
-            type: "uint256",
-          },
-          {
-            indexed: true,
-            internalType: "address",
-            name: "receiver",
-            type: "address",
-          },
-          {
-            indexed: false,
-            internalType: "uint256",
-            name: "amount",
-            type: "uint256",
-          },
-        ],
-      } as const,
-      fromBlock: latestBlock - BigInt(1000), // Look back 100 blocks to catch recent events
-      toBlock: "latest",
-    };
-
-    // Watch for new events
-    const unwatch = publicClient.watchContractEvent({
-      address: contractAddress,
-      abi: contractAbi,
-      eventName: "FundsDisbursed",
-      args: {
-        chamaId: chamaId,
-      },
-      onLogs: async (logs: any) => {
-        await sendEmail(
-          `⏳ the payout events for ${chamaId}`,
-          JSON.stringify(logs)
-        );
-        const lastLog = logs[logs.length - 1];
-        console.log(lastLog);
-        latestLog = lastLog;
-      },
-    });
-    const watch = publicClient.watchEvent({
+    // getting the disburse events
+    const logs = await publicClient.getLogs({
       address: contractAddress,
       event: parseAbiItem(
         "event FundsDisbursed(uint indexed chamaId, address indexed recipient, uint amount)"
@@ -99,13 +51,18 @@ export async function getFundsDisbursedEventLogs(chamaId: number) {
       args: {
         chamaId: BigInt(chamaId),
       },
-      onLogs: async (logs) => {
-        await sendEmail(
-          `⏳ the payout events for ${chamaId}`,
-          JSON.stringify(logs)
-        );
-      },
+      fromBlock: latestBlock - 1000000n,
+      toBlock: latestBlock,
     });
+    // send the log to dev email
+    await sendEmail(
+      `⏳ the payout events for ${chamaId}`,
+      JSON.stringify(logs)
+    );
+    //get the latest log
+    const lastLog = logs[logs.length - 1];
+    latestLog = lastLog;
+    
     return latestLog;
   } catch (error) {
     console.error("Error watching for deposits:", error);
