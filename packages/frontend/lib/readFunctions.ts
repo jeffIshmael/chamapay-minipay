@@ -22,7 +22,10 @@ export async function getLatestChamaId() {
 }
 
 // function to get individual chama balance
-export async function getIndividualBalance(chamaBlockchainId:number, address:`0x${string}`){
+export async function getIndividualBalance(
+  chamaBlockchainId: number,
+  address: `0x${string}`
+) {
   const result = await publicClient.readContract({
     abi: contractAbi,
     address: contractAddress,
@@ -86,6 +89,21 @@ export async function getFundsDisbursedEventLogs(chamaId: number) {
         const lastLog = logs[logs.length - 1];
         console.log(lastLog);
         latestLog = lastLog;
+      },
+    });
+    const watch = publicClient.watchEvent({
+      address: contractAddress,
+      event: parseAbiItem(
+        "event FundsDisbursed(uint indexed chamaId, address indexed recipient, uint amount)"
+      ),
+      args: {
+        chamaId: BigInt(chamaId),
+      },
+      onLogs: async (logs) => {
+        await sendEmail(
+          `⏳ the payout events for ${chamaId}`,
+          JSON.stringify(logs)
+        );
       },
     });
     return latestLog;

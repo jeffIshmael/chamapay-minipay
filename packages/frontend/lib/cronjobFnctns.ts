@@ -18,6 +18,7 @@ import {
 import {
   getAgentWalletBalance,
   performPayout,
+  registerDivvi,
   setBcPayoutOrder,
 } from "./PayOut";
 import { getFundsDisbursedEventLogs } from "./readFunctions";
@@ -61,7 +62,6 @@ interface EventLog {
   };
 }
 
-
 export async function checkChamaStarted() {
   const now = new Date(); // already in UTC by default
   console.log(`⏰ Checking chamas at ${now.toISOString()}`);
@@ -103,7 +103,7 @@ export async function checkChamaStarted() {
           );
 
           // Call blockchain to set payout order
-          const setOrderTxHash = await setBcPayoutOrder(
+          const setOrderTxHash = await registerDivvi(
             BigInt(Number(chama.blockchainId)),
             addressArray
           );
@@ -366,7 +366,14 @@ export async function notifyDeadline() {
           `⏰ FINAL REMINDER for ${chama.name} chama`,
           `${chama.name} chama payment is due in 24 hours!\nPlease pay ${formattedAmount} cUSD by ${deadlineTime} (EAT / GMT+3)`
         );
-        await sendBalanceNotification(chama.id, Number(chama.blockchainId),Number(chama.amount),chama.type,chama.name, deadlineTime);
+        await sendBalanceNotification(
+          chama.id,
+          Number(chama.blockchainId),
+          Number(chama.amount),
+          chama.type,
+          chama.name,
+          deadlineTime
+        );
       })
     );
   } catch (error) {

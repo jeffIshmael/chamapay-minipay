@@ -101,61 +101,18 @@ export const setBcPayoutOrder = async (
   }
 };
 
-export const triggerDisburse = async (
-  chamaId: BigInt
+export const registerDivvi: (
+  chamaId: BigInt,
+  addressArray: `0x${string}`[]
+) => Promise<string | Error> = async (
+  chamaId: BigInt,
+  addressArray: `0x${string}`[]
 ): Promise<string | Error> => {
   try {
     const functionData = encodeFunctionData({
       abi: contractAbi,
-      functionName: "disburseManually",
-      args: [chamaId],
-    });
-    const fullData = functionData + dataSuffix.replace(/^0x/, "");
-
-    const gas = await publicClient.estimateGas({
-      account: agentWalletAccount,
-      to: contractAddress,
-      data: fullData as `0x${string}`,
-      value: 0n,
-    });
-
-    const tx = await walletClient.prepareTransactionRequest({
-      to: contractAddress,
-      data: fullData as `0x${string}`,
-      value: 0n,
-      gas,
-    });
-
-    const signedTx = await walletClient.signTransaction(tx);
-
-    const txHash = await publicClient.sendRawTransaction({
-      serializedTransaction: signedTx,
-    });
-
-    const chainId = await walletClient.getChainId();
-
-    await submitReferral({
-      txHash,
-      chainId,
-    });
-    await sendEmail("manual trigger successful", txHash as string);
-    return txHash;
-  } catch (error) {
-    console.log(error);
-    await sendEmail("error", JSON.stringify(error));
-    return error as Error;
-  }
-};
-
-export const registerDivvi = async (
-  chamaBlockchainId: number
-): Promise<string | Error> => {
-  const chamaId = BigInt(chamaBlockchainId);
-  try {
-    const functionData = encodeFunctionData({
-      abi: contractAbi,
-      functionName: "checkPayDate",
-      args: [chamaId],
+      functionName: "setPayoutOrder",
+      args: [chamaId, addressArray],
     });
     const fullData = functionData + dataSuffix.replace(/^0x/, "");
 
