@@ -78,8 +78,9 @@ const Page = () => {
   const { writeContractAsync } = useWriteContract();
   const { isConnected, address } = useAccount();
   const { isFarcaster, setIsFarcaster } = useIsFarcaster();
-  const [rejecting, setRejecting] = useState(false);
-  const [approving, setApproving] = useState(false);
+  const [loadingStates, setLoadingStates] = useState<
+    Record<number, "approving" | "rejecting" | null>
+  >({});
 
   // Fetch user details
   useEffect(() => {
@@ -134,7 +135,13 @@ const Page = () => {
       toast.error("Please connect your wallet");
       return;
     }
-    setLoading(true);
+
+    // Set loading state for this specific request
+    setLoadingStates((prev) => ({
+      ...prev,
+      [requestId]: action === "approve" ? "approving" : "rejecting",
+    }));
+
     try {
       const [request, userData] = await Promise.all([
         getRequestById(requestId),
@@ -145,43 +152,23 @@ const Page = () => {
       if (!userData) throw new Error("User details not found");
 
       if (action === "approve") {
-        try {
-          setApproving(true);
-          const txHash = await writeContractAsync({
-            address: contractAddress,
-            abi: contractAbi,
-            functionName: "addMember",
-            args: [userData.address, BigInt(chamaBlockchainId)],
-          });
+        const txHash = await writeContractAsync({
+          address: contractAddress,
+          abi: contractAbi,
+          functionName: "addMember",
+          args: [userData.address, BigInt(chamaBlockchainId)],
+        });
 
-          if (txHash) {
-            // setSenderDetails(userData);
-            await handleJoinRequest(
-              requestId,
-              action,
-              userId,
-              chamaId,
-              canJoin
-            );
-            showToast(
-              `${userData.name} successfully added to ${chamaName}`,
-              "success"
-            );
-            setApproving(false);
-          }
-        } catch (error) {
-          showToast(`Failed to add ${userData.name} to ${chamaName}`);
-          console.log(error);
-          setApproving(false);
+        if (txHash) {
+          await handleJoinRequest(requestId, action, userId, chamaId, canJoin);
+          showToast(
+            `${userData.name} successfully added to ${chamaName}`,
+            "success"
+          );
         }
-      } else if (action === "reject") {
-        setRejecting(true);
-        // setSenderDetails(userData);
+      } else {
         await handleJoinRequest(requestId, action, userId, chamaId, canJoin);
         showToast(`Request successfully rejected`, "error");
-        setRejecting(false);
-      } else {
-        showToast("No action taken.", "info");
       }
 
       // Refetch data
@@ -200,9 +187,8 @@ const Page = () => {
       showToast(`Failed to ${action} request`, "error");
       console.log(error);
     } finally {
-      setLoading(false);
-      setRejecting(false);
-      setApproving(false);
+      // Clear loading state for this request
+      setLoadingStates((prev) => ({ ...prev, [requestId]: null }));
     }
   };
 
@@ -333,15 +319,22 @@ const Page = () => {
                                     : false
                                 )
                               }
-                              disabled={loading || approving || rejecting}
+                              disabled={
+                                loadingStates[notification.requestId ?? 0] !==
+                                null
+                              }
                               className={`flex items-center px-3 py-1.5 bg-downy-600 text-white rounded-lg hover:bg-downy-700 transition-colors ${
-                                loading || approving || rejecting
+                                loadingStates[notification.requestId ?? 0] !==
+                                null
                                   ? "opacity-70"
                                   : ""
                               }`}
                             >
                               <FiCheck className="mr-1" size={14} />
-                              {approving ? "Approving..." : "Approve"}
+                              {loadingStates[notification.requestId ?? 0] ===
+                              "approving"
+                                ? "Approving..."
+                                : "Approve"}
                             </button>
                             <button
                               onClick={() =>
@@ -361,15 +354,22 @@ const Page = () => {
                                     : false
                                 )
                               }
-                              disabled={loading || approving || rejecting}
+                              disabled={
+                                loadingStates[notification.requestId ?? 0] !==
+                                null
+                              }
                               className={`flex items-center px-3 py-1.5 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors ${
-                                loading || approving || rejecting
+                                loadingStates[notification.requestId ?? 0] !==
+                                null
                                   ? "opacity-70"
                                   : ""
                               }`}
                             >
                               <FiX className="mr-1" size={14} />
-                              {rejecting ? "rejecting..." : "Reject"}
+                              {loadingStates[notification.requestId ?? 0] ===
+                              "rejecting"
+                                ? "Rejecting..."
+                                : "Reject"}
                             </button>
                           </div>
                         )}

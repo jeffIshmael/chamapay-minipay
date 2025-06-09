@@ -56,8 +56,8 @@ const ChamaSchedule = ({
   address: string;
 }) => {
   const getMemberPayoutDate = (index: number): Date => {
-    const payoutDate = new Date(chama.startDate);
-    payoutDate.setDate(payoutDate.getDate() + chama.cycleTime * (index + 1));
+    const payoutDate = new Date(chama.cycle > 1 ? chama.payDate : chama.startDate);
+    payoutDate.setDate(payoutDate.getDate() + chama.cycleTime * (chama.cycle > 1 ? index : index + 1));
     return payoutDate;
   };
 

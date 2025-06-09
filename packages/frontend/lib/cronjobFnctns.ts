@@ -287,6 +287,23 @@ export async function runDailyPayouts() {
                 payoutOrder[i],
               ];
             }
+            //get the addresses
+            const addressArray = payoutOrder.map(
+              (m) => m.user.address as `0x${string}`
+            );
+
+            // Call blockchain to set payout order
+            const setOrderTxHash = await setBcPayoutOrder(
+              BigInt(Number(chama.blockchainId)),
+              addressArray
+            );
+
+            if (!setOrderTxHash || setOrderTxHash instanceof Error) {
+              const errorMsg = `❌ Failed to set payout order for Chama '${chama.name}' (ID: ${chama.id})`;
+              console.error(errorMsg, setOrderTxHash);
+              await sendEmail(errorMsg, JSON.stringify(setOrderTxHash));
+              continue; // skip updating DB if on-chain failed
+            }
 
             await prisma.chama.update({
               where: { id: chama.id },

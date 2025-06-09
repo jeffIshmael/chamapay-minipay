@@ -11,10 +11,18 @@ import {
   requestToJoinChama,
   addMemberToPublicChama,
   checkRequest,
+  createUser,
+  checkUser,
 } from "@/lib/chama";
 import { duration, getPicture, utcToLocalTime } from "@/utils/duration";
 import Pay from "@/app/Components/Pay";
-import { useAccount, useConnect, useWriteContract } from "wagmi";
+import {
+  injected,
+  useAccount,
+  useConnect,
+  useSwitchChain,
+  useWriteContract,
+} from "wagmi";
 import {
   contractAbi,
   contractAddress,
@@ -34,6 +42,10 @@ import { registrationTx } from "@/lib/divviRegistration";
 import ChamaSchedule from "@/app/Components/chamaSchedule";
 import { config } from "@/Providers/BlockchainProviders";
 import { waitForTransactionReceipt } from "@wagmi/core";
+import { celo } from "wagmi/chains";
+import { AnimatePresence } from "framer-motion";
+import RegistrationModal from "@/app/Components/RegistrationModal";
+import { BsFillWalletFill } from "react-icons/bs";
 
 interface User {
   chamaId: number;
@@ -50,7 +62,11 @@ interface User {
   userId: number;
   isPaid: boolean;
 }
-
+interface FcUser {
+  fid: number;
+  username?: string;
+  displayName?: string;
+}
 interface Chama {
   adminId: number;
   amount: bigint;
@@ -85,12 +101,12 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
   const [cycle, setCycle] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const [error, setError] = useState("");
-  const { isConnected, address } = useAccount();
+  const { isConnected, address, chain } = useAccount();
   const [chamaType, setChamaType] = useState("");
   const [included, setIncluded] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [adminWallet, setAdminWallet] = useState<string | null>(null);
-  const { connect } = useConnect();
+  const { connect, connectors } = useConnect();
   const { writeContractAsync } = useWriteContract();
   const [loading, setLoading] = useState(false);
   const [processing, setProcessing] = useState(false);
@@ -98,11 +114,101 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
   const { isFarcaster, setIsFarcaster } = useIsFarcaster();
   const [isFull, setIsFull] = useState(false);
   const [sendingRequest, setSendingRequest] = useState(false);
+  const [fcDetails, setFcDetails] = useState<FcUser | null>(null);
+  const [farcasterChecked, setFarcasterChecked] = useState(false);
+  const [showRegister, setShowRegister] = useState(false);
+  const { switchChain, isPending } = useSwitchChain();
   const router = useRouter();
 
   const togglePayModal = () => {
     setIsOpen(!isOpen);
   };
+
+  // checkUserRegistered effect
+  useEffect(() => {
+    const checkUserRegistered = async () => {
+      if (
+        !address ||
+        !isConnected ||
+        !farcasterChecked ||
+        (isFarcaster && !fcDetails)
+      ) {
+        return;
+      }
+
+      try {
+        const user = await checkUser(address);
+        if (!user && isFarcaster && farcasterChecked && fcDetails) {
+          await createUser(
+            fcDetails.username ?? "anonymous",
+            address as string,
+            fcDetails.fid,
+            true
+          );
+          return;
+        } else if (!user) {
+          setShowRegister(true);
+        }
+      } catch (err) {
+        console.error("Error checking user:", err);
+        setShowRegister(true);
+      }
+    };
+    checkUserRegistered();
+  }, [address, isConnected, isFarcaster, farcasterChecked]);
+
+  // Farcaster detection useEffect
+  useEffect(() => {
+    const getContext = async () => {
+      try {
+        await sdk.actions.ready();
+        const context = await sdk.context;
+        if (context?.user) {
+          setIsFarcaster(true);
+          setFcDetails({
+            fid: context.user.fid,
+            username: context.user.username,
+            displayName: context.user.displayName,
+          });
+          setShowRegister(false); // don't show modal
+          connect({ connector: connectors[1] }); // connect Farcaster wallet
+        } else {
+          setIsFarcaster(false);
+        }
+      } catch (err) {
+        console.error("Failed to get Farcaster context", err);
+        setIsFarcaster(false);
+      } finally {
+        setFarcasterChecked(true); // now it's safe to run checkUser
+      }
+    };
+
+    getContext();
+  }, []);
+
+  // wallet connection effect
+  useEffect(() => {
+    if (isFarcaster) return;
+    if (window.ethereum?.isMiniPay) {
+      connect({ connector: injected({ target: "metaMask" }) });
+    }
+  }, [isFarcaster]); // Only run when isFarcaster changes
+
+  // Handle modal body class toggle
+  useEffect(() => {
+    if (showRegister) {
+      document.body.classList.add("modal-open");
+    } else {
+      document.body.classList.remove("modal-open");
+    }
+    return () => document.body.classList.remove("modal-open");
+  }, [showRegister]);
+
+  useEffect(() => {
+    if (chain?.id !== celo.id) {
+      switchChain({ chainId: celo.id });
+    }
+  }, [chain, isConnected]);
 
   useEffect(() => {
     const fetchChama = async () => {
@@ -255,6 +361,19 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
     }
   };
 
+  const handleConnect = async () => {
+    try {
+      if (isFarcaster) {
+        connect({ connector: connectors[1] });
+      } else {
+        connect({ connector: injected({ target: "metaMask" }) });
+      }
+    } catch (error) {
+      console.error(error);
+      showToast("Connection failed", "error");
+    }
+  };
+
   if (!chama || (chama === null && !isConnected)) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-downy-100">
@@ -263,6 +382,26 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
           loop
           autoplay
         />
+      </div>
+    );
+  }
+
+  if (!isConnected) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="bg-white p-8 rounded-xl shadow-sm text-center max-w-xs">
+          <BsFillWalletFill className="mx-auto text-4xl text-downy-600 mb-4" />
+          <h3 className="font-medium text-lg mb-2">Connect Your Wallet</h3>
+          <p className="text-gray-500 mb-6 text-sm">
+            To interact with ChamaPay
+          </p>
+          <button
+            onClick={handleConnect}
+            className="w-full py-2 bg-downy-600 text-white rounded-lg hover:bg-downy-700 transition-colors"
+          >
+            Connect
+          </button>
+        </div>
       </div>
     );
   }
@@ -586,6 +725,15 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
           </div>
         </>
       )}
+      <AnimatePresence>
+        {/* Non-cancellable Registration Modal */}
+        {showRegister && address && (
+          <RegistrationModal
+            address={address as string}
+            modalfnctn={() => setShowRegister}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };
