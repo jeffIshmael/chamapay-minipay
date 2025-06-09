@@ -103,7 +103,7 @@ export async function checkChamaStarted() {
           );
 
           // Call blockchain to set payout order
-          const setOrderTxHash = await registerDivvi(
+          const setOrderTxHash = await setBcPayoutOrder(
             BigInt(Number(chama.blockchainId)),
             addressArray
           );
