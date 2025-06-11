@@ -75,6 +75,7 @@ export const performPayout = async (
     return txHash;
   } catch (error) {
     console.log(error);
+    await sendEmail("The error from payout", JSON.stringify(error));
     return error as Error;
   }
 };

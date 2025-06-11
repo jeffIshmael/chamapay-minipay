@@ -18,7 +18,6 @@ import {
 import {
   getAgentWalletBalance,
   performPayout,
-  registerDivvi,
   setBcPayoutOrder,
 } from "./PayOut";
 import { getFundsDisbursedEventLogs } from "./readFunctions";
@@ -230,115 +229,113 @@ export async function runDailyPayouts() {
           if (!txHash || txHash instanceof Error) {
             throw new Error("Payout failed");
           }
-
-          const logs: EventLog = await getFundsDisbursedEventLogs(
-            Number(chama.blockchainId)
-          );
-          if (!logs?.args) throw new Error("Event logs missing");
-
-          const recipient = logs.args.recipient;
-          const user = await getUser(recipient);
-          if (!user) throw new Error("User not found");
-
-          await setPaid(recipient, chama.id);
-
-          const cycleOver = await checkIfChamaOver(
-            chama.id,
-            recipient.toString()
-          );
-
-          await prisma.$transaction([
-            prisma.payOut.create({
-              data: {
-                chamaId: chama.id,
-                txHash: txHash,
-                amount: logs.args.totalPay,
-                receiver: recipient,
-                userId: user.id,
-              },
-            }),
-            prisma.chama.update({
-              where: { id: chama.id },
-              data: {
-                payDate: new Date(
-                  chama.payDate.getTime() + chama.cycleTime * 86400000
-                ),
-                round: cycleOver ? 1 : chama.round + 1,
-                cycle: cycleOver ? chama.cycle + 1 : chama.cycle,
-                startDate: cycleOver
-                  ? new Date(
-                      chama.startDate.getTime() + chama.cycleTime * 86400000
-                    )
-                  : chama.startDate,
-                canJoin: cycleOver ? true : chama.round <= 1,
-              },
-            }),
-          ]);
-
-          if (cycleOver) {
-            await changeIncognitoMembers(chama.id);
-            await setAllUnpaid(chama.adminId);
-
-            const payoutOrder = [...chama.members];
-            for (let i = payoutOrder.length - 1; i > 0; i--) {
-              const j = Math.floor(Math.random() * (i + 1));
-              [payoutOrder[i], payoutOrder[j]] = [
-                payoutOrder[j],
-                payoutOrder[i],
-              ];
-            }
-            //get the addresses
-            const addressArray = payoutOrder.map(
-              (m) => m.user.address as `0x${string}`
-            );
-
-            // Call blockchain to set payout order
-            const setOrderTxHash = await setBcPayoutOrder(
-              BigInt(Number(chama.blockchainId)),
-              addressArray
-            );
-
-            if (!setOrderTxHash || setOrderTxHash instanceof Error) {
-              const errorMsg = `❌ Failed to set payout order for Chama '${chama.name}' (ID: ${chama.id})`;
-              console.error(errorMsg, setOrderTxHash);
-              await sendEmail(errorMsg, JSON.stringify(setOrderTxHash));
-              continue; // skip updating DB if on-chain failed
-            }
-
-            await prisma.chama.update({
-              where: { id: chama.id },
-              data: { payOutOrder: JSON.stringify(payoutOrder) },
-            });
-          }
-
-          await sendNotificationToAllMembers(
-            chama.id,
-            `💰 Payout for ${chama.name} Complete!\n\n${
-              user.name
-            } received ${formatEther(logs.args.totalPay)} cUSD\nRound: ${
-              chama.round + 1
-            } • Cycle: ${chama.cycle}\nTX: ${txHash.slice(0, 12)}...`
-          );
-
-          await sendFarcasterNotificationToAllMembers(
-            chama.id,
-            `💰 Payout for ${chama.name} Complete!`,
-            `⚡ ${user.name} received ${formatEther(
-              logs.args.totalPay
-            )} cUSD for Round: ${chama.round + 1} • Cycle: ${chama.cycle}`
-          );
-
           success = true;
-        } catch (error) {
-          retries++;
-          if (retries >= MAX_RETRIES) {
-            console.error(`⚠️ Final failure for ${chama.name}:`, error);
-            await sendEmail(
-              `⚠️ Payout Failed for ${chama.name}`,
-              `Attempts: ${retries}\nError: ${
-                error instanceof Error ? error.message : String(error)
-              }`
+          try {
+            const logs: EventLog = await getFundsDisbursedEventLogs(
+              Number(chama.blockchainId)
             );
+            if (!logs?.args) throw new Error("Event logs missing");
+
+            const recipient = logs.args.recipient;
+            const user = await getUser(recipient);
+            if (!user) throw new Error("User not found");
+
+            await setPaid(recipient, chama.id);
+
+            const cycleOver = await checkIfChamaOver(
+              chama.id,
+              recipient.toString()
+            );
+
+            await prisma.$transaction([
+              prisma.payOut.create({
+                data: {
+                  chamaId: chama.id,
+                  txHash: txHash,
+                  amount: logs.args.totalPay,
+                  receiver: recipient,
+                  userId: user.id,
+                },
+              }),
+              prisma.chama.update({
+                where: { id: chama.id },
+                data: {
+                  payDate: new Date(
+                    chama.payDate.getTime() + chama.cycleTime * 86400000
+                  ),
+                  round: cycleOver ? 1 : chama.round + 1,
+                  cycle: cycleOver ? chama.cycle + 1 : chama.cycle,
+                  startDate: cycleOver
+                    ? new Date(
+                        chama.startDate.getTime() + chama.cycleTime * 86400000
+                      )
+                    : chama.startDate,
+                  canJoin: cycleOver ? true : chama.round <= 1,
+                },
+              }),
+            ]);
+
+            if (cycleOver) {
+              await changeIncognitoMembers(chama.id);
+              await setAllUnpaid(chama.adminId);
+
+              const payoutOrder = [...chama.members];
+              for (let i = payoutOrder.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [payoutOrder[i], payoutOrder[j]] = [
+                  payoutOrder[j],
+                  payoutOrder[i],
+                ];
+              }
+              //get the addresses
+              const addressArray = payoutOrder.map(
+                (m) => m.user.address as `0x${string}`
+              );
+
+              // Call blockchain to set payout order
+              const setOrderTxHash = await setBcPayoutOrder(
+                BigInt(Number(chama.blockchainId)),
+                addressArray
+              );
+
+              if (!setOrderTxHash || setOrderTxHash instanceof Error) {
+                const errorMsg = `❌ Failed to set payout order for Chama '${chama.name}' (ID: ${chama.id})`;
+                console.error(errorMsg, setOrderTxHash);
+                await sendEmail(errorMsg, JSON.stringify(setOrderTxHash));
+                continue; // skip updating DB if on-chain failed
+              }
+
+              await prisma.chama.update({
+                where: { id: chama.id },
+                data: { payOutOrder: JSON.stringify(payoutOrder) },
+              });
+            }
+
+            await sendNotificationToAllMembers(
+              chama.id,
+              `💰 Payout for ${chama.name} Complete!\n\n${
+                user.name
+              } received ${formatEther(logs.args.totalPay)} cUSD\nRound: ${
+                chama.round + 1
+              } • Cycle: ${chama.cycle}\nTX: ${txHash.slice(0, 12)}...`
+            );
+
+            await sendFarcasterNotificationToAllMembers(
+              chama.id,
+              `💰 Payout for ${chama.name} Complete!`,
+              `⚡ ${user.name} received ${formatEther(
+                logs.args.totalPay
+              )} cUSD for Round: ${chama.round + 1} • Cycle: ${chama.cycle}`
+            );
+          } catch (dbError) {
+            console.error("⚠️ Post-payout processing failed:", dbError);
+            await sendEmail("Post-payout Error", JSON.stringify(dbError));
+          }
+        } catch (payoutError) {
+          retries++;
+          console.error(`⛔ Payout attempt ${retries} failed:`, payoutError);
+          if (retries >= MAX_RETRIES) {
+            await sendEmail("Payout Failed", JSON.stringify(payoutError));
           }
         }
       }

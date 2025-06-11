@@ -388,7 +388,7 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
 
   if (!isConnected) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gray-300 flex items-center justify-center p-4">
         <div className="bg-white p-8 rounded-xl shadow-sm text-center max-w-xs">
           <BsFillWalletFill className="mx-auto text-4xl text-downy-600 mb-4" />
           <h3 className="font-medium text-lg mb-2">Connect Your Wallet</h3>
