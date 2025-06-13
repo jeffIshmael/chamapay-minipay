@@ -229,7 +229,7 @@ export async function runDailyPayouts() {
           if (!txHash || txHash instanceof Error) {
             throw new Error("Payout failed");
           }
-          success = true;
+          
           try {
             const logs: EventLog = await getFundsDisbursedEventLogs(
               Number(chama.blockchainId)
@@ -327,6 +327,7 @@ export async function runDailyPayouts() {
                 logs.args.totalPay
               )} cUSD for Round: ${chama.round + 1} • Cycle: ${chama.cycle}`
             );
+            success = true;
           } catch (dbError) {
             console.error("⚠️ Post-payout processing failed:", dbError);
             await sendEmail("Post-payout Error", JSON.stringify(dbError));
