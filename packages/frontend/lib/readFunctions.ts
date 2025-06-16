@@ -54,11 +54,11 @@ export async function getFundsDisbursedEventLogs(chamaId: number): Promise<Event
       "loading..."
     );
     // Get the latest block number to start watching from
-    const latestBlock = await publicClient.getBlockNumber();
+    // const latestBlock = await publicClient.getBlockNumber();
 
     await sendEmail(
       `latest celo block`,
-      JSON.stringify(latestBlock)
+      JSON.stringify(38164790n)
     );
 
     // getting the disburse events
@@ -71,7 +71,7 @@ export async function getFundsDisbursedEventLogs(chamaId: number): Promise<Event
         chamaId: BigInt(chamaId),
       },
       fromBlock: 37162926n, // block of chamapay contract creation
-      toBlock: latestBlock,
+      toBlock: 38164790n,
     });
     // send the log to dev email
     await sendEmail(
