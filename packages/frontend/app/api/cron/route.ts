@@ -14,7 +14,7 @@ export async function GET(request: Request) {
   }
 
   // 2. Your cron logic
-  await trialError(3,3);
+  // await trialError(3,3);
   await getFundsDisbursedEventLogs(3);
   await checkChamaStarted();
   await runDailyPayouts();
