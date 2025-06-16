@@ -232,9 +232,9 @@ export async function runDailyPayouts() {
           }
 
           try {
-            const logs = await getFundsDisbursedEventLogs(
+            const logs = (await getFundsDisbursedEventLogs(
               Number(chama.blockchainId)
-            ) as EventLog[];
+            )) as EventLog[];
             if (!Array.isArray(logs)) {
               await sendEmail(
                 "Post-payout Error",
@@ -424,7 +424,9 @@ export async function checkBalance() {
 
 export async function trialError(chamaBlockchainId: number, chamaId: number) {
   try {
-    const logs = await getFundsDisbursedEventLogs(chamaBlockchainId) as EventLog[];
+    const logs = (await getFundsDisbursedEventLogs(
+      chamaBlockchainId
+    )) as EventLog[];
     if (!Array.isArray(logs)) {
       await sendEmail(
         "Post-payout Error",

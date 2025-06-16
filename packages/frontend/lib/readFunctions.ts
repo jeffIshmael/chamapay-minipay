@@ -8,7 +8,7 @@ import { celo } from "viem/chains";
 
 export const publicClient = createPublicClient({
   chain: celo,
-  transport: http("https://forno.celo.org"),
+  transport: http(),
 });
 
 interface EventLog {
