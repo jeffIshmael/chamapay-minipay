@@ -24,6 +24,7 @@ import { getFundsDisbursedEventLogs } from "./readFunctions";
 import { formatEther } from "viem";
 import { sendEmail } from "../app/actions/emailService";
 import { utcToEAT, utcToLocalTime } from "@/utils/duration";
+import { getFundsDisbursedModule } from "@/Test";
 
 const prisma = new PrismaClient();
 
@@ -414,7 +415,7 @@ export async function checkBalance() {
 
 export async function trialError(chamaBlockchainId: number, chamaId: number) {
   try {
-    const logs: EventLog = await getFundsDisbursedEventLogs(chamaBlockchainId);
+    const logs = (await getFundsDisbursedModule(chamaBlockchainId)) as EventLog;
     if (!logs?.args) throw new Error("Event logs missing");
 
     const recipient = logs.args.recipient;

@@ -51,7 +51,7 @@ export async function getFundsDisbursedEventLogs(chamaId: number) {
       args: {
         chamaId: BigInt(chamaId),
       },
-      fromBlock: 37162926n,
+      fromBlock: 37162926n, // block of chamapay contract creation
       toBlock: latestBlock,
     });
     // send the log to dev email

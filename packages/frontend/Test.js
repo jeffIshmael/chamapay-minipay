@@ -21,90 +21,40 @@ async function getLatestChamaId() {
 }
 
 // function to get FundsDisbursed event logs
-async function getFundsDisbursedEventLogs(chamaId) {
+export async function getFundsDisbursedModule(chamaId) {
   try {
     let latestLog;
     // Get the latest block number to start watching from
     const latestBlock = await publicClient.getBlockNumber();
+    console.log(latestBlock);
+
+    // getting the disburse events
     const logs = await publicClient.getLogs({
       address: "0x367266EAfb2DD67A844648f86CD1F880AE100e09",
       event: parseAbiItem(
-        "event ChamaRegistered(uint indexed id,  uint amount, uint duration, uint maxMembers, uint startDate,bool _isPublic,  address indexed admin)"
+        "event FundsDisbursed(uint indexed chamaId, address indexed recipient, uint amount)"
       ),
-      fromBlock: latestBlock - 1000000n,
+      args: {
+        chamaId: BigInt(chamaId),
+      },
+      fromBlock: 37162926n,
       toBlock: latestBlock,
     });
-
-    console.log(logs);
+    // send the log to dev email
+    console.log(`⏳ the payout events for ${chamaId}`, logs);
+    //get the latest log
     const lastLog = logs[logs.length - 1];
-    console.log("The last log is,");
-    console.log(lastLog);
-
-    // Set up the event filter
-    // const fundsDisbursedEvent = {
-    //   address: "0x367266EAfb2DD67A844648f86CD1F880AE100e09",
-    //   event: {
-    //     type: "event",
-    //     name: "FundsDisbursed",
-    //     inputs: [
-    //       {
-    //         indexed: false,
-    //         internalType: "uint256",
-    //         name: "chamaId",
-    //         type: "uint256",
-    //       },
-    //       {
-    //         indexed: true,
-    //         internalType: "address",
-    //         name: "receiver",
-    //         type: "address",
-    //       },
-    //       {
-    //         indexed: false,
-    //         internalType: "uint256",
-    //         name: "amount",
-    //         type: "uint256",
-    //       },
-    //     ],
-    //   },
-    //   fromBlock: latestBlock - BigInt(1000), // Look back 100 blocks to catch recent events
-    //   toBlock: "latest",
-    // };
-    // console.log(fundsDisbursedEvent);
-
-    // Watch for new events
-    // const unwatch = publicClient.watchContractEvent({
-    //   address: contractAddress,
-    //   abi: contractAbi,
-    //   eventName: "FundsDisbursed",
-    //   args: {
-    //     chamaId: chamaId,
-    //   },
-    //   onLogs: async (logs) => {
-    //     await sendEmail(
-    //       `⏳ the payout events for ${chamaId}`,
-    //       JSON.stringify(logs)
-    //     );
-    //     const lastLog = logs[logs.length - 1];
-    //     console.log(lastLog);
-    //     latestLog = lastLog;
-    //   },
-    // });
-    // const watch = publicClient.watchEvent({
-    //   address: "0x367266EAfb2DD67A844648f86CD1F880AE100e09",
-    //   event: parseAbiItem(
-    //     "event ChamaRegistered(uint indexed id,  uint amount, uint duration, uint maxMembers, uint startDate,bool _isPublic,  address indexed admin)"
-    //   ),
-    //   onLogs: (logs) => {
-    //     console.log(logs);
-    //   },
-    // });
+    latestLog = lastLog;
+    console.log(`⏳ the last log events for ${chamaId}`, lastLog);
+    return lastLog;
   } catch (error) {
     console.error("Error watching for deposits:", error);
+    console.log(`⏳ error getting logs ${chamaId}`, error);
+    return error;
   }
 }
 
-getFundsDisbursedEventLogs(BigInt(1));
+getFundsDisbursedModule(3);
 
 // [
 //   {
