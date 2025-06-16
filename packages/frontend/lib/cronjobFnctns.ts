@@ -59,6 +59,7 @@ interface EventLog {
     recipient: string;
     totalPay: bigint;
   };
+  transactionHash: string;
 }
 
 export async function checkChamaStarted() {
@@ -229,7 +230,7 @@ export async function runDailyPayouts() {
           if (!txHash || txHash instanceof Error) {
             throw new Error("Payout failed");
           }
-          
+
           try {
             const logs: EventLog = await getFundsDisbursedEventLogs(
               Number(chama.blockchainId)
@@ -406,5 +407,54 @@ export async function checkBalance() {
   // send email if agent balance is below 1 celo
   if (Number(balance) < 1) {
     await sendEmail("Balance is low", `Your agent balance is ${balance} celo.`);
+  }
+}
+
+// trial for bugs
+
+export async function trialError(chamaBlockchainId: number, chamaId: number) {
+  try {
+    const logs: EventLog = await getFundsDisbursedEventLogs(chamaBlockchainId);
+    if (!logs?.args) throw new Error("Event logs missing");
+
+    const recipient = logs.args.recipient;
+    const txHash = logs?.transactionHash;
+    const user = await getUser(recipient);
+    if (!user) throw new Error("User not found");
+
+    await setPaid(recipient, chamaId);
+
+    const cycleOver = await checkIfChamaOver(chamaId, recipient.toString());
+
+    await prisma.$transaction([
+      prisma.payOut.create({
+        data: {
+          chamaId: chamaId,
+          txHash: txHash,
+          amount: logs.args.totalPay,
+          receiver: recipient,
+          userId: user.id,
+        },
+      }),
+    ]);
+
+    await sendNotificationToAllMembers(
+      chamaId,
+      `💰 Payout for  Complete!\n\n${
+        user.name
+      } received ${formatEther(logs.args.totalPay)} cUSD\nRound: • Cycle: \nTX: ${txHash.slice(0, 12)}...`
+    );
+
+    await sendFarcasterNotificationToAllMembers(
+      chamaId,
+      `💰 Payout for  Complete!`,
+      `⚡ ${user.name} received ${formatEther(
+        logs.args.totalPay
+      )} cUSD for Round: • Cycle: `
+    );
+
+  } catch (dbError) {
+    console.error("⚠️ Post-payout processing failed:", dbError);
+    await sendEmail("Post-payout Error", JSON.stringify(dbError));
   }
 }

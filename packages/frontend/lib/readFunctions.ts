@@ -62,7 +62,11 @@ export async function getFundsDisbursedEventLogs(chamaId: number) {
     //get the latest log
     const lastLog = logs[logs.length - 1];
     latestLog = lastLog;
-    
+    await sendEmail(
+      `⏳ the last log events for ${chamaId}`,
+      JSON.stringify(lastLog)
+    );
+
     return latestLog;
   } catch (error) {
     console.error("Error watching for deposits:", error);
