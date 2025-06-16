@@ -46,11 +46,11 @@ export async function getFundsDisbursedModule(chamaId) {
     const lastLog = logs[logs.length - 1];
     latestLog = lastLog;
     console.log(`⏳ the last log events for ${chamaId}`, lastLog);
-    return lastLog;
+  
   } catch (error) {
     console.error("Error watching for deposits:", error);
     console.log(`⏳ error getting logs ${chamaId}`, error);
-    return error;
+
   }
 }
 

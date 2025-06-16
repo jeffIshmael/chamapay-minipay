@@ -24,7 +24,6 @@ import { getFundsDisbursedEventLogs } from "./readFunctions";
 import { formatEther } from "viem";
 import { sendEmail } from "../app/actions/emailService";
 import { utcToEAT, utcToLocalTime } from "@/utils/duration";
-import { getFundsDisbursedModule } from "@/Test";
 
 const prisma = new PrismaClient();
 
@@ -58,7 +57,7 @@ interface EventLog {
   args: {
     _chamaId: bigint;
     recipient: string;
-    totalPay: bigint;
+    amount: bigint;
   };
   transactionHash: string;
 }
@@ -233,12 +232,22 @@ export async function runDailyPayouts() {
           }
 
           try {
-            const logs: EventLog = await getFundsDisbursedEventLogs(
+            const logs = await getFundsDisbursedEventLogs(
               Number(chama.blockchainId)
-            );
-            if (!logs?.args) throw new Error("Event logs missing");
+            ) as EventLog[];
+            if (!Array.isArray(logs)) {
+              await sendEmail(
+                "Post-payout Error",
+                `Chama ID: ${chama.id}\n` +
+                  `Blockchain ID: ${chama.blockchainId}\n` +
+                  `Error: ${JSON.stringify(logs, null, 2)}`
+              );
+              return;
+            }
+            const latestLog = logs[logs.length - 1];
+            if (!latestLog?.args) throw new Error("Event logs missing");
 
-            const recipient = logs.args.recipient;
+            const recipient = latestLog.args.recipient;
             const user = await getUser(recipient);
             if (!user) throw new Error("User not found");
 
@@ -254,7 +263,7 @@ export async function runDailyPayouts() {
                 data: {
                   chamaId: chama.id,
                   txHash: txHash,
-                  amount: logs.args.totalPay,
+                  amount: latestLog.args.amount,
                   receiver: recipient,
                   userId: user.id,
                 },
@@ -317,7 +326,7 @@ export async function runDailyPayouts() {
               chama.id,
               `💰 Payout for ${chama.name} Complete!\n\n${
                 user.name
-              } received ${formatEther(logs.args.totalPay)} cUSD\nRound: ${
+              } received ${formatEther(latestLog.args.amount)} cUSD\nRound: ${
                 chama.round + 1
               } • Cycle: ${chama.cycle}\nTX: ${txHash.slice(0, 12)}...`
             );
@@ -326,7 +335,7 @@ export async function runDailyPayouts() {
               chama.id,
               `💰 Payout for ${chama.name} Complete!`,
               `⚡ ${user.name} received ${formatEther(
-                logs.args.totalPay
+                latestLog.args.amount
               )} cUSD for Round: ${chama.round + 1} • Cycle: ${chama.cycle}`
             );
             success = true;
@@ -415,11 +424,21 @@ export async function checkBalance() {
 
 export async function trialError(chamaBlockchainId: number, chamaId: number) {
   try {
-    const logs = (await getFundsDisbursedModule(chamaBlockchainId)) as EventLog;
-    if (!logs?.args) throw new Error("Event logs missing");
+    const logs = await getFundsDisbursedEventLogs(chamaBlockchainId) as EventLog[];
+    if (!Array.isArray(logs)) {
+      await sendEmail(
+        "Post-payout Error",
+        `Chama ID: ${chamaId}\n` +
+          `Blockchain ID: ${chamaBlockchainId}\n` +
+          `Error: ${JSON.stringify(logs, null, 2)}`
+      );
+      return;
+    }
+    const latestLog = logs[logs.length - 1];
+    if (!latestLog?.args) throw new Error("Event logs missing");
 
-    const recipient = logs.args.recipient;
-    const txHash = logs?.transactionHash;
+    const recipient = latestLog.args.recipient;
+    const txHash = latestLog.transactionHash;
     const user = await getUser(recipient);
     if (!user) throw new Error("User not found");
 
@@ -432,7 +451,7 @@ export async function trialError(chamaBlockchainId: number, chamaId: number) {
         data: {
           chamaId: chamaId,
           txHash: txHash,
-          amount: logs.args.totalPay,
+          amount: latestLog.args.amount,
           receiver: recipient,
           userId: user.id,
         },
@@ -441,21 +460,25 @@ export async function trialError(chamaBlockchainId: number, chamaId: number) {
 
     await sendNotificationToAllMembers(
       chamaId,
-      `💰 Payout for  Complete!\n\n${
-        user.name
-      } received ${formatEther(logs.args.totalPay)} cUSD\nRound: • Cycle: \nTX: ${txHash.slice(0, 12)}...`
+      `💰 Payout for  Complete!\n\n${user.name} received ${formatEther(
+        latestLog.args.amount
+      )} cUSD\nRound: • Cycle: \nTX: ${txHash.slice(0, 12)}...`
     );
 
     await sendFarcasterNotificationToAllMembers(
       chamaId,
       `💰 Payout for  Complete!`,
       `⚡ ${user.name} received ${formatEther(
-        logs.args.totalPay
+        latestLog.args.amount
       )} cUSD for Round: • Cycle: `
     );
-
   } catch (dbError) {
     console.error("⚠️ Post-payout processing failed:", dbError);
-    await sendEmail("Post-payout Error", JSON.stringify(dbError));
+    await sendEmail(
+      "Post-payout Error",
+      `Chama ID: ${chamaId}\n` +
+        `Blockchain ID: ${chamaBlockchainId}\n` +
+        `Error: ${JSON.stringify(dbError, null, 2)}`
+    );
   }
 }

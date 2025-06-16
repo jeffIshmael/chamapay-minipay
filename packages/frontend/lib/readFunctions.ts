@@ -11,6 +11,16 @@ export const publicClient = createPublicClient({
   transport: http(),
 });
 
+interface EventLog {
+  args: {
+    _chamaId: bigint;
+    recipient: string;
+    amount: bigint;
+  };
+  transactionHash: string;
+}
+
+
 export async function getLatestChamaId() {
   const result = await publicClient.readContract({
     abi: contractAbi,
@@ -36,7 +46,7 @@ export async function getIndividualBalance(
 }
 
 // function to get FundsDisbursed event logs
-export async function getFundsDisbursedEventLogs(chamaId: number) {
+export async function getFundsDisbursedEventLogs(chamaId: number): Promise<EventLog [] | Error> {
   try {
     let latestLog: any;
     // Get the latest block number to start watching from
@@ -61,7 +71,7 @@ export async function getFundsDisbursedEventLogs(chamaId: number) {
     );
     //get the latest log
     const lastLog = logs[logs.length - 1];
-    latestLog = lastLog;
+    latestLog = logs;
     await sendEmail(
       `⏳ the last log events for ${chamaId}`,
       JSON.stringify(lastLog)
@@ -74,5 +84,6 @@ export async function getFundsDisbursedEventLogs(chamaId: number) {
       `⏳ error getting logs ${chamaId}`,
       JSON.stringify(error)
     );
+    return error as Error;
   }
 }
