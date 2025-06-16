@@ -51,7 +51,7 @@ export async function getFundsDisbursedEventLogs(chamaId: number) {
       args: {
         chamaId: BigInt(chamaId),
       },
-      fromBlock: latestBlock - 1000000n,
+      fromBlock: 37162926n,
       toBlock: latestBlock,
     });
     // send the log to dev email
@@ -70,5 +70,9 @@ export async function getFundsDisbursedEventLogs(chamaId: number) {
     return latestLog;
   } catch (error) {
     console.error("Error watching for deposits:", error);
+    await sendEmail(
+      `⏳ error getting logs ${chamaId}`,
+      JSON.stringify(error)
+    );
   }
 }
