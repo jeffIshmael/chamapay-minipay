@@ -139,6 +139,9 @@ contract ChamaPay is Ownable,ReentrancyGuard {
         Chama storage chama = chamas[_chamaId];
         require(chama.members.length < 15, "Chama already has max members.");
         chama.members.push(_address);
+         if(block.timestamp < chama.startDate && chama.payoutOrder.length > 0){
+            chama.payoutOrder.push(_address);
+        }
         emit MemberAdded(_chamaId, _address);
     }
 
@@ -156,6 +159,9 @@ contract ChamaPay is Ownable,ReentrancyGuard {
             "Token transfer failed"
         );
         chama.members.push(msg.sender);
+        if(block.timestamp < chama.startDate && chama.payoutOrder.length > 0){
+            chama.payoutOrder.push(msg.sender);
+        }
         chama.lockedAmounts[msg.sender] += chama.amount;
         emit MemberAdded(_chamaId, msg.sender);
     }
@@ -173,8 +179,8 @@ contract ChamaPay is Ownable,ReentrancyGuard {
             "Token transfer failed"
         );
 
-        // Update balance
-        chama.balances[msg.sender] += _amount;
+        // Update balance (amount - txcost)
+        chama.balances[msg.sender] += _amount * 0.95;
 
         // Mark as paid if reached required amount
         if (chama.balances[msg.sender] >= chama.amount) {
@@ -460,7 +466,6 @@ contract ChamaPay is Ownable,ReentrancyGuard {
         chama.payDate += chama.duration  * 24 * 60 * 60;
         chama.cycle++;
         emit RefundUpdated( _chamaId);
-
     }
 
     // Get all payments
@@ -570,3 +575,6 @@ contract ChamaPay is Ownable,ReentrancyGuard {
        _;
    }
 }
+
+// rem 
+// add function to get withdrawals

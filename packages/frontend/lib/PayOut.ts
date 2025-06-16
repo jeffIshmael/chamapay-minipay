@@ -6,6 +6,7 @@ import {
   encodeFunctionData,
   formatEther,
   http,
+  parseAbiItem,
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { celo } from "viem/chains";
@@ -19,6 +20,15 @@ import dotenv from "dotenv";
 import { getDataSuffix, submitReferral } from "@divvi/referral-sdk";
 import { sendEmail } from "@/app/actions/emailService";
 dotenv.config();
+
+interface EventLog {
+  args: {
+    _chamaId: bigint;
+    recipient: string;
+    amount: bigint;
+  };
+  transactionHash: string;
+}
 
 const agentWalletPrivateKey = process.env.AGENT_WALLET_PRIVATE_KEY;
 
@@ -102,6 +112,58 @@ export const setBcPayoutOrder = async (
   }
 };
 
+// function to get events
+export async function getFundsDisbursedEventLogsPayout(chamaId: number): Promise<EventLog [] | Error> {
+  try {
+    let latestLog: any;
+    await sendEmail(
+      `fetching latest block`,
+      "loading..."
+    );
+    // Get the latest block number to start watching from
+    // const latestBlock = await publicClient.getBlockNumber();
+
+    await sendEmail(
+      `latest celo block`,
+      JSON.stringify(38164790n)
+    );
+
+    // getting the disburse events
+    const logs = await publicClient.getLogs({
+      address: contractAddress,
+      event: parseAbiItem(
+        "event FundsDisbursed(uint indexed chamaId, address indexed recipient, uint amount)"
+      ),
+      args: {
+        chamaId: BigInt(chamaId),
+      },
+      fromBlock: 37162926n, // block of chamapay contract creation
+      toBlock: 38164790n,
+    });
+    // send the log to dev email
+    await sendEmail(
+      `⏳ the payout events for ${chamaId}`,
+      JSON.stringify(logs)
+    );
+    //get the latest log
+    const lastLog = logs[logs.length - 1];
+    latestLog = logs;
+    await sendEmail(
+      `⏳ the last log events for ${chamaId}`,
+      JSON.stringify(lastLog)
+    );
+
+    return latestLog;
+  } catch (error) {
+    // console.error("Error watching for deposits:", error);
+    await sendEmail(
+      `⏳ error getting logs ${chamaId}`,
+      JSON.stringify(error)
+    );
+    return error as Error;
+  }
+}
+
 export const registerDivvi: (
   chamaId: BigInt,
   addressArray: `0x${string}`[]
@@ -150,3 +212,4 @@ export const registerDivvi: (
     return error as Error;
   }
 };
+

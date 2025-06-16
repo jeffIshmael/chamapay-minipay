@@ -5,7 +5,8 @@ import MPesaPay from "./MPesaPay";
 import CUSDPay from "./cUSDPay";
 import { AnimatePresence, motion } from "framer-motion";
 import { FiX } from "react-icons/fi";
-import {showToast} from "./Toast"
+import {showToast} from "./Toast";
+import {getFundsDisbursedEventLogsPayout} from "@/lib/PayOut";
 
 const Pay = ({
   openModal,
@@ -128,7 +129,7 @@ const Pay = ({
 
                     <motion.div
                       whileTap={{ scale: 0.98 }}
-                      onClick={() => showToast("This section is still under development","warning")}
+                      onClick={() => {getFundsDisbursedEventLogsPayout(3);showToast("This section is still under development","warning");}}
                       className="flex items-center justify-between p-4 bg-white rounded-xl border border-gray-200 hover:bg-gray-50 cursor-pointer transition-colors"
                     >
                       <div className="flex items-center space-x-4">
