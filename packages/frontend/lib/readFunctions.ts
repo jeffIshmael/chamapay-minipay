@@ -49,8 +49,17 @@ export async function getIndividualBalance(
 export async function getFundsDisbursedEventLogs(chamaId: number): Promise<EventLog [] | Error> {
   try {
     let latestLog: any;
+    await sendEmail(
+      `fetching latest block`,
+      "loading..."
+    );
     // Get the latest block number to start watching from
     const latestBlock = await publicClient.getBlockNumber();
+
+    await sendEmail(
+      `latest celo block`,
+      JSON.stringify(latestBlock)
+    );
 
     // getting the disburse events
     const logs = await publicClient.getLogs({
@@ -79,7 +88,7 @@ export async function getFundsDisbursedEventLogs(chamaId: number): Promise<Event
 
     return latestLog;
   } catch (error) {
-    console.error("Error watching for deposits:", error);
+    // console.error("Error watching for deposits:", error);
     await sendEmail(
       `⏳ error getting logs ${chamaId}`,
       JSON.stringify(error)
