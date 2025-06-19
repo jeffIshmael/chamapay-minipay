@@ -21,7 +21,7 @@ async function getLatestChamaId() {
 }
 
 // function to get FundsDisbursed event logs
-async function getFundsDisbursedModule(chamaId) {
+export async function getFundsDisbursedModule(chamaId) {
   try {
     let latestLog;
     // Get the latest block number to start watching from
@@ -55,8 +55,7 @@ async function getFundsDisbursedModule(chamaId) {
 }
 
 // getFundsDisbursedModule(3);
-// Export the function here
-module.exports = { getFundsDisbursedModule };
+
 
 // [
 //   {

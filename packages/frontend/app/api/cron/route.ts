@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import dotenv from "dotenv";
 import {  checkChamaStarted, runDailyPayouts, trialError } from "@/lib/cronjobFnctns";
 import { getFundsDisbursedEventLogs } from "@/lib/readFunctions";
-const { getFundsDisbursedModule } = require('@/Test'); 
+import { getFundsDisbursedModule } from '@/Test'; 
 
 dotenv.config();
 
