@@ -46,20 +46,13 @@ export async function getIndividualBalance(
 }
 
 // function to get FundsDisbursed event logs
-export async function getFundsDisbursedEventLogs(chamaId: number): Promise<number | Error> {
+export async function getFundsDisbursedEventLogs(chamaId: number): Promise<number> {
   try {
     let latestLog: any;
-    await sendEmail(
-      `fetching latest block`,
-      "loading..."
-    );
+
     // Get the latest block number to start watching from
     // const latestBlock = await publicClient.getBlockNumber();
 
-    await sendEmail(
-      `latest celo block`,
-      JSON.stringify(38164790n)
-    );
 
     // getting the disburse events
     const logs = await publicClient.getLogs({
@@ -73,26 +66,23 @@ export async function getFundsDisbursedEventLogs(chamaId: number): Promise<numbe
       fromBlock: 37162926n, // block of chamapay contract creation
       toBlock: 38164790n,
     });
+    const logsLength = logs.length;
     // send the log to dev email
     await sendEmail(
-      `⏳ the payout events for ${chamaId}`,
-      JSON.stringify(logs)
+      `the length`,
+      logsLength.toString()
     );
     //get the latest log
     const lastLog = logs[logs.length - 1];
     latestLog = logs;
-    await sendEmail(
-      `⏳ the last log events for ${chamaId}`,
-      JSON.stringify(lastLog)
-    );
 
-    return logs.length;
+    return logsLength;
   } catch (error) {
     // console.error("Error watching for deposits:", error);
     await sendEmail(
       `⏳ error getting logs ${chamaId}`,
       JSON.stringify(error)
     );
-    return error as Error;
+    return 45;
   }
 }
