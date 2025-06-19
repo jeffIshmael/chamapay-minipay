@@ -231,118 +231,118 @@ export async function runDailyPayouts() {
             throw new Error("Payout failed");
           }
 
-          try {
-            const logs = (await getFundsDisbursedEventLogs(
-              Number(chama.blockchainId)
-            )) as EventLog[];
-            if (!Array.isArray(logs)) {
-              await sendEmail(
-                "Post-payout Error",
-                `Chama ID: ${chama.id}\n` +
-                  `Blockchain ID: ${chama.blockchainId}\n` +
-                  `Error: ${JSON.stringify(logs, null, 2)}`
-              );
-              return;
-            }
-            const latestLog = logs[logs.length - 1];
-            if (!latestLog?.args) throw new Error("Event logs missing");
+          // try {
+          //   const logs = (await getFundsDisbursedEventLogs(
+          //     Number(chama.blockchainId)
+          //   )) as EventLog[];
+          //   if (!Array.isArray(logs)) {
+          //     await sendEmail(
+          //       "Post-payout Error",
+          //       `Chama ID: ${chama.id}\n` +
+          //         `Blockchain ID: ${chama.blockchainId}\n` +
+          //         `Error: ${JSON.stringify(logs, null, 2)}`
+          //     );
+          //     return;
+          //   }
+          //   const latestLog = logs[logs.length - 1];
+          //   if (!latestLog?.args) throw new Error("Event logs missing");
 
-            const recipient = latestLog.args.recipient;
-            const user = await getUser(recipient);
-            if (!user) throw new Error("User not found");
+          //   const recipient = latestLog.args.recipient;
+          //   const user = await getUser(recipient);
+          //   if (!user) throw new Error("User not found");
 
-            await setPaid(recipient, chama.id);
+          //   await setPaid(recipient, chama.id);
 
-            const cycleOver = await checkIfChamaOver(
-              chama.id,
-              recipient.toString()
-            );
+          //   const cycleOver = await checkIfChamaOver(
+          //     chama.id,
+          //     recipient.toString()
+          //   );
 
-            await prisma.$transaction([
-              prisma.payOut.create({
-                data: {
-                  chamaId: chama.id,
-                  txHash: txHash,
-                  amount: latestLog.args.amount,
-                  receiver: recipient,
-                  userId: user.id,
-                },
-              }),
-              prisma.chama.update({
-                where: { id: chama.id },
-                data: {
-                  payDate: new Date(
-                    chama.payDate.getTime() + chama.cycleTime * 86400000
-                  ),
-                  round: cycleOver ? 1 : chama.round + 1,
-                  cycle: cycleOver ? chama.cycle + 1 : chama.cycle,
-                  startDate: cycleOver
-                    ? new Date(
-                        chama.startDate.getTime() + chama.cycleTime * 86400000
-                      )
-                    : chama.startDate,
-                  canJoin: cycleOver ? true : chama.round <= 1,
-                },
-              }),
-            ]);
+          //   await prisma.$transaction([
+          //     prisma.payOut.create({
+          //       data: {
+          //         chamaId: chama.id,
+          //         txHash: txHash,
+          //         amount: latestLog.args.amount,
+          //         receiver: recipient,
+          //         userId: user.id,
+          //       },
+          //     }),
+          //     prisma.chama.update({
+          //       where: { id: chama.id },
+          //       data: {
+          //         payDate: new Date(
+          //           chama.payDate.getTime() + chama.cycleTime * 86400000
+          //         ),
+          //         round: cycleOver ? 1 : chama.round + 1,
+          //         cycle: cycleOver ? chama.cycle + 1 : chama.cycle,
+          //         startDate: cycleOver
+          //           ? new Date(
+          //               chama.startDate.getTime() + chama.cycleTime * 86400000
+          //             )
+          //           : chama.startDate,
+          //         canJoin: cycleOver ? true : chama.round <= 1,
+          //       },
+          //     }),
+          //   ]);
 
-            if (cycleOver) {
-              await changeIncognitoMembers(chama.id);
-              await setAllUnpaid(chama.adminId);
+          //   if (cycleOver) {
+          //     await changeIncognitoMembers(chama.id);
+          //     await setAllUnpaid(chama.adminId);
 
-              const payoutOrder = [...chama.members];
-              for (let i = payoutOrder.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [payoutOrder[i], payoutOrder[j]] = [
-                  payoutOrder[j],
-                  payoutOrder[i],
-                ];
-              }
-              //get the addresses
-              const addressArray = payoutOrder.map(
-                (m) => m.user.address as `0x${string}`
-              );
+          //     const payoutOrder = [...chama.members];
+          //     for (let i = payoutOrder.length - 1; i > 0; i--) {
+          //       const j = Math.floor(Math.random() * (i + 1));
+          //       [payoutOrder[i], payoutOrder[j]] = [
+          //         payoutOrder[j],
+          //         payoutOrder[i],
+          //       ];
+          //     }
+          //     //get the addresses
+          //     const addressArray = payoutOrder.map(
+          //       (m) => m.user.address as `0x${string}`
+          //     );
 
-              // Call blockchain to set payout order
-              const setOrderTxHash = await setBcPayoutOrder(
-                BigInt(Number(chama.blockchainId)),
-                addressArray
-              );
+          //     // Call blockchain to set payout order
+          //     const setOrderTxHash = await setBcPayoutOrder(
+          //       BigInt(Number(chama.blockchainId)),
+          //       addressArray
+          //     );
 
-              if (!setOrderTxHash || setOrderTxHash instanceof Error) {
-                const errorMsg = `❌ Failed to set payout order for Chama '${chama.name}' (ID: ${chama.id})`;
-                console.error(errorMsg, setOrderTxHash);
-                await sendEmail(errorMsg, JSON.stringify(setOrderTxHash));
-                continue; // skip updating DB if on-chain failed
-              }
+          //     if (!setOrderTxHash || setOrderTxHash instanceof Error) {
+          //       const errorMsg = `❌ Failed to set payout order for Chama '${chama.name}' (ID: ${chama.id})`;
+          //       console.error(errorMsg, setOrderTxHash);
+          //       await sendEmail(errorMsg, JSON.stringify(setOrderTxHash));
+          //       continue; // skip updating DB if on-chain failed
+          //     }
 
-              await prisma.chama.update({
-                where: { id: chama.id },
-                data: { payOutOrder: JSON.stringify(payoutOrder) },
-              });
-            }
+          //     await prisma.chama.update({
+          //       where: { id: chama.id },
+          //       data: { payOutOrder: JSON.stringify(payoutOrder) },
+          //     });
+          //   }
 
-            await sendNotificationToAllMembers(
-              chama.id,
-              `💰 Payout for ${chama.name} Complete!\n\n${
-                user.name
-              } received ${formatEther(latestLog.args.amount)} cUSD\nRound: ${
-                chama.round + 1
-              } • Cycle: ${chama.cycle}\nTX: ${txHash.slice(0, 12)}...`
-            );
+          //   await sendNotificationToAllMembers(
+          //     chama.id,
+          //     `💰 Payout for ${chama.name} Complete!\n\n${
+          //       user.name
+          //     } received ${formatEther(latestLog.args.amount)} cUSD\nRound: ${
+          //       chama.round + 1
+          //     } • Cycle: ${chama.cycle}\nTX: ${txHash.slice(0, 12)}...`
+          //   );
 
-            await sendFarcasterNotificationToAllMembers(
-              chama.id,
-              `💰 Payout for ${chama.name} Complete!`,
-              `⚡ ${user.name} received ${formatEther(
-                latestLog.args.amount
-              )} cUSD for Round: ${chama.round + 1} • Cycle: ${chama.cycle}`
-            );
-            success = true;
-          } catch (dbError) {
-            console.error("⚠️ Post-payout processing failed:", dbError);
-            await sendEmail("Post-payout Error", JSON.stringify(dbError));
-          }
+          //   await sendFarcasterNotificationToAllMembers(
+          //     chama.id,
+          //     `💰 Payout for ${chama.name} Complete!`,
+          //     `⚡ ${user.name} received ${formatEther(
+          //       latestLog.args.amount
+          //     )} cUSD for Round: ${chama.round + 1} • Cycle: ${chama.cycle}`
+          //   );
+          //   success = true;
+          // } catch (dbError) {
+          //   console.error("⚠️ Post-payout processing failed:", dbError);
+          //   await sendEmail("Post-payout Error", JSON.stringify(dbError));
+          // }
         } catch (payoutError) {
           retries++;
           console.error(`⛔ Payout attempt ${retries} failed:`, payoutError);
@@ -422,65 +422,65 @@ export async function checkBalance() {
 
 // trial for bugs
 
-export async function trialError(chamaBlockchainId: number, chamaId: number) {
-  try {
-    const logs = (await getFundsDisbursedEventLogs(
-      chamaBlockchainId
-    )) as EventLog[];
-    if (!Array.isArray(logs)) {
-      await sendEmail(
-        "Post-payout Error",
-        `Chama ID: ${chamaId}\n` +
-          `Blockchain ID: ${chamaBlockchainId}\n` +
-          `Error: ${JSON.stringify(logs, null, 2)}`
-      );
-      return;
-    }
-    const latestLog = logs[logs.length - 1];
-    if (!latestLog?.args) throw new Error("Event logs missing");
+// export async function trialError(chamaBlockchainId: number, chamaId: number) {
+//   try {
+//     const logs = (await getFundsDisbursedEventLogs(
+//       chamaBlockchainId
+//     )) as EventLog[];
+//     if (!Array.isArray(logs)) {
+//       await sendEmail(
+//         "Post-payout Error",
+//         `Chama ID: ${chamaId}\n` +
+//           `Blockchain ID: ${chamaBlockchainId}\n` +
+//           `Error: ${JSON.stringify(logs, null, 2)}`
+//       );
+//       return;
+//     }
+//     const latestLog = logs[logs.length - 1];
+//     if (!latestLog?.args) throw new Error("Event logs missing");
 
-    const recipient = latestLog.args.recipient;
-    const txHash = latestLog.transactionHash;
-    const user = await getUser(recipient);
-    if (!user) throw new Error("User not found");
+//     const recipient = latestLog.args.recipient;
+//     const txHash = latestLog.transactionHash;
+//     const user = await getUser(recipient);
+//     if (!user) throw new Error("User not found");
 
-    await setPaid(recipient, chamaId);
+//     await setPaid(recipient, chamaId);
 
-    const cycleOver = await checkIfChamaOver(chamaId, recipient.toString());
+//     const cycleOver = await checkIfChamaOver(chamaId, recipient.toString());
 
-    await prisma.$transaction([
-      prisma.payOut.create({
-        data: {
-          chamaId: chamaId,
-          txHash: txHash,
-          amount: latestLog.args.amount,
-          receiver: recipient,
-          userId: user.id,
-        },
-      }),
-    ]);
+//     await prisma.$transaction([
+//       prisma.payOut.create({
+//         data: {
+//           chamaId: chamaId,
+//           txHash: txHash,
+//           amount: latestLog.args.amount,
+//           receiver: recipient,
+//           userId: user.id,
+//         },
+//       }),
+//     ]);
 
-    await sendNotificationToAllMembers(
-      chamaId,
-      `💰 Payout for  Complete!\n\n${user.name} received ${formatEther(
-        latestLog.args.amount
-      )} cUSD\nRound: • Cycle: \nTX: ${txHash.slice(0, 12)}...`
-    );
+//     await sendNotificationToAllMembers(
+//       chamaId,
+//       `💰 Payout for  Complete!\n\n${user.name} received ${formatEther(
+//         latestLog.args.amount
+//       )} cUSD\nRound: • Cycle: \nTX: ${txHash.slice(0, 12)}...`
+//     );
 
-    await sendFarcasterNotificationToAllMembers(
-      chamaId,
-      `💰 Payout for  Complete!`,
-      `⚡ ${user.name} received ${formatEther(
-        latestLog.args.amount
-      )} cUSD for Round: • Cycle: `
-    );
-  } catch (dbError) {
-    console.error("⚠️ Post-payout processing failed:", dbError);
-    await sendEmail(
-      "Post-payout Error",
-      `Chama ID: ${chamaId}\n` +
-        `Blockchain ID: ${chamaBlockchainId}\n` +
-        `Error: ${JSON.stringify(dbError, null, 2)}`
-    );
-  }
-}
+//     await sendFarcasterNotificationToAllMembers(
+//       chamaId,
+//       `💰 Payout for  Complete!`,
+//       `⚡ ${user.name} received ${formatEther(
+//         latestLog.args.amount
+//       )} cUSD for Round: • Cycle: `
+//     );
+//   } catch (dbError) {
+//     console.error("⚠️ Post-payout processing failed:", dbError);
+//     await sendEmail(
+//       "Post-payout Error",
+//       `Chama ID: ${chamaId}\n` +
+//         `Blockchain ID: ${chamaBlockchainId}\n` +
+//         `Error: ${JSON.stringify(dbError, null, 2)}`
+//     );
+//   }
+// }

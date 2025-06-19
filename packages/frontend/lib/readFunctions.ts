@@ -46,7 +46,7 @@ export async function getIndividualBalance(
 }
 
 // function to get FundsDisbursed event logs
-export async function getFundsDisbursedEventLogs(chamaId: number): Promise<EventLog [] | Error> {
+export async function getFundsDisbursedEventLogs(chamaId: number): Promise<number | Error> {
   try {
     let latestLog: any;
     await sendEmail(
@@ -86,7 +86,7 @@ export async function getFundsDisbursedEventLogs(chamaId: number): Promise<Event
       JSON.stringify(lastLog)
     );
 
-    return latestLog;
+    return logs.length;
   } catch (error) {
     // console.error("Error watching for deposits:", error);
     await sendEmail(

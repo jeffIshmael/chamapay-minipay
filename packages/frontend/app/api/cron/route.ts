@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import dotenv from "dotenv";
-import {
-  checkChamaStarted,
-  runDailyPayouts,
-  trialError,
-} from "@/lib/cronjobFnctns";
+// import {
+//   checkChamaStarted,
+//   runDailyPayouts,
+//   trialError,
+// } from "@/lib/cronjobFnctns";
 import { getFundsDisbursedEventLogs } from "@/lib/readFunctions";
 import { getFundsDisbursedModule } from "@/Test";
 import { sendEmail } from "@/app/actions/emailService";
