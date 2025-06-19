@@ -13,9 +13,9 @@ export const publicClient = createPublicClient({
 
 interface EventLog {
   args: {
-    _chamaId: bigint;
+    chamaId: string;
     recipient: string;
-    amount: bigint;
+    amount: string;
   };
   transactionHash: string;
 }
@@ -45,15 +45,13 @@ export async function getIndividualBalance(
 }
 
 // function to get FundsDisbursed event logs
-export async function getFundsDisbursedEventLogs(chamaId: number): Promise<{
-  args: {
-    chamaId: string;
-    recipient: string;
-    amount: string;
-  };
-  transactionHash: string;
-} | null> {
+export async function getFundsDisbursedEventLogs(
+  chamaId: number
+): Promise<EventLog | null> {
   try {
+    // get latest block no.
+    const latestCeloBlock = await publicClient.getBlockNumber();
+    
     // Fetch logs
     const logs = await publicClient.getLogs({
       address: contractAddress,
@@ -64,7 +62,7 @@ export async function getFundsDisbursedEventLogs(chamaId: number): Promise<{
         chamaId: BigInt(chamaId),
       },
       fromBlock: 37162926n,
-      toBlock: 38164790n,
+      toBlock: latestCeloBlock,
     });
 
     // If no logs found
