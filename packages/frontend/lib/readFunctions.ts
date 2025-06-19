@@ -20,7 +20,6 @@ interface EventLog {
   transactionHash: string;
 }
 
-
 export async function getLatestChamaId() {
   const result = await publicClient.readContract({
     abi: contractAbi,
@@ -46,15 +45,16 @@ export async function getIndividualBalance(
 }
 
 // function to get FundsDisbursed event logs
-export async function getFundsDisbursedEventLogs(chamaId: number): Promise<number> {
+export async function getFundsDisbursedEventLogs(chamaId: number): Promise<{
+  args: {
+    chamaId: string;
+    recipient: string;
+    amount: string;
+  };
+  transactionHash: string;
+} | null> {
   try {
-    let latestLog: any;
-
-    // Get the latest block number to start watching from
-    // const latestBlock = await publicClient.getBlockNumber();
-
-
-    // getting the disburse events
+    // Fetch logs
     const logs = await publicClient.getLogs({
       address: contractAddress,
       event: parseAbiItem(
@@ -63,26 +63,47 @@ export async function getFundsDisbursedEventLogs(chamaId: number): Promise<numbe
       args: {
         chamaId: BigInt(chamaId),
       },
-      fromBlock: 37162926n, // block of chamapay contract creation
+      fromBlock: 37162926n,
       toBlock: 38164790n,
     });
-    const logsLength = logs.length;
-    // send the log to dev email
-    await sendEmail(
-      `the length`,
-      logsLength.toString()
-    );
-    //get the latest log
-    const lastLog = logs[logs.length - 1];
-    latestLog = logs;
 
-    return logsLength;
+    // If no logs found
+    if (logs.length === 0) return null;
+
+    const lastLog = logs[logs.length - 1];
+
+    if (
+      !lastLog.args ||
+      lastLog.args.chamaId === undefined ||
+      lastLog.args.recipient === undefined ||
+      lastLog.args.amount === undefined
+    ) {
+      await sendEmail(
+        `Malformed log for chamaId ${chamaId}`,
+        JSON.stringify(lastLog)
+      );
+      return null;
+    }
+
+    // Extract essential data and convert BigInt to string
+    const essentialData = {
+      args: {
+        chamaId: lastLog.args.chamaId.toString(),
+        recipient: lastLog.args.recipient,
+        amount: lastLog.args.amount.toString(),
+      },
+      transactionHash: lastLog.transactionHash,
+    };
+
+    // Optional: send to dev email for tracking
+    await sendEmail("Latest Log Essentials", JSON.stringify(essentialData));
+
+    return essentialData;
   } catch (error) {
-    // console.error("Error watching for deposits:", error);
     await sendEmail(
-      `⏳ error getting logs ${chamaId}`,
+      `Error getting logs for chamaId ${chamaId}`,
       JSON.stringify(error)
     );
-    return 45;
+    return null;
   }
 }
