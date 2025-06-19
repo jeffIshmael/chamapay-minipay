@@ -21,7 +21,7 @@ async function getLatestChamaId() {
 }
 
 // function to get FundsDisbursed event logs
-export async function getFundsDisbursedModule(chamaId) {
+async function getFundsDisbursedModule(chamaId) {
   try {
     let latestLog;
     // Get the latest block number to start watching from
@@ -46,15 +46,17 @@ export async function getFundsDisbursedModule(chamaId) {
     const lastLog = logs[logs.length - 1];
     latestLog = lastLog;
     console.log(`⏳ the last log events for ${chamaId}`, lastLog);
-  
+    return latestLog;
   } catch (error) {
     console.error("Error watching for deposits:", error);
     console.log(`⏳ error getting logs ${chamaId}`, error);
-
+    return null;
   }
 }
 
-getFundsDisbursedModule(3);
+// getFundsDisbursedModule(3);
+// Export the function here
+module.exports = { getFundsDisbursedModule };
 
 // [
 //   {
