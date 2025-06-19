@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import {  checkChamaStarted, runDailyPayouts, trialError } from "@/lib/cronjobFnctns";
 import { getFundsDisbursedEventLogs } from "@/lib/readFunctions";
 import { getFundsDisbursedModule } from '@/Test'; 
+import { sendEmail } from "@/app/actions/emailService";
 
 dotenv.config();
 
@@ -15,7 +16,8 @@ export async function GET(request: Request) {
   }
 
   // 2. Your cron logic
-  const result = await getFundsDisbursedModule(3);
+  const result = await getFundsDisbursedEventLogs(3);
+  await sendEmail("results from api", JSON.stringify(result));
   // await trialError(3,3);
   // await getFundsDisbursedEventLogs(3);
   // await checkChamaStarted();

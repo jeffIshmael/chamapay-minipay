@@ -2,8 +2,8 @@ import React from "react";
 
 const PayoutCongrats = () =>{
    return (
-    <div>
-        
+    <div className="" >
+
     </div>
    ) 
 }
