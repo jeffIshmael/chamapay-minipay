@@ -1,11 +1,32 @@
 import { NextResponse } from "next/server";
 import dotenv from "dotenv";
-import {  checkChamaStarted, runDailyPayouts, trialError } from "@/lib/cronjobFnctns";
+import {
+  checkChamaStarted,
+  runDailyPayouts,
+  trialError,
+} from "@/lib/cronjobFnctns";
 import { getFundsDisbursedEventLogs } from "@/lib/readFunctions";
-import { getFundsDisbursedModule } from '@/Test'; 
+import { getFundsDisbursedModule } from "@/Test";
 import { sendEmail } from "@/app/actions/emailService";
 
 dotenv.config();
+
+function serializeLogs(logs: any) {
+  return logs.map((log: any) => {
+    return {
+      ...log,
+      args: {
+        ...log.args,
+        // Convert BigInt to string
+        chamaId: log.args?.chamaId?.toString(),
+        amount: log.args?.amount?.toString(),
+      },
+      blockNumber: log.blockNumber?.toString(),
+      transactionIndex: log.transactionIndex?.toString(),
+      logIndex: log.logIndex?.toString(),
+    };
+  });
+}
 
 export async function GET(request: Request) {
   // 1. Auth check
@@ -16,7 +37,10 @@ export async function GET(request: Request) {
   }
 
   // 2. Your cron logic
-  const result = await getFundsDisbursedEventLogs(3);
+  const rawResult = await getFundsDisbursedEventLogs(3);
+  const result = Array.isArray(rawResult)
+    ? serializeLogs(rawResult)
+    : rawResult;
   await sendEmail("results from api", JSON.stringify(result));
   // await trialError(3,3);
   // await getFundsDisbursedEventLogs(3);
