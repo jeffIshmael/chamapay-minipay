@@ -244,205 +244,185 @@ const Page = () => {
                 pendingRequestIds.has(notification.requestId);
 
               return (
-                <div className="space-y-3">
-                  {notifications.map((notification) => {
-                    const isPending =
-                      notification.requestId !== null &&
-                      pendingRequestIds.has(notification.requestId);
+                <div
+                  key={notification.id}
+                  className={`relative p-2 rounded-xl shadow-sm border ${
+                    notification.read
+                      ? "bg-white border-gray-200"
+                      : "bg-downy-50 border-downy-200"
+                  }`}
+                >
+                  {!notification.read && (
+                    <div className="absolute top-2 right-2 w-2 h-2 bg-downy-500 rounded-full"></div>
+                  )}
 
-                    return (
-                      <div
-                        key={notification.id}
-                        className={`relative p-2 rounded-xl shadow-sm border ${
-                          notification.read
-                            ? "bg-white border-gray-200"
-                            : "bg-downy-50 border-downy-200"
-                        }`}
-                      >
-                        {!notification.read && (
-                          <div className="absolute top-2 right-2 w-2 h-2 bg-downy-500 rounded-full"></div>
-                        )}
+                  <div className="flex items-start">
+                    <div
+                      className={`p-2 rounded-lg mr-3 ${
+                        isPending
+                          ? "bg-purple-100 text-purple-600"
+                          : "bg-downy-100 text-downy-600"
+                      }`}
+                    >
+                      {isPending ? (
+                        <FiUserPlus size={18} />
+                      ) : (
+                        <FiBell size={18} />
+                      )}
+                    </div>
 
-                        <div className="flex items-start">
-                          <div
-                            className={`p-2 rounded-lg mr-3 ${
-                              isPending
-                                ? "bg-purple-100 text-purple-600"
-                                : "bg-downy-100 text-downy-600"
+                    <div className="flex-1">
+                      <p className="text-gray-800 font-medium">
+                        {notification.message}
+                      </p>
+
+                      {/* Timestamp row */}
+                      <div className="flex justify-between items-center mt-2">
+                        <span className="text-xs text-gray-500 flex items-center">
+                          {new Date(notification.createdAt).toLocaleTimeString(
+                            [],
+                            {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            }
+                          )}
+                          {" • "}
+                          {new Date(notification.createdAt).toLocaleDateString(
+                            "en-US",
+                            {
+                              month: "short",
+                              day: "numeric",
+                            }
+                          )}
+                        </span>
+                      </div>
+
+                      {/* Approval buttons - moved below timestamp */}
+                      {isPending && (
+                        <div className="mt-3 flex justify-end space-x-2">
+                          <button
+                            onClick={() => {
+                              if (loadingStates[notification.requestId ?? 0])
+                                return;
+                              handleJoin(
+                                "approve",
+                                notification.chama
+                                  ? Number(notification.chama.blockchainId)
+                                  : 0,
+                                notification.chamaId ?? 0,
+                                notification.chama
+                                  ? notification.chama.name
+                                  : "",
+                                notification.senderId ?? 0,
+                                notification.requestId ?? 0,
+                                notification.chama
+                                  ? notification.chama.canJoin
+                                  : false
+                              );
+                            }}
+                            className={`flex items-center px-3 py-1.5 bg-downy-600 text-white rounded-lg transition-colors ${
+                              loadingStates[notification.requestId ?? 0] ===
+                              "approving"
+                                ? "opacity-70 cursor-wait"
+                                : "hover:bg-downy-700"
                             }`}
                           >
-                            {isPending ? (
-                              <FiUserPlus size={18} />
-                            ) : (
-                              <FiBell size={18} />
-                            )}
-                          </div>
-
-                          <div className="flex-1">
-                            <p className="text-gray-800 font-medium">
-                              {notification.message}
-                            </p>
-
-                            {/* Timestamp row */}
-                            <div className="flex justify-between items-center mt-2">
-                              <span className="text-xs text-gray-500 flex items-center">
-                                {new Date(
-                                  notification.createdAt
-                                ).toLocaleTimeString([], {
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                })}
-                                {" • "}
-                                {new Date(
-                                  notification.createdAt
-                                ).toLocaleDateString("en-US", {
-                                  month: "short",
-                                  day: "numeric",
-                                })}
+                            {loadingStates[notification.requestId ?? 0] ===
+                            "approving" ? (
+                              <span className="flex items-center">
+                                <svg
+                                  className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <circle
+                                    className="opacity-25"
+                                    cx="12"
+                                    cy="12"
+                                    r="10"
+                                    stroke="currentColor"
+                                    strokeWidth="4"
+                                  ></circle>
+                                  <path
+                                    className="opacity-75"
+                                    fill="currentColor"
+                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                  ></path>
+                                </svg>
+                                Approving...
                               </span>
-                            </div>
-
-                            {/* Approval buttons - moved below timestamp */}
-                            {isPending && (
-                              <div className="mt-3 flex justify-end space-x-2">
-                                <button
-                                  onClick={() => {
-                                    if (
-                                      loadingStates[notification.requestId ?? 0]
-                                    )
-                                      return;
-                                    handleJoin(
-                                      "approve",
-                                      notification.chama
-                                        ? Number(
-                                            notification.chama.blockchainId
-                                          )
-                                        : 0,
-                                      notification.chamaId ?? 0,
-                                      notification.chama
-                                        ? notification.chama.name
-                                        : "",
-                                      notification.senderId ?? 0,
-                                      notification.requestId ?? 0,
-                                      notification.chama
-                                        ? notification.chama.canJoin
-                                        : false
-                                    );
-                                  }}
-                                  className={`flex items-center px-3 py-1.5 bg-downy-600 text-white rounded-lg transition-colors ${
-                                    loadingStates[
-                                      notification.requestId ?? 0
-                                    ] === "approving"
-                                      ? "opacity-70 cursor-wait"
-                                      : "hover:bg-downy-700"
-                                  }`}
-                                >
-                                  {loadingStates[
-                                    notification.requestId ?? 0
-                                  ] === "approving" ? (
-                                    <span className="flex items-center">
-                                      <svg
-                                        className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                      >
-                                        <circle
-                                          className="opacity-25"
-                                          cx="12"
-                                          cy="12"
-                                          r="10"
-                                          stroke="currentColor"
-                                          strokeWidth="4"
-                                        ></circle>
-                                        <path
-                                          className="opacity-75"
-                                          fill="currentColor"
-                                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                                        ></path>
-                                      </svg>
-                                      Approving...
-                                    </span>
-                                  ) : (
-                                    <>
-                                      <FiCheck className="mr-1" size={14} />
-                                      Approve
-                                    </>
-                                  )}
-                                </button>
-
-                                <button
-                                  onClick={() => {
-                                    if (
-                                      loadingStates[notification.requestId ?? 0]
-                                    )
-                                      return;
-                                    handleJoin(
-                                      "reject",
-                                      notification.chama
-                                        ? Number(
-                                            notification.chama.blockchainId
-                                          )
-                                        : 0,
-                                      notification.chamaId ?? 0,
-                                      notification.chama
-                                        ? notification.chama.name
-                                        : "",
-                                      notification.senderId ?? 0,
-                                      notification.requestId ?? 0,
-                                      notification.chama
-                                        ? notification.chama.canJoin
-                                        : false
-                                    );
-                                  }}
-                                  className={`flex items-center px-3 py-1.5 bg-red-100 text-red-600 rounded-lg transition-colors ${
-                                    loadingStates[
-                                      notification.requestId ?? 0
-                                    ] === "rejecting"
-                                      ? "opacity-70 cursor-wait"
-                                      : "hover:bg-red-200"
-                                  }`}
-                                >
-                                  {loadingStates[
-                                    notification.requestId ?? 0
-                                  ] === "rejecting" ? (
-                                    <span className="flex items-center">
-                                      <svg
-                                        className="animate-spin -ml-1 mr-2 h-4 w-4 text-red-600"
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                      >
-                                        <circle
-                                          className="opacity-25"
-                                          cx="12"
-                                          cy="12"
-                                          r="10"
-                                          stroke="currentColor"
-                                          strokeWidth="4"
-                                        ></circle>
-                                        <path
-                                          className="opacity-75"
-                                          fill="currentColor"
-                                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                                        ></path>
-                                      </svg>
-                                      Rejecting...
-                                    </span>
-                                  ) : (
-                                    <>
-                                      <FiX className="mr-1" size={14} />
-                                      Reject
-                                    </>
-                                  )}
-                                </button>
-                              </div>
+                            ) : (
+                              <>
+                                <FiCheck className="mr-1" size={14} />
+                                Approve
+                              </>
                             )}
-                          </div>
+                          </button>
+
+                          <button
+                            onClick={() => {
+                              if (loadingStates[notification.requestId ?? 0])
+                                return;
+                              handleJoin(
+                                "reject",
+                                notification.chama
+                                  ? Number(notification.chama.blockchainId)
+                                  : 0,
+                                notification.chamaId ?? 0,
+                                notification.chama
+                                  ? notification.chama.name
+                                  : "",
+                                notification.senderId ?? 0,
+                                notification.requestId ?? 0,
+                                notification.chama
+                                  ? notification.chama.canJoin
+                                  : false
+                              );
+                            }}
+                            className={`flex items-center px-3 py-1.5 bg-red-100 text-red-600 rounded-lg transition-colors ${
+                              loadingStates[notification.requestId ?? 0] ===
+                              "rejecting"
+                                ? "opacity-70 cursor-wait"
+                                : "hover:bg-red-200"
+                            }`}
+                          >
+                            {loadingStates[notification.requestId ?? 0] ===
+                            "rejecting" ? (
+                              <span className="flex items-center">
+                                <svg
+                                  className="animate-spin -ml-1 mr-2 h-4 w-4 text-red-600"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <circle
+                                    className="opacity-25"
+                                    cx="12"
+                                    cy="12"
+                                    r="10"
+                                    stroke="currentColor"
+                                    strokeWidth="4"
+                                  ></circle>
+                                  <path
+                                    className="opacity-75"
+                                    fill="currentColor"
+                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                  ></path>
+                                </svg>
+                                Rejecting...
+                              </span>
+                            ) : (
+                              <>
+                                <FiX className="mr-1" size={14} />
+                                Reject
+                              </>
+                            )}
+                          </button>
                         </div>
-                      </div>
-                    );
-                  })}
+                      )}
+                    </div>
+                  </div>
                 </div>
               );
             })}
