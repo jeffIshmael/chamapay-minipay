@@ -145,6 +145,8 @@ export async function getChamasByUser(userId: number) {
       },
       include: {
         members: true,
+        roundOutcome: true,
+        payOuts: true
       },
     });
 
@@ -155,6 +157,41 @@ export async function getChamasByUser(userId: number) {
 
   return chamas;
 }
+
+// Function to check if a chama has had a payout in the last 24 hrs and if the user hasn't been shown the modal
+export async function checkPayoutModal(userId: number) {
+  const MyChamas = await getChamasByUser(userId);
+  const chamasToShowModal = [];
+
+  const now = new Date();
+
+  for (const chama of MyChamas) {
+    const allRoundOutcomes = chama.roundOutcome;
+    const allPayouts = chama.payOuts;
+
+    // Check if there are outcomes and payouts to avoid errors
+    if (allRoundOutcomes.length === 0 || allPayouts.length === 0) continue;
+
+    const latestOutcome = allRoundOutcomes[allRoundOutcomes.length - 1];
+    const latestPayout = allPayouts[allPayouts.length - 1]; // if needed in future
+
+    const shownUsers = latestOutcome.shownMembers
+      ? JSON.parse(latestOutcome.shownMembers)
+      : [];
+
+    // Calculate time difference in milliseconds
+    const createdAt = new Date(latestOutcome.createdAt);
+    const timeDifference = now.getTime() - createdAt.getTime();
+
+    // Check: payout was within last 24 hours AND user has NOT been shown yet
+    if (timeDifference <= 24 * 60 * 60 * 1000 && !shownUsers.includes(userId)) {
+      chamasToShowModal.push(chama);
+    }
+  }
+
+  return chamasToShowModal;
+}
+
 
 //create a chama
 export async function createChama(
@@ -422,7 +459,7 @@ export async function getPublicNotMember(userAddress: string) {
   return chamas;
 }
 
-//function to get public chamas that user is not member
+//function to get public chamas that user is member
 export async function getPublicChamas() {
   const chamas = await prisma.chama.findMany({
     where: {

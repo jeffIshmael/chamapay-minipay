@@ -5,7 +5,7 @@ import BottomNavbar from "../Components/BottomNavbar";
 import Image from "next/image";
 import Link from "next/link";
 import { useAccount } from "wagmi";
-import { getChamasByUser, getUser } from "../../lib/chama";
+import { checkPayoutModal, getChamasByUser, getUser } from "../../lib/chama";
 import ChamaLinkSearch from "../Components/SearchModal";
 import { motion } from "framer-motion";
 import {
@@ -19,6 +19,7 @@ import {
 } from "react-icons/fi";
 import { formatEther } from "viem";
 import { getPicture, utcToLocalTime } from "@/utils/duration";
+import PayoutCongrats from "../Components/PayoutCongrats";
 
 interface User {
   id: number;
@@ -26,7 +27,27 @@ interface User {
   payDate: Date;
 }
 
-interface Chama {
+interface RoundOutcome {
+  id: number;
+  disburse: boolean;
+  chamaCycle: number;
+  chamaRound: number;
+  amountPaid: string;
+  shownMembers: string | null; // Json string of people who have been shown an outcome modal.
+  createdAt: Date;
+}
+
+interface PayOut {
+  id: number;
+  amount: bigint;
+  doneAt: Date;
+  txHash: string | null;
+  receiver: string;
+  userId: number;
+  chamaId: number;
+}
+
+export interface Chama {
   adminId: number;
   amount: bigint;
   createdAt: Date;
@@ -40,6 +61,8 @@ interface Chama {
   started: boolean;
   type: string;
   members: User[];
+  roundOutcome: RoundOutcome[];
+  payOuts: PayOut[];
 }
 
 const Page = () => {
@@ -48,6 +71,8 @@ const Page = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [activeTab, setActiveTab] = useState<"friends" | "public">("friends");
   const [showLinkSearch, setShowLinkSearch] = useState(false);
+  const [showPayoutModal, setShowPayoutModal] = useState(false);
+  const [showingChamas, setShowingChamas] = useState<Chama[]>([]);
 
   const { isConnected, address } = useAccount();
 
@@ -85,7 +110,12 @@ const Page = () => {
         const userData = await getUser(address as string);
         if (userData) {
           const data = await getChamasByUser(userData.id);
+          const payedOutData = await checkPayoutModal(userData.id);
+          setShowingChamas(payedOutData);
           setChamas(data);
+          if (payedOutData.length > 0) {
+            setShowPayoutModal(true);
+          }
         }
       } catch (error) {
         console.error("Error fetching chamas:", error);
@@ -223,6 +253,7 @@ const Page = () => {
       {showLinkSearch && (
         <ChamaLinkSearch onClose={() => setShowLinkSearch(false)} />
       )}
+      {showPayoutModal && <PayoutCongrats chamas={showingChamas} onClose={() => setShowPayoutModal(false)} />}
     </div>
   );
 };

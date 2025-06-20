@@ -52,6 +52,7 @@ model Chama {
   payments      Payment[]
   messages      Message[]     // Added relation to Message
   payOuts       PayOut[]
+  roundOutcome  roundOutcome[]
 }
 
 model ChamaMember {
@@ -120,5 +121,17 @@ model PayOut {
   chamaId Int
   chama   Chama    @relation(fields: [chamaId], references: [id])
   user    User     @relation(fields: [userId], references: [id])
+}
+
+model roundOutcome {
+  id  Int @id @default(autoincrement())
+  disburse Boolean
+  chamaCycle Int
+  chamaRound Int
+  amountPaid String 
+  shownMembers String?  // Json string of people who have been shown an outcome modal.
+  createdAt DateTime @default(now())
+  chamaId Int
+  chama   Chama    @relation(fields: [chamaId], references: [id])
 }
 

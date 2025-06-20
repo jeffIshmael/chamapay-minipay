@@ -105,3 +105,67 @@ export async function getFundsDisbursedEventLogs(
     return null;
   }
 }
+
+
+// function to check if a disburse or refund 
+export async function getPaydateCheckedEventLogs(
+  chamaId: number
+): Promise<boolean | null> {
+  try {
+    // get latest block no.
+    const latestCeloBlock = await publicClient.getBlockNumber();
+    
+    // Fetch logs
+    const logs = await publicClient.getLogs({
+      address: contractAddress,
+      event: parseAbiItem(
+        "event PayDateChecked(uint indexed _chamaId, bool _isPastPayDate, bool _isAllMembersContributed, bool isDisbursed)"
+      ),
+      args: {
+        _chamaId: BigInt(chamaId),
+      },
+      fromBlock: 37162926n, // contract creation block
+      toBlock: latestCeloBlock,
+    });
+
+    // If no logs found
+    if (logs.length === 0) return null;
+
+    const lastLog = logs[logs.length - 1];
+
+    if (
+      !lastLog.args ||
+      lastLog.args._chamaId === undefined ||
+      lastLog.args._isAllMembersContributed === undefined ||
+      lastLog.args._isPastPayDate === undefined ||
+      lastLog.args.isDisbursed === undefined
+    ) {
+      await sendEmail(
+        `checkpaydate log for chamaId ${chamaId}`,
+        JSON.stringify(lastLog)
+      );
+      return null;
+    }
+
+    let theOutcome:boolean = false;
+    const lastLogArgs = lastLog.args;
+
+    // Extract essential data and convert BigInt to string
+   if(lastLogArgs._isAllMembersContributed && lastLogArgs.isDisbursed){
+    theOutcome = true;
+   }else if (!lastLogArgs._isAllMembersContributed && !lastLogArgs.isDisbursed){
+    theOutcome = false;
+   }else{
+    await sendEmail("checking paydate abnormality",JSON.stringify({...lastLogArgs, _chamaId: (lastLogArgs._chamaId)?.toString}));
+    theOutcome = false;
+  }
+
+    return theOutcome;
+  } catch (error) {
+    await sendEmail(
+      `Error getting logs for chamaId ${chamaId}`,
+      JSON.stringify(error)
+    );
+    return null;
+  }
+}

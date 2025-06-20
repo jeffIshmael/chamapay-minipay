@@ -20,7 +20,10 @@ import {
   performPayout,
   setBcPayoutOrder,
 } from "./PayOut";
-import { getFundsDisbursedEventLogs } from "./readFunctions";
+import {
+  getFundsDisbursedEventLogs,
+  getPaydateCheckedEventLogs,
+} from "./readFunctions";
 import { formatEther, parseEther } from "viem";
 import { sendEmail } from "../app/actions/emailService";
 import { utcToEAT, utcToLocalTime } from "@/utils/duration";
@@ -60,6 +63,16 @@ interface EventLog {
     amount: string;
   };
   transactionHash: string;
+}
+interface User {
+  id: number;
+  address: string;
+  name: string | null;
+  isFarcaster: boolean;
+  fid: number | null;
+  token: string | null;
+  url: string | null;
+  divviReferred: boolean;
 }
 
 export async function checkChamaStarted() {
@@ -232,54 +245,101 @@ export async function runDailyPayouts() {
           }
 
           try {
-            const logs = await getFundsDisbursedEventLogs(
+            // check if what happened is a disburse or refund
+            let isADisburse: boolean;
+            let cycleOver: boolean = false;
+            let amountPaid: bigint = 0n;
+            let paidUser: User | null = null;
+            const outCome = await getPaydateCheckedEventLogs(
               Number(chama.blockchainId)
             );
-           if (!logs){
-            await sendEmail("Theres an error in logs","please check it out");
-            return;
-           }
+            if (outCome == null) {
+              return;
+            }
+            isADisburse = outCome;
 
-            const recipient = logs.args.recipient;
-            // amount in bigint
-            const amountPaid = BigInt(Number(logs.args.amount));
-            const user = await getUser(recipient);
-            if (!user) throw new Error("User not found");
+            // handle a disburse and a refund.
+            if (isADisburse) {
+              const logs = await getFundsDisbursedEventLogs(
+                Number(chama.blockchainId)
+              );
+              if (!logs) {
+                await sendEmail(
+                  "Theres an error in logs",
+                  "please check it out"
+                );
+                return;
+              }
 
-            await setPaid(recipient, chama.id);
+              const recipient = logs.args.recipient;
+              // amount in bigint
+              amountPaid = BigInt(Number(logs.args.amount));
+              const user = await getUser(recipient);
+              if (!user) throw new Error("User not found");
+              paidUser = user;
+              await setPaid(recipient, chama.id);
+              cycleOver = await checkIfChamaOver(
+                chama.id,
+                recipient.toString()
+              );
 
-            const cycleOver = await checkIfChamaOver(
-              chama.id,
-              recipient.toString()
-            );
-
-            await prisma.$transaction([
-              prisma.payOut.create({
-                data: {
-                  chamaId: chama.id,
-                  txHash: txHash,
-                  amount: amountPaid,
-                  receiver: recipient,
-                  userId: user.id,
-                },
-              }),
-              prisma.chama.update({
-                where: { id: chama.id },
-                data: {
-                  payDate: new Date(
-                    chama.payDate.getTime() + chama.cycleTime * 86400000
-                  ),
-                  round: cycleOver ? 1 : chama.round + 1,
-                  cycle: cycleOver ? chama.cycle + 1 : chama.cycle,
-                  startDate: cycleOver
-                    ? new Date(
-                        chama.startDate.getTime() + chama.cycleTime * 86400000
-                      )
-                    : chama.startDate,
-                  canJoin: cycleOver ? true : chama.round <= 1,
-                },
-              }),
-            ]);
+              await prisma.$transaction([
+                prisma.payOut.create({
+                  data: {
+                    chamaId: chama.id,
+                    txHash: txHash,
+                    amount: amountPaid,
+                    receiver: recipient,
+                    userId: user.id,
+                  },
+                }),
+                prisma.roundOutcome.create({
+                  data: {
+                    chamaId: chama.id,
+                    disburse: true,
+                    chamaCycle: chama.cycle,
+                    chamaRound: chama.round,
+                    amountPaid: formatEther(amountPaid),
+                  },
+                }),
+                prisma.chama.update({
+                  where: { id: chama.id },
+                  data: {
+                    payDate: new Date(
+                      chama.payDate.getTime() + chama.cycleTime * 86400000
+                    ),
+                    round: cycleOver ? 1 : chama.round + 1,
+                    cycle: cycleOver ? chama.cycle + 1 : chama.cycle,
+                    startDate: cycleOver
+                      ? new Date(
+                          chama.startDate.getTime() + chama.cycleTime * 86400000
+                        )
+                      : chama.startDate,
+                    canJoin: cycleOver ? true : chama.round <= 1,
+                  },
+                }),
+              ]);
+            } else {
+              await prisma.$transaction([
+                prisma.roundOutcome.create({
+                  data: {
+                    chamaId: chama.id,
+                    disburse: false,
+                    chamaCycle: chama.cycle,
+                    chamaRound: chama.round,
+                    amountPaid: "0",
+                  },
+                }), // update the chama paydate
+                prisma.chama.update({
+                  where: { id: chama.id },
+                  data: {
+                    payDate: new Date(
+                      chama.payDate.getTime() + chama.cycleTime * 86400000
+                    ),
+                  },
+                }),
+              ]);
+            }
 
             if (cycleOver) {
               await changeIncognitoMembers(chama.id);
@@ -317,21 +377,29 @@ export async function runDailyPayouts() {
               });
             }
 
-            await sendNotificationToAllMembers(
-              chama.id,
-              `💰 Payout for ${chama.name} Complete!\n\n${
-                user.name
-              } received ${formatEther(amountPaid)} cUSD\nRound: ${
-                chama.round + 1
-              } • Cycle: ${chama.cycle}\nTX: ${txHash.slice(0, 12)}...`
-            );
+            const title = isADisburse
+              ? `💰 Payout for ${chama.name} Complete!`
+              : `A refund happened for ${chama.name}.`;
+            const fcText = isADisburse
+              ? `⚡ ${paidUser?.name} received ${formatEther(
+                  amountPaid
+                )} cUSD for Round: ${chama.round + 1} • Cycle: ${chama.cycle}`
+              : `Not all members contributed for ${chama.cycle} cycle ${chama.round} round, thus resulting to a refund.`;
+
+            const text = isADisburse
+              ? `💰 Payout for ${chama.name} Complete!\n\n${
+                  paidUser?.name
+                } received ${formatEther(amountPaid)} cUSD\nRound: ${
+                  chama.round + 1
+                } • Cycle: ${chama.cycle}\nTX: ${txHash.slice(0, 12)}...`
+              : `💰 Refund for ${chama.name} happened!\n\nNot all members contributed for ${chama.cycle} cycle ${chama.round} round, thus resulting to a refund.`;
+
+            await sendNotificationToAllMembers(chama.id, text);
 
             await sendFarcasterNotificationToAllMembers(
               chama.id,
-              `💰 Payout for ${chama.name} Complete!`,
-              `⚡ ${user.name} received ${formatEther(
-                amountPaid
-              )} cUSD for Round: ${chama.round + 1} • Cycle: ${chama.cycle}`
+              title,
+              fcText
             );
             success = true;
           } catch (dbError) {
@@ -414,4 +482,3 @@ export async function checkBalance() {
     await sendEmail("Balance is low", `Your agent balance is ${balance} celo.`);
   }
 }
-
