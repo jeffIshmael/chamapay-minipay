@@ -127,36 +127,24 @@ export async function createUser(
 
 //get a member's chamas
 export async function getChamasByUser(userId: number) {
-  const chamaIds = await prisma.chamaMember.findMany({
+  const chamas = await prisma.chama.findMany({
     where: {
-      userId: userId,
+      members: {
+        some: {
+          userId: userId,
+        },
+      },
     },
-    select: {
-      chamaId: true,
+    include: {
+      members: true,
+      roundOutcome: true,
+      payOuts: true,
     },
   });
 
-  const chamas = [];
-
-  for (const chamaIdItem of chamaIds) {
-    const chama = await prisma.chama.findUnique({
-      where: {
-        id: chamaIdItem.chamaId,
-      },
-      include: {
-        members: true,
-        roundOutcome: true,
-        payOuts: true
-      },
-    });
-
-    if (chama) {
-      chamas.push(chama);
-    }
-  }
-
   return chamas;
 }
+
 
 // Function to check if a chama has had a payout in the last 24 hrs and if the user hasn't been shown the modal
 export async function checkPayoutModal(userId: number) {
