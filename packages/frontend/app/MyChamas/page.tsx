@@ -111,6 +111,7 @@ const Page = () => {
         if (userData) {
           const data = await getChamasByUser(userData.id);
           const payedOutData = await checkPayoutModal(userData.id);
+          console.log("the payout data", payedOutData);
           setShowingChamas(payedOutData);
           setChamas(data);
           if (payedOutData.length > 0) {
@@ -253,7 +254,12 @@ const Page = () => {
       {showLinkSearch && (
         <ChamaLinkSearch onClose={() => setShowLinkSearch(false)} />
       )}
-      {showPayoutModal && <PayoutCongrats chamas={showingChamas} onClose={() => setShowPayoutModal(false)} />}
+      {showPayoutModal && (
+        <PayoutCongrats
+          chamas={showingChamas}
+          onClose={() => setShowPayoutModal(false)}
+        />
+      )}
     </div>
   );
 };
