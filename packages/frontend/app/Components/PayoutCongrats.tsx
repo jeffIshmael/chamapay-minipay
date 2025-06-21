@@ -7,14 +7,16 @@ import { motion, AnimatePresence } from "framer-motion";
 import Confetti from "react-confetti";
 import { useWindowSize } from "react-use";
 import { formatEther } from "viem";
-import { getUser } from "@/lib/chama";
+import { addShownMember, getUser } from "@/lib/chama";
 import { useIsFarcaster } from "../context/isFarcasterContext";
 
 const PayoutCongrats = ({
   chamas,
+  userId,
   onClose,
 }: {
   chamas: Chama[];
+  userId: number;
   onClose: () => void;
 }) => {
   const [current, setCurrent] = useState(0);
@@ -29,7 +31,14 @@ const PayoutCongrats = ({
   const latestOutcome = chama.roundOutcome[chama.roundOutcome.length - 1];
   const isDisburse = latestOutcome?.disburse;
 
-  // NOTE: getUsername not usable here as it's async and React won't wait.
+  // function to add user to shown members.
+  async function memberShownModal(
+    chamaId: number,
+    userId: number,
+    roundOutcomeId: number
+  ) {
+    await addShownMember(chamaId, userId, roundOutcomeId);
+  }
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-50">
@@ -40,11 +49,13 @@ const PayoutCongrats = ({
           height={height}
           recycle={false}
           numberOfPieces={200}
+          gravity={0.3}
         />
       )}
 
       {/* Modal Card */}
       <motion.div
+        key={current}
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.9, opacity: 0 }}
@@ -52,7 +63,10 @@ const PayoutCongrats = ({
       >
         {/* Close Button (inside the card now) */}
         <button
-          onClick={onClose}
+          onClick={() => {
+            memberShownModal(chama.id, userId, latestOutcome.id);
+            onClose();
+          }}
           className="absolute -top-3 -right-3 bg-white p-2 rounded-full shadow hover:bg-gray-100 transition-all"
         >
           <HiOutlineX size={16} className="text-gray-700" />
@@ -60,7 +74,6 @@ const PayoutCongrats = ({
 
         <AnimatePresence mode="wait">
           <motion.div
-            key={current}
             initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -50 }}
@@ -116,10 +129,12 @@ const PayoutCongrats = ({
                     </span>{" "}
                     contributed this round ({latestOutcome.chamaRound} of cycle{" "}
                     {latestOutcome.chamaCycle}).
-                    <p>
-                      Don&apos;t worry — your funds are safe and refunded. Let&apos;s
-                      smash it next time! 💪
-                    </p>
+                    <div className="bg-gray-50 p-2 rounded-lg border text-left mb-4 mt-2">
+                      <p>
+                        Don&apos;t worry — your funds are safe and refunded.
+                        Let&apos;s smash it next time! 💪
+                      </p>
+                    </div>
                   </>
                 )}
               </p>

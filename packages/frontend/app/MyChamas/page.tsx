@@ -72,6 +72,7 @@ const Page = () => {
   const [activeTab, setActiveTab] = useState<"friends" | "public">("friends");
   const [showLinkSearch, setShowLinkSearch] = useState(false);
   const [showPayoutModal, setShowPayoutModal] = useState(false);
+  const [userId, setUserId] = useState<number | null>(null);
   const [showingChamas, setShowingChamas] = useState<Chama[]>([]);
 
   const { isConnected, address } = useAccount();
@@ -109,6 +110,7 @@ const Page = () => {
       try {
         const userData = await getUser(address as string);
         if (userData) {
+          setUserId(userData.id);
           const data = await getChamasByUser(userData.id);
           const payedOutData = await checkPayoutModal(userData.id);
           console.log("the payout data", payedOutData);
@@ -257,6 +259,7 @@ const Page = () => {
       {showPayoutModal && (
         <PayoutCongrats
           chamas={showingChamas}
+          userId={userId?? 0}
           onClose={() => setShowPayoutModal(false)}
         />
       )}

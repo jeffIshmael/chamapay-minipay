@@ -1,8 +1,9 @@
-export const contractAddress = "0x367266EAfb2DD67A844648f86CD1F880AE100e09";
-
+export const contractAddress = "0xBBEAC768e3a3441C75CDb1eE6c3F56Af89695bba";
+// 0xBBEAC768e3a3441C75CDb1eE6c3F56Af89695bba
+// older - 0x367266EAfb2DD67A844648f86CD1F880AE100e09
 export const cUSDContractAddress = "0x765DE816845861e75A25fCA122bb6898B8B1282a";
 
-export const contractAbi =[
+export const contractAbi = [
   {
     "inputs": [],
     "stateMutability": "nonpayable",
@@ -242,6 +243,12 @@ export const contractAbi =[
         "indexed": false,
         "internalType": "bool",
         "name": "_isAllMembersContributed",
+        "type": "bool"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "isDisbursed",
         "type": "bool"
       }
     ],

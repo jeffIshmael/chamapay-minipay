@@ -145,7 +145,6 @@ export async function getChamasByUser(userId: number) {
   return chamas;
 }
 
-
 // Function to check if a chama has had a payout in the last 24 hrs and if the user hasn't been shown the modal
 export async function checkPayoutModal(userId: number) {
   const MyChamas = await getChamasByUser(userId);
@@ -180,6 +179,34 @@ export async function checkPayoutModal(userId: number) {
   return chamasToShowModal;
 }
 
+// function to add a user as shown modal
+export async function addShownMember(
+  chamaId: number,
+  userId: number,
+  roundOutcomeId: number
+) {
+  // get roundoutcome
+  const roundOutcome = await prisma.roundOutcome.findUnique({
+    where: {
+      id: roundOutcomeId,
+      chamaId: chamaId,
+    },
+    select: {
+      shownMembers: true,
+    },
+  });
+  const userIds = JSON.parse(roundOutcome?.shownMembers || "[]");
+  userIds.push(userId);
+
+  await prisma.roundOutcome.update({
+    where: {
+      id: roundOutcomeId,
+    },
+    data: {
+      shownMembers: JSON.stringify(userIds),
+    },
+  });
+}
 
 //create a chama
 export async function createChama(

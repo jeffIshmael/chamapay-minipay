@@ -75,7 +75,7 @@ contract ChamaPay is Ownable,ReentrancyGuard {
     event RefundUpdated( uint indexed _chamaId);
     event MemberAddedToPayoutOrder(uint indexed _chamaId, address[] indexed _member);
     event aiAgentSet(address indexed _aiAgent);
-    event PayDateChecked(uint indexed _chamaId, bool _isPastPayDate, bool _isAllMembersContributed);
+    event PayDateChecked(uint indexed _chamaId, bool _isPastPayDate, bool _isAllMembersContributed, bool isDisbursed);
     event TransferDone(address indexed _receiver, uint _amount, bool _success, uint _contractBal, uint _receiverBalBefore); 
     event PayoutDone(uint indexed _chamaId, address indexed _receiver, uint _amount);
    
@@ -180,7 +180,7 @@ contract ChamaPay is Ownable,ReentrancyGuard {
         );
 
         // Update balance (amount - txcost)
-        chama.balances[msg.sender] += _amount * 0.95;
+        chama.balances[msg.sender] += _amount * 95 / 100;
 
         // Mark as paid if reached required amount
         if (chama.balances[msg.sender] >= chama.amount) {
@@ -399,16 +399,18 @@ contract ChamaPay is Ownable,ReentrancyGuard {
             bool isPastPayDate = block.timestamp >= chama.payDate;
             bool isAllMembersContributed = allMembersContributed(chamaId);
             require(isPastPayDate, "Pay date has not passed");
-
+            bool isDisbursed;
             // Check if the current time has passed the pay date
             if (isPastPayDate) {
                 if (isAllMembersContributed) {
                     disburse(chamaId); // Disburse funds if everyone has paid
+                    isDisbursed = true;
                 } else {
                     refund(chamaId); // Refund if not everyone has paid
+                    isDisbursed = false;
                 }
             }
-            emit PayDateChecked(chamaId, isPastPayDate, isAllMembersContributed);
+            emit PayDateChecked(chamaId, isPastPayDate, isAllMembersContributed, isDisbursed);
         }
     }
 
@@ -575,6 +577,3 @@ contract ChamaPay is Ownable,ReentrancyGuard {
        _;
    }
 }
-
-// rem 
-// add function to get withdrawals
