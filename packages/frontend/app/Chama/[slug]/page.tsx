@@ -346,7 +346,7 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
 
     // Suggest an embed (e.g., link to the Chama's page or image)
     const embeds: [string, string] = [
-      `https://ipfs.io/ipfs/Qmd1VFua3zc65LT93Sv81VVu6BGa2QEuAakAFJexmRDGtX/${chama.id}.jpg`,
+      `https://ik.imagekit.io/gcfah6uz27/incognito.jpeg?updatedAt=1748199344892`,
       `https://chamapay-minipay.vercel.app/Chama/${chama.slug}`,      
     ];
 
