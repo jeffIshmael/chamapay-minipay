@@ -24,6 +24,7 @@ const PayoutCongrats = ({
   const [current, setCurrent] = useState(0);
   const { isFarcaster, setIsFarcaster } = useIsFarcaster();
   const { width, height } = useWindowSize();
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleNext = () => setCurrent((prev) => (prev + 1) % chamas.length);
   const handlePrev = () =>
@@ -39,47 +40,79 @@ const PayoutCongrats = ({
   }
 
   // function to post the cast sharing  the payout
-  // const sharePayoutCast = async () =>{
-    // form the image
-    // const imageUri = await generatePayoutImage();
+  const sharePayoutCast = async (
+    chamaName: string,
+    receiver: string,
+    amount: string,
+    datePaid: string
+  ) => {
+    const slicedAddress = `${receiver.slice(0, 6)}...${receiver.slice(-4)}`;
+    const payoutDetails = {
+      chamaName: chamaName,
+      receiverAddress: slicedAddress,
+      amount: amount,
+      date: datePaid,
+    };
+    try {
+      setIsLoading(true);
+      // form the image
+      const imageUrl = await generatePayoutImage(payoutDetails);
 
-    // Construct the cast text
-    // const message =
-    //   `🔔 Join "${chama.name}" saving group on ChamaPay!\n` +
-    //   `💰 Contribution: ${formatEther(chama.amount)} cUSD/${cycle}\n` +
-    //   `👥 Members: ${chama.members?.length}\n` +
-    //   `⏰ Next Pay Date: ${
-    //     chama.started
-    //       ? chama.payDate.toLocaleDateString("en-GB", {
-    //           day: "numeric",
-    //           month: "short",
-    //           year: "numeric",
-    //         })
-    //       : chama.startDate.toLocaleDateString("en-GB", {
-    //           day: "numeric",
-    //           month: "short",
-    //           year: "numeric",
-    //         })
-    //   }\n\n`;
+      // Validate the generated image URL
+      if (!imageUrl || !imageUrl.startsWith("data:image/png;base64,")) {
+        throw new Error("Invalid NFT image URL.");
+      }
 
-    // Suggest an embed (e.g., link to the Chama's page or image)
-    // const embeds: [string, string] = [
-    //   `https://chamapay-minipay.vercel.app/Chama/${chama.slug}`,
-    //   `https://ipfs.io/ipfs/Qmd1VFua3zc65LT93Sv81VVu6BGa2QEuAakAFJexmRDGtX/${chama.id}.jpg`,
-    // ];
+      // Convert the base64 data URL to a blob
+      const response = await fetch(imageUrl);
 
-    // try {
-    //   const result = await sdk.actions.composeCast({
-    //     text: message,
-    //     embeds,
-    //   });
-    //   console.log("Cast posted:", result?.cast.hash);
-    // } catch (err) {
-    //   console.error("ComposeCast failed:", err);
-    // }
-  
+      if (!response.ok) {
+        throw new Error("Failed to fetch the image blob.");
+      }
 
-  // }
+      const blob = await response.blob();
+
+      // Prepare the blob for uploading to IPFS
+      const data = new FormData();
+      data.set("file", blob);
+
+      const res = await fetch("/api/files", {
+        method: "POST",
+        body: data,
+      });
+
+      const pinataData = await res.json();
+      const ipfsHash = pinataData.IpfsHash;
+
+      // Construct the cast text
+      const message =
+        `🎉 Milestone Unlocked! 💰\n` +
+        `"${chama.name}" Chama just hit a payout on ChamaPay! 🥳🔥\n\n` +
+        `Teamwork, consistency, and shared goals made it happen. Yep — someone just bagged the reward! 💼💸\n` +
+        `🚀 Ready to stack savings with the squad? Join the vibe now! 🔗`;
+
+      // Suggest an embed (e.g., link to the Chama's page or image)
+      const embeds: [string, string] = [
+        `https://gateway.pinata.cloud/ipfs/${ipfsHash}`,
+        `https://ipfs.io/ipfs/Qmd1VFua3zc65LT93Sv81VVu6BGa2QEuAakAFJexmRDGtX/${chama.id}.jpg`,
+      ];
+
+      try {
+        const result = await sdk.actions.composeCast({
+          text: message,
+          embeds,
+        });
+        await memberShownModal(userId);
+        console.log("Cast posted:", result?.cast.hash);
+      } catch (err) {
+        console.error("ComposeCast failed:", err);
+      }
+    } catch (error) {
+      console.log("pinata error", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-50">
@@ -96,7 +129,6 @@ const PayoutCongrats = ({
 
       {/* Modal Card */}
       <motion.div
-       
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.9, opacity: 0 }}
@@ -115,7 +147,7 @@ const PayoutCongrats = ({
 
         <AnimatePresence mode="wait">
           <motion.div
-           key={current}
+            key={current}
             initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -50 }}
@@ -208,19 +240,45 @@ const PayoutCongrats = ({
                   </div>
 
                   {/* Action Button */}
-
-                  <button className="w-full py-2 flex items-center justify-center gap-2 bg-purple-600 text-white rounded-xl text-sm font-semibold shadow-md hover:bg-purple-700 active:scale-95 transition-transform duration-200">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="20"
-                      height="20"
-                      viewBox="0 0 24 24"
-                      className="fill-current"
+                  {isFarcaster && (
+                    <button
+                      onClick={() => {
+                        sharePayoutCast(
+                          chama.name,
+                          `${
+                            chama.payOuts[chama.payOuts.length - 1]?.receiver
+                          }`,
+                          `  ${formatEther(
+                            chama.payOuts[chama.payOuts.length - 1].amount
+                          )}`,
+                          `${chama.payOuts[
+                            chama.payOuts.length - 1
+                          ].doneAt.toLocaleString()}`
+                        );
+                      }}
+                      disabled={isLoading}
+                      className={`w-full py-2 flex items-center justify-center gap-2 rounded-xl text-sm font-semibold shadow-md transition-transform duration-200 ${
+                        isLoading
+                          ? "bg-purple-400 cursor-not-allowed opacity-70"
+                          : "bg-purple-600 hover:bg-purple-700 active:scale-95 text-white"
+                      }`}
                     >
-                      <path d="M18.24.24H5.76A5.76 5.76 0 0 0 0 6v12a5.76 5.76 0 0 0 5.76 5.76h12.48A5.76 5.76 0 0 0 24 18V6A5.76 5.76 0 0 0 18.24.24m.816 17.166v.504a.49.49 0 0 1 .543.48v.568h-5.143v-.569A.49.49 0 0 1 15 17.91v-.504c0-.22.153-.402.358-.458l-.01-4.364c-.158-1.737-1.64-3.098-3.443-3.098s-3.285 1.361-3.443 3.098l-.01 4.358c.228.042.532.208.54.464v.504a.49.49 0 0 1 .543.48v.568H4.392v-.569a.49.49 0 0 1 .543-.479v-.504c0-.253.201-.454.454-.472V9.039h-.49l-.61-2.031H6.93V5.042h9.95v1.966h2.822l-.61 2.03h-.49v7.896c.252.017.453.22.453.472" />
-                    </svg>
-                    <span>Brag a Little 🚀</span>
-                  </button>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        className={`fill-current ${
+                          isLoading ? "animate-spin" : ""
+                        }`}
+                      >
+                        <path d="M18.24.24H5.76A5.76 5.76 0 0 0 0 6v12a5.76 5.76 0 0 0 5.76 5.76h12.48A5.76 5.76 0 0 0 24 18V6A5.76 5.76 0 0 0 18.24.24m.816 17.166v.504a.49.49 0 0 1 .543.48v.568h-5.143v-.569A.49.49 0 0 1 15 17.91v-.504c0-.22.153-.402.358-.458l-.01-4.364c-.158-1.737-1.64-3.098-3.443-3.098s-3.285 1.361-3.443 3.098l-.01 4.358c.228.042.532.208.54.464v.504a.49.49 0 0 1 .543.48v.568H4.392v-.569a.49.49 0 0 1 .543-.479v-.504c0-.253.201-.454.454-.472V9.039h-.49l-.61-2.031H6.93V5.042h9.95v1.966h2.822l-.61 2.03h-.49v7.896c.252.017.453.22.453.472" />
+                      </svg>
+                      <span>
+                        {isLoading ? "Casting..." : "Brag a Little 🚀"}
+                      </span>
+                    </button>
+                  )}
                 </>
               )}
             </div>

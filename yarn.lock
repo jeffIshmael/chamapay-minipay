@@ -5969,6 +5969,7 @@ framer-motion@^12.9.2:
     encoding "^0.1.13"
     framer-motion "^12.9.2"
     html-to-image "^1.11.13"
+    jspdf "^3.0.1"
     moment "^2.30.1"
     next "14.2.6"
     node-cron "^3.0.3"
@@ -8276,6 +8277,11 @@ pify@^5.0.0:
   version "5.0.0"
   resolved "https://registry.npmjs.org/pify/-/pify-5.0.0.tgz"
   integrity sha512-eW/gHNMlxdSP6dmG6uJip6FXN0EQBwm2clYYd8Wul42Cwu/DK8HEftzsapcNdYe2MfLiIwZqsDk2RDEsTE79hA==
+
+pinata@^2.4.8:
+  version "2.4.8"
+  resolved "https://registry.npmjs.org/pinata/-/pinata-2.4.8.tgz"
+  integrity sha512-5z2d9pe6q0fO+8GuH5ofy5uxZQtknFUD2K1C1BQ4sTrUKLmW3h0bRCSKWu9d8EQEjDp+2s27s4BXG83lBfW4Ig==
 
 pino-abstract-transport@^1.0.0:
   version "1.2.0"

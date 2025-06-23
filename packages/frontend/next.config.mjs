@@ -2,7 +2,7 @@
 const nextConfig = {
     transpilePackages: ['@neynar/nodejs-sdk', 'wagmi', 'viem'],
     images:{
-        domains: ['ipfs.io'],
+        domains: ['ipfs.io', 'gateway.pinata.cloud'],
 
     }
 };
