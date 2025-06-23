@@ -7,8 +7,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import Confetti from "react-confetti";
 import { useWindowSize } from "react-use";
 import { formatEther } from "viem";
-import { addShownMember, getUser } from "@/lib/chama";
+import { addShownMemberToAll } from "@/lib/chama";
 import { useIsFarcaster } from "../context/isFarcasterContext";
+import { generatePayoutImage } from "@/app/Cast/GeneratePayoutImage";
+import { sdk } from "@farcaster/frame-sdk";
 
 const PayoutCongrats = ({
   chamas,
@@ -32,13 +34,52 @@ const PayoutCongrats = ({
   const isDisburse = latestOutcome?.disburse;
 
   // function to add user to shown members.
-  async function memberShownModal(
-    chamaId: number,
-    userId: number,
-    roundOutcomeId: number
-  ) {
-    await addShownMember(chamaId, userId, roundOutcomeId);
+  async function memberShownModal(userId: number) {
+    await addShownMemberToAll(userId);
   }
+
+  // function to post the cast sharing  the payout
+  // const sharePayoutCast = async () =>{
+    // form the image
+    // const imageUri = await generatePayoutImage();
+
+    // Construct the cast text
+    // const message =
+    //   `🔔 Join "${chama.name}" saving group on ChamaPay!\n` +
+    //   `💰 Contribution: ${formatEther(chama.amount)} cUSD/${cycle}\n` +
+    //   `👥 Members: ${chama.members?.length}\n` +
+    //   `⏰ Next Pay Date: ${
+    //     chama.started
+    //       ? chama.payDate.toLocaleDateString("en-GB", {
+    //           day: "numeric",
+    //           month: "short",
+    //           year: "numeric",
+    //         })
+    //       : chama.startDate.toLocaleDateString("en-GB", {
+    //           day: "numeric",
+    //           month: "short",
+    //           year: "numeric",
+    //         })
+    //   }\n\n`;
+
+    // Suggest an embed (e.g., link to the Chama's page or image)
+    // const embeds: [string, string] = [
+    //   `https://chamapay-minipay.vercel.app/Chama/${chama.slug}`,
+    //   `https://ipfs.io/ipfs/Qmd1VFua3zc65LT93Sv81VVu6BGa2QEuAakAFJexmRDGtX/${chama.id}.jpg`,
+    // ];
+
+    // try {
+    //   const result = await sdk.actions.composeCast({
+    //     text: message,
+    //     embeds,
+    //   });
+    //   console.log("Cast posted:", result?.cast.hash);
+    // } catch (err) {
+    //   console.error("ComposeCast failed:", err);
+    // }
+  
+
+  // }
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-50">
@@ -55,7 +96,7 @@ const PayoutCongrats = ({
 
       {/* Modal Card */}
       <motion.div
-        key={current}
+       
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.9, opacity: 0 }}
@@ -64,7 +105,7 @@ const PayoutCongrats = ({
         {/* Close Button (inside the card now) */}
         <button
           onClick={() => {
-            memberShownModal(chama.id, userId, latestOutcome.id);
+            memberShownModal(userId);
             onClose();
           }}
           className="absolute -top-3 -right-3 bg-white p-2 rounded-full shadow hover:bg-gray-100 transition-all"
@@ -74,6 +115,7 @@ const PayoutCongrats = ({
 
         <AnimatePresence mode="wait">
           <motion.div
+           key={current}
             initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -50 }}

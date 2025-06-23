@@ -71,7 +71,7 @@ export const getAgentWalletBalance = async () => {
 // function to perform payout smart contract function
 export const performPayout = async (
   chamaBlockchainId: number
-): Promise<string | Error> => {
+): Promise<string> => {
   const chamaId = [BigInt(chamaBlockchainId)];
   try {
     const { request } = await publicClient.simulateContract({
@@ -81,12 +81,14 @@ export const performPayout = async (
       functionName: "checkPayDate",
       args: [chamaId],
     });
+
     const txHash = await walletClient.writeContract(request);
-    return txHash;
+
+    return txHash.toString();
   } catch (error) {
     console.log(error);
     await sendEmail("The error from payout", JSON.stringify(error));
-    return error as Error;
+    throw error; // throw instead of returning Error object
   }
 };
 
@@ -111,7 +113,6 @@ export const setBcPayoutOrder = async (
     return error as Error;
   }
 };
-
 
 export const registerDivvi: (
   chamaId: BigInt,
@@ -161,4 +162,3 @@ export const registerDivvi: (
     return error as Error;
   }
 };
-

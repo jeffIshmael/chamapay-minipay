@@ -179,6 +179,32 @@ export async function checkPayoutModal(userId: number) {
   return chamasToShowModal;
 }
 
+// function to add a user as shown to all the available
+export async function addShownMemberToAll(userId: number) {
+  // get roundoutcome
+  const chamas = await checkPayoutModal(userId);
+  for (const chama of chamas) {
+    const allRoundOutcomes = chama.roundOutcome;
+    // Check if there are outcomes and payouts to avoid errors
+    if (allRoundOutcomes.length === 0) continue;
+    const latestOutcome = allRoundOutcomes[allRoundOutcomes.length - 1];
+    const shownUsers = latestOutcome.shownMembers
+      ? JSON.parse(latestOutcome.shownMembers)
+      : [];
+
+    shownUsers.push(userId);
+    await prisma.roundOutcome.update({
+      where: {
+        chamaId: chama.id,
+        id: latestOutcome.id,
+      },
+      data: {
+        shownMembers: JSON.stringify(shownUsers),
+      },
+    });
+  }
+}
+
 // function to add a user as shown modal
 export async function addShownMember(
   chamaId: number,

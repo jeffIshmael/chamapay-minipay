@@ -64,6 +64,7 @@ interface EventLog {
   };
   transactionHash: string;
 }
+
 interface User {
   id: number;
   address: string;
@@ -240,9 +241,11 @@ export async function runDailyPayouts() {
           }
 
           const txHash = await performPayout(Number(chama.blockchainId));
-          if (!txHash || txHash instanceof Error) {
-            throw new Error("Payout failed");
+          if (typeof txHash !== "string" || !txHash.startsWith("0x")) {
+            throw new Error(`Invalid txHash returned: ${txHash}`);
           }
+
+          await sendEmail("Great: the payout tx", txHash);
 
           try {
             // check if what happened is a disburse or refund
@@ -253,6 +256,7 @@ export async function runDailyPayouts() {
             const outCome = await getPaydateCheckedEventLogs(
               Number(chama.blockchainId)
             );
+            await sendEmail("Checking the outcome", JSON.stringify(outCome));
             if (outCome == null) {
               return;
             }
@@ -380,6 +384,7 @@ export async function runDailyPayouts() {
             const title = isADisburse
               ? `💰 Payout for ${chama.name} Complete!`
               : `A refund happened for ${chama.name}.`;
+
             const fcText = isADisburse
               ? `⚡ ${paidUser?.name} received ${formatEther(
                   amountPaid
