@@ -345,8 +345,11 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
       }\n\n`;
 
     // Suggest an embed (e.g., link to the Chama's page or image)
+
+    //https://gateway.pinata.cloud/ipfs/Qmd1VFua3zc65LT93Sv81VVu6BGa2QEuAakAFJexmRDGtX/1.jpg
+
     const embeds: [string, string] = [
-      `https://ik.imagekit.io/gcfah6uz27/incognito.jpeg?updatedAt=1748199344892`,
+      `https://gateway.pinata.cloud/ipfs/Qmd1VFua3zc65LT93Sv81VVu6BGa2QEuAakAFJexmRDGtX/1.jpg`,
       `https://chamapay-minipay.vercel.app/Chama/${chama.slug}`,      
     ];
 
