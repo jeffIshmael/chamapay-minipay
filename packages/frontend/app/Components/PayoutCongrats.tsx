@@ -94,7 +94,7 @@ const PayoutCongrats = ({
       // Suggest an embed (e.g., link to the Chama's page or image)
       const embeds: [string, string] = [
         `https://gateway.pinata.cloud/ipfs/${ipfsHash}`,
-        `https://ipfs.io/ipfs/Qmd1VFua3zc65LT93Sv81VVu6BGa2QEuAakAFJexmRDGtX/${chama.id}.jpg`,
+        `https://chamapay-minipay.vercel.app/`, 
       ];
 
       try {

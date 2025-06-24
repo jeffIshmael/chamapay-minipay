@@ -463,7 +463,7 @@ export async function notifyDeadline() {
         await sendBalanceNotification(
           chama.id,
           Number(chama.blockchainId),
-          Number(chama.amount),
+          Number(formattedAmount),
           chama.type,
           chama.name,
           deadlineTime

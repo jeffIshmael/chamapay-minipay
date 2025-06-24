@@ -3,7 +3,7 @@
 
 import { PrismaClient } from "@prisma/client";
 import { revalidatePath } from "next/cache";
-import { parseEther } from "viem";
+import { formatEther, parseEther } from "viem";
 import { sendFarcasterNotification } from "./farcasterNotification";
 import { sendEmail } from "@/app/actions/emailService";
 import { getIndividualBalance } from "./readFunctions";
@@ -700,8 +700,8 @@ export async function sendBalanceNotification(
       userAddress
     )) as [bigint, bigint];
 
-    const lockedAmount = Number(lockedRaw) / 1e18;
-    const availableBalance = Number(availableRaw) / 1e18;
+    const lockedAmount = Number(formatEther(lockedRaw));
+    const availableBalance = Number(formatEther(availableRaw));
 
     const remainingLocked = chamaAmount - lockedAmount;
     const remainingToPay = chamaAmount - availableBalance;
@@ -714,7 +714,7 @@ export async function sendBalanceNotification(
 
       const message =
         chamaType === "Public"
-          ? `You have an outstanding balance in **${chamaName}**.\n\n🔹 Please pay **${remainingToPay.toFixed(
+          ? `You have an outstanding balance in **${chamaName}** chama.\n\n🔹 Please pay **${remainingToPay.toFixed(
               2
             )} cUSD**${
               remainingLocked > 0
@@ -723,7 +723,7 @@ export async function sendBalanceNotification(
             }\n⏳ Deadline: **${time} (EAT / GMT+3)**\n\nLet's keep your spot secure. Contribute now!`
           : `You're yet to complete your payment to **${chamaName}**.\n\n🔹 Amount due: **${remainingToPay.toFixed(
               2
-            )} cUSD**\n⏳ Deadline: **${time} (EAT / GMT+3)**\n\nMake sure to fulfill your commitment before the deadline.`;
+            )} cUSD**\n⏳ Deadline: **${time} (EAT / GMT+3)**.\n\nMake sure to fulfill your commitment before the deadline.`;
       await sendNotificationToUserIds([userId], message);
       if (fid) {
         await sendFarcasterNotification([fid], title, message);
