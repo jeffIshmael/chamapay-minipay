@@ -73,8 +73,8 @@ const CUSDPay = ({
       return;
     }
 
-    // amount + txfee
-    const totalAmount = Number(amount) * 1.01;
+    // amount + txfee(5% of total)
+    const totalAmount = Number(amount) * 1.05; 
 
     // Check if user has sufficient balance
     const balance = Number(balanceData) / 10 ** 18;
