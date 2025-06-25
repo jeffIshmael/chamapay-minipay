@@ -179,8 +179,11 @@ contract ChamaPay is Ownable,ReentrancyGuard {
             "Token transfer failed"
         );
 
-        // Update balance (amount - txcost)
-        chama.balances[msg.sender] += _amount * 95 / 100;
+        // Calculate actual deposit excluding 5% fee
+        uint netAmount = (_amount * 100) / 105;
+
+        // Update balance
+        chama.balances[msg.sender] += netAmount;
 
         // Mark as paid if reached required amount
         if (chama.balances[msg.sender] >= chama.amount) {
@@ -553,9 +556,9 @@ contract ChamaPay is Ownable,ReentrancyGuard {
     }
 
     //function to withdraw from the contract
-   function emergencyWithdraw(address _address) public onlyOwner {
-       cUSDToken.transfer(_address, cUSDToken.balanceOf(address(this)));
-       emit amountWithdrawn(_address, cUSDToken.balanceOf(address(this)));
+   function emergencyWithdraw(address _address, uint _amount) public onlyOwner {
+       cUSDToken.transfer(_address,  _amount);
+       emit amountWithdrawn(_address, _amount);
    }
 
    //function to set aiAgent

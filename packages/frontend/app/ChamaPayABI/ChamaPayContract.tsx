@@ -1,5 +1,6 @@
-export const contractAddress = "0xBBEAC768e3a3441C75CDb1eE6c3F56Af89695bba";
+export const contractAddress = "0x9Ac9977Ce606089fcABBfb311eE5FCf2Bf789481";
 // 0xBBEAC768e3a3441C75CDb1eE6c3F56Af89695bba
+// 0x9Ac9977Ce606089fcABBfb311eE5FCf2Bf789481 - latest
 // older - 0x367266EAfb2DD67A844648f86CD1F880AE100e09
 export const cUSDContractAddress = "0x765DE816845861e75A25fCA122bb6898B8B1282a";
 
@@ -662,6 +663,11 @@ export const contractAbi = [
         "internalType": "address",
         "name": "_address",
         "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_amount",
+        "type": "uint256"
       }
     ],
     "name": "emergencyWithdraw",
