@@ -350,7 +350,7 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
 
     const embeds: [string, string] = [
       `https://gateway.pinata.cloud/ipfs/Qmd1VFua3zc65LT93Sv81VVu6BGa2QEuAakAFJexmRDGtX/1.jpg`,
-      `https://chamapay-minipay.vercel.app/Chama/${chama.slug}`,      
+      `https://chamapay-minipay.vercel.app/Chama/${chama.slug}`,
     ];
 
     try {
@@ -452,7 +452,10 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
                     onClick={
                       loading || processing
                         ? undefined
-                        : () => setShowModal(false)
+                        : () => {
+                            setError("");
+                            setShowModal(false);
+                          }
                     }
                     disabled={loading || processing}
                     className={`px-4 py-2 bg-gray-300 text-gray-700 rounded-md ${
@@ -555,7 +558,10 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
                 <button
                   onClick={
                     chama.type === "Public"
-                      ? () => setShowModal(true)
+                      ? () => {
+                          setError("");
+                          setShowModal(true);
+                        }
                       : joinChama
                   }
                   disabled={hasRequest || isFull || sendingRequest}

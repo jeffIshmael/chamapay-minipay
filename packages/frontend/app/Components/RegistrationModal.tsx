@@ -10,7 +10,7 @@ const RegistrationModal = ({
   modalfnctn,
 }: {
   address: string;
-  modalfnctn: (value: boolean) => void;
+  modalfnctn: () => void;
 }) => {
   const [userName, setUserName] = useState("");
   const [isRegistering, setIsRegistering] = useState(false);
@@ -28,7 +28,7 @@ const RegistrationModal = ({
       if (address) {
         await createUser(userName.trim(), address, 1, false);
         showToast("Username set successfully!", "success");
-        modalfnctn(false);
+        modalfnctn();
       }
     } catch (error) {
       setError("Failed to register username. Please try again.");

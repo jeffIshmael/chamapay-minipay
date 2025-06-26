@@ -542,7 +542,7 @@ const Page = () => {
         {showRegister && address && (
           <RegistrationModal
             address={address as string}
-            modalfnctn={() => setShowRegister}
+            modalfnctn={() => setShowRegister(false)}
           />
         )}
       </AnimatePresence>

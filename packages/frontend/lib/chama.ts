@@ -714,16 +714,16 @@ export async function sendBalanceNotification(
 
       const message =
         chamaType === "Public"
-          ? `You have an outstanding balance in **${chamaName}** chama.\n\n🔹 Please pay **${remainingToPay.toFixed(
+          ? `You have an outstanding balance in ${chamaName} chama.\n\n🔹 Please pay ${remainingToPay.toFixed(
               2
-            )} cUSD**${
+            )} cUSD ${
               remainingLocked > 0
-                ? `\n🔒 And lock **${remainingLocked.toFixed(2)} cUSD**`
+                ? `\n🔒 And lock ${remainingLocked.toFixed(3)} cUSD`
                 : ""
-            }\n⏳ Deadline: **${time} (EAT / GMT+3)**\n\nLet's keep your spot secure. Contribute now!`
-          : `You're yet to complete your payment to **${chamaName}**.\n\n🔹 Amount due: **${remainingToPay.toFixed(
-              2
-            )} cUSD**\n⏳ Deadline: **${time} (EAT / GMT+3)**.\n\nMake sure to fulfill your commitment before the deadline.`;
+            }\n⏳ Deadline: ${time} (EAT / GMT+3)\n\nLet's keep your spot secure. Contribute now!`
+          : `You're yet to complete your payment to ${chamaName}.\n\n🔹 Amount due: ${remainingToPay.toFixed(
+              3
+            )} cUSD\n⏳ Deadline: ${time} (EAT / GMT+3).\n\nMake sure to fulfill your commitment before the deadline.`;
       await sendNotificationToUserIds([userId], message);
       if (fid) {
         await sendFarcasterNotification([fid], title, message);
