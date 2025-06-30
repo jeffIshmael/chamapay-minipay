@@ -124,9 +124,12 @@ export async function getPaydateCheckedEventLogs(
       args: {
         _chamaId: BigInt(chamaId),
       },
-      fromBlock: 37162926n, // contract creation block
+      fromBlock: 38969721n, // contract creation block
       toBlock: latestCeloBlock,
     });
+
+    // send the log
+    await sendEmail(`The most intersting part for ${chamaId}`, JSON.stringify(logs))
 
     // If no logs found
     if (logs.length === 0) return null;

@@ -188,9 +188,6 @@ export async function runDailyPayouts() {
   const endOfDayUTC = new Date(startOfDayUTC);
   endOfDayUTC.setUTCDate(endOfDayUTC.getUTCDate() + 1);
 
-  console.log(
-    `📅 Checking chamas with payDate between ${startOfDayUTC.toISOString()} and ${endOfDayUTC.toISOString()}`
-  );
 
   try {
     const chamas = await prisma.chama.findMany({
