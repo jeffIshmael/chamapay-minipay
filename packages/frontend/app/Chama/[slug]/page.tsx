@@ -46,6 +46,7 @@ import { celo } from "wagmi/chains";
 import { AnimatePresence } from "framer-motion";
 import RegistrationModal from "@/app/Components/RegistrationModal";
 import { BsFillWalletFill } from "react-icons/bs";
+import { generateShareImage } from "@/app/Cast/GenerateShareChama";
 
 interface User {
   chamaId: number;
@@ -118,6 +119,7 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
   const [farcasterChecked, setFarcasterChecked] = useState(false);
   const [showRegister, setShowRegister] = useState(false);
   const { switchChain, isPending } = useSwitchChain();
+  const [isSharing, setIsSharing] = useState(false);
   const router = useRouter();
 
   const togglePayModal = () => {
@@ -324,43 +326,72 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
 
   const handleShareCast = async () => {
     if (!chama) return;
-
-    // Construct the cast text
-    const message =
-      `🔔 Join "${chama.name}" saving group on ChamaPay!\n` +
-      `💰 Contribution: ${formatEther(chama.amount)} cUSD/${cycle}\n` +
-      `👥 Members: ${chama.members?.length}\n` +
-      `⏰ Next Pay Date: ${
-        chama.started
-          ? chama.payDate.toLocaleDateString("en-GB", {
-              day: "numeric",
-              month: "short",
-              year: "numeric",
-            })
-          : chama.startDate.toLocaleDateString("en-GB", {
-              day: "numeric",
-              month: "short",
-              year: "numeric",
-            })
-      }\n\n`;
-
-    // Suggest an embed (e.g., link to the Chama's page or image)
-
-    //https://gateway.pinata.cloud/ipfs/Qmd1VFua3zc65LT93Sv81VVu6BGa2QEuAakAFJexmRDGtX/1.jpg
-
-    const embeds: [string, string] = [
-      `https://gateway.pinata.cloud/ipfs/Qmd1VFua3zc65LT93Sv81VVu6BGa2QEuAakAFJexmRDGtX/1.jpg`,
-      `https://chamapay-minipay.vercel.app/Chama/${chama.slug}`,
-    ];
+    setIsSharing(true);
 
     try {
+      // Construct the cast text
+      const message =
+        `🔔 Join "${chama.name}" saving group on ChamaPay!\n` +
+        `💰 Contribution: ${formatEther(chama.amount)} cUSD/${cycle}\n` +
+        `👥 Members: ${chama.members?.length}/${chama.maxNo}\n` +
+        `⏰ Next Pay Date: ${
+          chama.started
+            ? chama.payDate.toLocaleDateString("en-GB", {
+                day: "numeric",
+                month: "short",
+                year: "numeric",
+              })
+            : chama.startDate.toLocaleDateString("en-GB", {
+                day: "numeric",
+                month: "short",
+                year: "numeric",
+              })
+        }\n\n`;
+      // An embed to be attached during the cast
+      //the info on the image
+      const chamaInfo = {
+        chamaName: chama.name,
+        duration: cycle,
+        members: (chama.members?.length).toString(),
+        maxNo: chama.maxNo.toString(),
+        amount: formatEther(chama.amount),
+      };
+      const imageUrl = await generateShareImage(chamaInfo);
+
+      if (!imageUrl || !imageUrl.startsWith("data:image/png;base64,")) {
+        throw new Error("Invalid image URL.");
+      }
+
+      const response = await fetch(imageUrl);
+      if (!response.ok) throw new Error("Failed to fetch the image blob.");
+      const blob = await response.blob();
+
+      const data = new FormData();
+      data.set("file", blob);
+
+      const res = await fetch("/api/files", {
+        method: "POST",
+        body: data,
+      });
+
+      const pinataData = await res.json();
+      const ipfsHash = pinataData.IpfsHash;
+
+      const embeds: [string, string] = [
+        `https://gateway.pinata.cloud/ipfs/${ipfsHash}`,
+        `https://chamapay-minipay.vercel.app/Chama/${chama.slug}`,
+      ];
+
       const result = await sdk.actions.composeCast({
         text: message,
         embeds,
       });
+
       console.log("Cast posted:", result?.cast.hash);
     } catch (err) {
       console.error("ComposeCast failed:", err);
+    } finally {
+      setIsSharing(false); // Stop loading
     }
   };
 
@@ -612,20 +643,53 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
               {isFarcaster && (
                 <button
                   onClick={handleShareCast}
-                  className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition"
+                  disabled={isSharing}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-md transition ${
+                    isSharing
+                      ? "bg-indigo-400 cursor-not-allowed"
+                      : "bg-indigo-600 hover:bg-indigo-700"
+                  } text-white`}
                 >
-                  Share to
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="28"
-                    height="28"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      fill="currentColor"
-                      d="M18.24.24H5.76A5.76 5.76 0 0 0 0 6v12a5.76 5.76 0 0 0 5.76 5.76h12.48A5.76 5.76 0 0 0 24 18V6A5.76 5.76 0 0 0 18.24.24m.816 17.166v.504a.49.49 0 0 1 .543.48v.568h-5.143v-.569A.49.49 0 0 1 15 17.91v-.504c0-.22.153-.402.358-.458l-.01-4.364c-.158-1.737-1.64-3.098-3.443-3.098s-3.285 1.361-3.443 3.098l-.01 4.358c.228.042.532.208.54.464v.504a.49.49 0 0 1 .543.48v.568H4.392v-.569a.49.49 0 0 1 .543-.479v-.504c0-.253.201-.454.454-.472V9.039h-.49l-.61-2.031H6.93V5.042h9.95v1.966h2.822l-.61 2.03h-.49v7.896c.252.017.453.22.453.472"
-                    />
-                  </svg>
+                  {isSharing ? (
+                    <>
+                      <svg
+                        className="animate-spin h-5 w-5 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 100 16v-4l-3 3 3 3v-4a8 8 0 01-8-8z"
+                        ></path>
+                      </svg>
+                      Sharing...
+                    </>
+                  ) : (
+                    <>
+                      Share to
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="28"
+                        height="28"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          fill="currentColor"
+                          d="M18.24.24H5.76A5.76 5.76 0 0 0 0 6v12a5.76 5.76 0 0 0 5.76 5.76h12.48A5.76 5.76 0 0 0 24 18V6A5.76 5.76 0 0 0 18.24.24m.816 17.166v.504a.49.49 0 0 1 .543.48v.568h-5.143v-.569A.49.49 0 0 1 15 17.91v-.504c0-.22.153-.402.358-.458l-.01-4.364c-.158-1.737-1.64-3.098-3.443-3.098s-3.285 1.361-3.443 3.098l-.01 4.358c.228.042.532.208.54.464v.504a.49.49 0 0 1 .543.48v.568H4.392v-.569a.49.49 0 0 1 .543-.479v-.504c0-.253.201-.454.454-.472V9.039h-.49l-.61-2.031H6.93V5.042h9.95v1.966h2.822l-.61 2.03h-.49v7.896c.252.017.453.22.453.472"
+                        />
+                      </svg>
+                    </>
+                  )}
                 </button>
               )}
             </div>

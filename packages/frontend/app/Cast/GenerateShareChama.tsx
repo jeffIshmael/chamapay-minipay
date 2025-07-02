@@ -10,14 +10,14 @@ interface Details {
   amount: string;
 }
 
-export const generateShareImage = async () => {
-  const chamaDetails = {
-    chamaName: "Celo Devs",
-    duration: "3 dys",
-    members: "6",
-    maxNo: "10",
-    amount: "10",
-  };
+export const generateShareImage = async (chamaDetails:Details) => {
+  // const chamaDetails = {
+  //   chamaName: "Celo Devs",
+  //   duration: "3 dys",
+  //   members: "6",
+  //   maxNo: "10",
+  //   amount: "10",
+  // };
   const canvasRef = document.createElement("div");
 
   canvasRef.style.width = "1086px";
@@ -113,5 +113,5 @@ export const generateShareImage = async () => {
   // Clean up
   document.body.removeChild(canvasRef);
 
-  return imageUrl; // optionally return image if needed
+  return imageUrl; 
 };
