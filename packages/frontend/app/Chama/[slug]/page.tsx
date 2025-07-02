@@ -386,8 +386,6 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
         text: message,
         embeds,
       });
-
-      console.log("Cast posted:", result?.cast.hash);
     } catch (err) {
       console.error("ComposeCast failed:", err);
     } finally {

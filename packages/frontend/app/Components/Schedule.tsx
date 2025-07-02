@@ -7,7 +7,7 @@ import dayjs from "dayjs";
 import { useAccount, useReadContract } from "wagmi";
 import { contractAbi, contractAddress } from "../ChamaPayABI/ChamaPayContract";
 import { motion, AnimatePresence } from "framer-motion";
-import { FiDollarSign, FiClock, FiLock } from "react-icons/fi";
+import { FiDollarSign, FiClock, FiLock, FiShare2 } from "react-icons/fi";
 import { formatEther } from "viem";
 import { formatTimeRemaining } from "@/lib/paydate";
 dayjs.extend(utc);
@@ -19,6 +19,9 @@ import LiquidFillGauge from "react-liquid-gauge";
 import { IoMdCalendar, IoMdPerson, IoMdWallet } from "react-icons/io";
 import { toast } from "sonner";
 import { showToast } from "./Toast";
+import sdk from "@farcaster/frame-sdk";
+import { generateScheduleImage } from "../Cast/GenerateScheduleImage";
+import { useIsFarcaster } from "../context/isFarcasterContext";
 
 interface User {
   chamaId: number;
@@ -74,6 +77,9 @@ const Schedule = ({
   const [timeUntilStart, setTimeUntilStart] = useState("");
   const [timeUntilUserPayout, setTimeUntilUserPayout] = useState("");
   const [userPayoutProgress, setUserPayoutProgress] = useState(0);
+  const [canCast, setCanCast] = useState(false);
+  const [isCasting, setIsCasting] = useState(false);
+  const { isFarcaster, setIsFarcaster } = useIsFarcaster();
 
   const { data } = useReadContract({
     address: contractAddress,
@@ -110,29 +116,6 @@ const Schedule = ({
 
     return () => clearInterval(interval); // cleanup when component unmounts
   }, []);
-
-  // Calculate progress percentage
-  // const calculateProgress = () => {
-  //   if (!chama?.startDate || !chama?.cycleTime || !chama?.members) return 0;
-
-  //   const startDate = new Date(chama.startDate);
-  //   const startTime = startDate.getTime();
-
-  //   // Total duration = cycleTime (in days) × number of members
-  //   const totalDays = chama.cycleTime * chama.members.length;
-  //   const totalMilliseconds = totalDays * 24 * 60 * 60 * 1000; // convert days to ms
-
-  //   const endTime = startTime + totalMilliseconds;
-  //   const currentTime = Date.now();
-
-  //   if (currentTime < startTime) return 0;
-  //   if (currentTime >= endTime) return 100;
-
-  //   const elapsedDuration = currentTime - startTime;
-  //   return Math.min((elapsedDuration / totalMilliseconds) * 100, 100);
-  // };
-
-  // const progress = calculateProgress();
 
   //function to ge a members payout date
   const getMemberPayoutDate = (memberIndex: number) => {
@@ -187,7 +170,14 @@ const Schedule = ({
         setUserPayoutProgress(100);
       } else {
         const diff = payoutDate.diff(now);
-        setTimeUntilUserPayout(await formatTimeRemaining(diff));
+        const timeToPayout = await formatTimeRemaining(diff);
+        setTimeUntilUserPayout(timeToPayout);
+
+        // Match ONLY if format is "Xhrs Ymins" OR "Xmins"
+        const isShortTerm = /^(\d+hrs \d+mins|\d+mins)$/.test(timeToPayout);
+        if (isShortTerm) {
+          setCanCast(true);
+        }
 
         // Calculate progress (0-100) based on time remaining
         const cycleDuration = chama.cycleTime * 24 * 60 * 60 * 1000;
@@ -233,6 +223,60 @@ const Schedule = ({
       Math.floor(elapsedTime / cycleDuration) % members.length;
 
     return members[currentRoundIndex]?.user;
+  };
+
+  // function to send a cast
+  const handleCasting = async () => {
+    try {
+      setIsCasting(true);
+      const amountToReceive =
+        Number(formatEther(chama.amount)) * members.length;
+      const sharingDetails = {
+        chamaName: chama.name,
+        duration: timeUntilUserPayout,
+        amount: amountToReceive.toString(),
+      };
+      const message =
+        `📢 It’s almost payday for me!\n` +
+        `Only ${timeUntilUserPayout} left before I receive ` +
+        `${amountToReceive} cUSD via ${chama.name} group on ChamaPay 🎉\n\n` +
+        `Circular savings that work 💪 #ChamaPay`;
+
+      const imageUrl = await generateScheduleImage(sharingDetails);
+
+      if (!imageUrl || !imageUrl.startsWith("data:image/png;base64,")) {
+        throw new Error("Invalid image URL.");
+      }
+
+      const response = await fetch(imageUrl);
+      if (!response.ok) throw new Error("Failed to fetch the image blob.");
+      const blob = await response.blob();
+
+      const data = new FormData();
+      data.set("file", blob);
+
+      const res = await fetch("/api/files", {
+        method: "POST",
+        body: data,
+      });
+
+      const pinataData = await res.json();
+      const ipfsHash = pinataData.IpfsHash;
+
+      const embeds: [string, string] = [
+        `https://gateway.pinata.cloud/ipfs/${ipfsHash}`,
+        `https://chamapay-minipay.vercel.app/Chama/${chama.slug}`,
+      ];
+
+      const result = await sdk.actions.composeCast({
+        text: message,
+        embeds,
+      });
+    } catch (error) {
+      console.error("ComposeCast failed:", error);
+    } finally {
+      setIsCasting(false);
+    }
   };
 
   const lockedAmount = balance[1] ? Number(balance[1]) / 10 ** 18 : 0;
@@ -387,7 +431,7 @@ const Schedule = ({
             waveStyle={{
               fill: "#66d9d0",
             }}
-            textRenderer={() => null} // Disable default text
+            textRenderer={() => null}
           />
           <div className="absolute inset-0 flex flex-col items-center justify-center">
             <FiClock className="text-downy-500 mb-2" size={24} />
@@ -401,10 +445,51 @@ const Schedule = ({
             </p>
           </div>
         </div>
-        <p className="text-sm text-gray-600 mt-2 text-center">
-          Your payout date:{" "}
-          {dayjs(getMemberPayoutDate(userIndex)).format("MMM D, YYYY h:mm A")}
-        </p>
+
+        <div className="flex items-center justify-between w-full max-w-sm mt-4 px-4">
+          <p className="text-sm text-gray-600 text-center">
+            Your payout date:{" "}
+            {dayjs(getMemberPayoutDate(userIndex)).format("MMM D, YYYY h:mm A")}
+          </p>
+
+          {canCast && isFarcaster && (
+            <button
+              onClick={handleCasting}
+              disabled={isCasting}
+              className={`flex items-center gap-1 bg-purple-500 text-white px-2 py-1.5 rounded-md hover:bg-purple-600 transition ${
+                isCasting ? "opacity-50 cursor-not-allowed" : ""
+              }`}
+            >
+              {isCasting ? (
+                <svg
+                  className="animate-spin h-5 w-5 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                  ></path>
+                </svg>
+              ) : (
+                <>
+                  <FiShare2 />
+                  <span>Share</span>
+                </>
+              )}
+            </button>
+          )}
+        </div>
       </div>
     );
   };
