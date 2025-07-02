@@ -188,7 +188,6 @@ export async function runDailyPayouts() {
   const endOfDayUTC = new Date(startOfDayUTC);
   endOfDayUTC.setUTCDate(endOfDayUTC.getUTCDate() + 1);
 
-
   try {
     const chamas = await prisma.chama.findMany({
       where: {
@@ -237,7 +236,9 @@ export async function runDailyPayouts() {
             break;
           }
 
-          const txHash = await performPayout(Number(chama.blockchainId));
+          const { txHash, blockNumber } = await performPayout(
+            Number(chama.blockchainId)
+          );
           if (typeof txHash !== "string" || !txHash.startsWith("0x")) {
             throw new Error(`Invalid txHash returned: ${txHash}`);
           }
@@ -251,7 +252,8 @@ export async function runDailyPayouts() {
             let amountPaid: bigint = 0n;
             let paidUser: User | null = null;
             const outCome = await getPaydateCheckedEventLogs(
-              Number(chama.blockchainId)
+              Number(chama.blockchainId),
+              blockNumber
             );
             await sendEmail("Checking the outcome", JSON.stringify(outCome));
             if (outCome == null) {

@@ -71,7 +71,7 @@ export const getAgentWalletBalance = async () => {
 // function to perform payout smart contract function
 export const performPayout = async (
   chamaBlockchainId: number
-): Promise<string> => {
+): Promise<{ txHash: string; blockNumber: bigint }> => {
   const chamaId = [BigInt(chamaBlockchainId)];
   try {
     const { request } = await publicClient.simulateContract({
@@ -83,12 +83,18 @@ export const performPayout = async (
     });
 
     const txHash = await walletClient.writeContract(request);
+    const receipt = await publicClient.waitForTransactionReceipt({
+      hash: txHash,
+    });
 
-    return txHash.toString();
+    return {
+      txHash: txHash.toString(),
+      blockNumber: receipt.blockNumber,
+    };
   } catch (error) {
     console.log(error);
     await sendEmail("The error from payout", JSON.stringify(error));
-    throw error; // throw instead of returning Error object
+    throw error;
   }
 };
 
