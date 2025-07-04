@@ -9,6 +9,15 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { WagmiProvider, createConfig, http } from "wagmi";
 import { celo, celoAlfajores } from "wagmi/chains";
 import { farcasterFrame as miniAppConnector } from "@farcaster/frame-wagmi-connector";
+import { PermissionlessProvider } from "@permissionless/wagmi";
+// import dotenv from "dotenv";
+// dotenv.config();
+
+// if (!process.env.PIMLICO_API) {
+//   throw new Error("PIMLICO_API not found in .env");
+// }
+
+// const pimlicoApiKey = process.env.PIMLICO_API;
 
 const connectors = connectorsForWallets(
   [
@@ -35,6 +44,14 @@ export const config = createConfig({
   connectors: [...connectors, miniAppConnector()],
 });
 
+// const capabilities = {
+//   paymasterService: {
+//     [celo.id]: {
+//       url: `https://api.pimlico.io/v2/${celo.id}/rpc?apikey=${pimlicoApiKey}`,
+//     },
+//   },
+// };
+
 export function BlockchainProviders({
   children,
 }: {
@@ -45,7 +62,9 @@ export function BlockchainProviders({
   return (
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
-        <RainbowKitProvider>{children}</RainbowKitProvider>
+        <RainbowKitProvider>
+            {children}
+        </RainbowKitProvider>
       </QueryClientProvider>
     </WagmiProvider>
   );

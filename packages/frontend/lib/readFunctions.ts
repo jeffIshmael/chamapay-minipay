@@ -166,7 +166,7 @@ export async function getPaydateCheckedEventLogs(
       }
 
       // Wait before retrying
-      await delay(2000 * (attempt + 1));
+      await delay(6000 * (attempt + 1));
     }
 
     // After retries
