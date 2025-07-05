@@ -129,7 +129,7 @@ export async function getPaydateCheckedEventLogs(
         args: {
           _chamaId: BigInt(chamaId),
         },
-        fromBlock,
+        fromBlock: 38969721n,
         toBlock: latestCeloBlock,
       });
 
