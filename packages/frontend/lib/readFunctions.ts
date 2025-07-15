@@ -110,7 +110,7 @@ function delay(ms: number) {
   return new Promise((res) => setTimeout(res, ms));
 }
 
-// function to check if the outcome was a disburse or refund
+//fromBlock function to check if the outcome was a disburse or refund
 export async function getPaydateCheckedEventLogs(
   chamaId: number,
   fromBlock: bigint 

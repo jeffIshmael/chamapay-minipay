@@ -74,7 +74,7 @@ const CUSDPay = ({
     }
 
     // amount + txfee(5% of total)
-    const totalAmount = Number(amount) * 1.05; 
+    const totalAmount = Number(amount) * 1.05;
 
     // Check if user has sufficient balance
     const balance = Number(balanceData) / 10 ** 18;
@@ -83,6 +83,7 @@ const CUSDPay = ({
       return;
     }
     const amountInWei = parseEther(totalAmount.toString());
+    const dbAmount = parseEther(data.amount as string);
 
     try {
       setIsLoading(true);
@@ -115,7 +116,7 @@ const CUSDPay = ({
           return;
         }
         await makePayment(
-          amountInWei,
+          dbAmount,
           hash,
           chamaId,
           address as string,
