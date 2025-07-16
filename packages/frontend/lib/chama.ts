@@ -362,7 +362,7 @@ export async function setAllUnpaid(chamaId: number) {
 async function rewardAdmin(chamaId: number) {
   const chama = await prisma.chama.findUnique({
     where: { id: chamaId },
-    select: { adminId: true, promoCode: true },
+    select: { adminId: true, promoCode: true, name:true },
   });
   if (!chama?.promoCode) return;
   const admin = await prisma.user.findUnique({
