@@ -1,7 +1,8 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { getPaymentsById } from "../../lib/chama"; // assuming both APIs are imported correctly
+import { getPaymentsById, getPaymentsByUser, getUser } from "../../lib/chama"; // assuming both APIs are imported correctly
 import { formatEther } from "viem";
+import { useAccount } from "wagmi";
 
 interface Deposit {
   amount: bigint;
@@ -16,17 +17,21 @@ interface Deposit {
 const Deposits = ({ chamaId }: { chamaId: number }) => {
   const [deposits, setDeposits] = useState<Deposit[] | null>(null);
   const [loading, setLoading] = useState(true);
+  const { address } = useAccount();
 
   useEffect(() => {
     const fetchDeposits = async () => {
-      const results: Deposit[] = await getPaymentsById(chamaId);
+      if (!address) return;
+      const user = await getUser(address as string);
+      if (!user) return;
+      const results: Deposit[] = await getPaymentsByUser(user.id);
       if (results) {
         setDeposits(results);
       }
       setLoading(false);
     };
     fetchDeposits();
-  }, [chamaId]); // Make sure to add the dependency here
+  }, [address]); // Make sure to add the dependency here
 
   const formatDate = (date: Date) => {
     return new Date(date).toLocaleDateString("en-GB", {

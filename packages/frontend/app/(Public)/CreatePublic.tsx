@@ -25,6 +25,7 @@ import { registrationTx } from "@/lib/divviRegistration";
 import { config } from "@/Providers/BlockchainProviders";
 import { waitForTransactionReceipt } from "@wagmi/core";
 import { registerOnEarnbase } from "@/lib/Helpers/Register";
+import { approveViemTx } from "@/lib/ViemApprove";
 
 interface Form {
   amount: string;
@@ -124,15 +125,26 @@ const CreatePublic = () => {
     //function to send the lock amount
     try {
       setProcessing(true);
-      const approveHash = await writeContractAsync({
-        address: cUSDContractAddress,
-        abi: ERC2OAbi,
-        functionName: "approve",
-        args: [contractAddress, amountInWei],
-      });
-      const txHash = await waitForTransactionReceipt(config, {
-        hash: approveHash,
-      });
+      let txHash: string | null = null;
+      if (isFarcaster) {
+        const approveHash = await writeContractAsync({
+          address: cUSDContractAddress,
+          abi: ERC2OAbi,
+          functionName: "approve",
+          args: [contractAddress, amountInWei],
+        });
+        const transactionHash = await waitForTransactionReceipt(config, {
+          hash: approveHash,
+        });
+        txHash = transactionHash.transactionHash;
+      } else {
+        const approveTxHash = await approveViemTx(contractAddress, amountInWei);
+        if (!approveTxHash) {
+          txHash = null;
+          return;
+        }
+        txHash = approveTxHash;
+      }
       if (txHash) {
         setProcessing(false);
         setLoading(true);
