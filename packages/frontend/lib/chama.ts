@@ -606,6 +606,20 @@ export async function getPaymentsByUser(userId: number) {
   return payments;
 }
 
+//get payments by type
+export async function getPaymentsByUserToChama(userId: number,chamaId: number) {
+  const payments = await prisma.payment.findMany({
+    where: {
+      userId: userId,
+      chamaId: chamaId
+    },
+    orderBy: {
+      doneAt: "desc",
+    },
+  });
+  return payments;
+}
+
 //function to get chama payouts
 export async function getChamaPayouts(chamaId: number) {
   const payouts = await prisma.payOut.findMany({

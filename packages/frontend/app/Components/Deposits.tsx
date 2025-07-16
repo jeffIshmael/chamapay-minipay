@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { getPaymentsById, getPaymentsByUser, getUser } from "../../lib/chama"; // assuming both APIs are imported correctly
+import { getPaymentsByUserToChama, getUser } from "../../lib/chama"; // assuming both APIs are imported correctly
 import { formatEther } from "viem";
 import { useAccount } from "wagmi";
 
@@ -24,7 +24,7 @@ const Deposits = ({ chamaId }: { chamaId: number }) => {
       if (!address) return;
       const user = await getUser(address as string);
       if (!user) return;
-      const results: Deposit[] = await getPaymentsByUser(user.id);
+      const results: Deposit[] = await getPaymentsByUserToChama(user.id, chamaId);
       if (results) {
         setDeposits(results);
       }
