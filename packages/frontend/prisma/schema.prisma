@@ -45,6 +45,7 @@ model Chama {
   canJoin       Boolean  @default(true)
   payOutOrder   String?  // Json string of payout order array.
   createdAt     DateTime      @default(now())
+  promoCode     String?
   admin         User          @relation("AdminChamas", fields: [adminId], references: [id])
   members       ChamaMember[]
   requests      ChamaRequest[]

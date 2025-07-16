@@ -16,6 +16,7 @@ import { parseEther } from "viem";
 import { FiAlertTriangle } from "react-icons/fi";
 import { showToast } from "../Components/Toast";
 import { registrationTx } from "@/lib/divviRegistration";
+import { registerOnEarnbase } from "@/lib/Helpers/Register";
 
 const CreateFamily = () => {
   const [groupName, setGroupName] = useState("");
@@ -26,6 +27,7 @@ const CreateFamily = () => {
   const { writeContractAsync } = useWriteContract();
   const [startDateDate, setStartDateDate] = useState("");
   const [startDateTime, setStartDateTime] = useState("");
+  const [coupon, setCoupon] = useState("");
   const { isConnected, address } = useAccount();
   const router = useRouter();
 
@@ -73,13 +75,13 @@ const CreateFamily = () => {
       if (address && isConnected) {
         const dateObject = new Date(startDate as string);
 
-        const dateInSeconds = Math.floor(dateObject.getTime() / 1000);;
+        const dateInSeconds = Math.floor(dateObject.getTime() / 1000);
         // get the current blockchain id from the blockchain
         const chamaIdToUse = await getLatestChamaId();
         const localDateTime = new Date(`${startDateDate}T${startDateTime}`);
-        const startDateUTC = localDateTime.toISOString();        
-        console.log("the localDateTime is",localDateTime);     
-        console.log("the startDateUTCTime is",startDateUTC);
+        const startDateUTC = localDateTime.toISOString();
+        console.log("the localDateTime is", localDateTime);
+        console.log("the startDateUTCTime is", startDateUTC);
 
         const chamaArgs = [
           parseEther(data.amount as string),
@@ -92,15 +94,26 @@ const CreateFamily = () => {
         const hash = await registrationTx("registerChama", chamaArgs);
 
         if (hash) {
+          // check if creator used the right promo code
+          const promo = coupon.toLowerCase() === "cpbs001" ? "CPBS001" : null;
           await createChama(
             formData,
             startDateUTC,
             "Private",
             address,
             chamaIdToUse,
-            hash
+            hash,
+            promo
           );
 
+          // If user used the promo code, make sure they are registered on earnbase
+          if(promo){
+           const isRegistered = await registerOnEarnbase(address as string);
+           if (!isRegistered){
+            toast("Done:Head to earnbase to receive promo rewards.");
+           }
+
+         }
           showToast(`${data.name} created successfully.`, "success");
           router.push("/MyChamas");
         } else {
@@ -236,6 +249,29 @@ const CreateFamily = () => {
             className="mt-1 block w-full rounded-md border-downy-200 shadow-sm focus:border-downy-500 focus:ring-downy-500 sm:text-sm"
           />
         </div>
+        <div className="mt-2">
+          <label
+            htmlFor="coupon"
+            className="block text-sm font-semibold text-downy-600 mb-1"
+          >
+            Got a Promo Code? (optional)
+          </label>
+          <div className="relative">
+            <input
+              type="text"
+              id="coupon"
+              name="coupon"
+              value={coupon}
+              onChange={(e) => setCoupon(e.target.value)}
+              placeholder="e.g. CPBS001"
+              className="pl-12 pr-4 py-2 w-full text-sm rounded-full bg-downy-50 text-downy-600 placeholder-downy-300 border border-downy-200 shadow-inner focus:outline-none focus:ring-2 focus:ring-downy-300 focus:border-downy-400 transition duration-200 ease-in-out"
+            />
+            <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-downy-400 text-base">
+              💌
+            </div>
+          </div>
+        </div>
+
         <div className="flex justify-end">
           <button
             type="submit"

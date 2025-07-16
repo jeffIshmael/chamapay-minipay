@@ -24,6 +24,7 @@ import { useIsFarcaster } from "../context/isFarcasterContext";
 import { registrationTx } from "@/lib/divviRegistration";
 import { config } from "@/Providers/BlockchainProviders";
 import { waitForTransactionReceipt } from "@wagmi/core";
+import { registerOnEarnbase } from "@/lib/Helpers/Register";
 
 interface Form {
   amount: string;
@@ -48,6 +49,7 @@ const CreatePublic = () => {
   const [startDateTime, setStartDateTime] = useState("");
   const router = useRouter();
   const { isConnected, address } = useAccount();
+  const [coupon, setCoupon] = useState("");
   const { isFarcaster, setIsFarcaster } = useIsFarcaster();
   const { writeContractAsync } = useWriteContract();
   const [filledData, setFilledData] = useState<Form>({
@@ -155,14 +157,25 @@ const CreatePublic = () => {
           formData.append("maxNumber", filledData.maxNumber);
           formData.append("startDate", startDateUTC);
 
+          // check if creator used the right promo code
+          const promo = coupon.toLowerCase() === "cpbs001" ? "CPBS001" : null;
+
           await createChama(
             formData,
             startDateUTC,
             "Public",
             address,
             blockchainId,
-            hash
+            hash,
+            promo
           );
+          // register user on earnbase
+          if(promo){
+             const isRegistered = await registerOnEarnbase(address as string);
+             if (!isRegistered){
+              toast("Done:Head to earnbase to receive promo rewards.");
+             }
+          }
           showToast(`${filledData.name} created successfully.`, "success");
           setLoading(false);
           router.push("/MyChamas");
@@ -365,6 +378,28 @@ const CreatePublic = () => {
             placeholder="Enter Cycle Time (in days)"
             className="mt-1 block w-full rounded-md border-downy-200 shadow-sm focus:border-downy-500 focus:ring-downy-500 sm:text-sm"
           />
+        </div>
+        <div className="mt-2">
+          <label
+            htmlFor="coupon"
+            className="block text-sm font-semibold text-downy-600 mb-1"
+          >
+            Got a Promo Code? (optional)
+          </label>
+          <div className="relative">
+            <input
+              type="text"
+              id="coupon"
+              name="coupon"
+              value={coupon}
+              onChange={(e) => setCoupon(e.target.value)}
+              placeholder="e.g. CPBS001"
+              className="pl-12 pr-4 py-2 w-full text-sm rounded-full bg-downy-50 text-downy-600 placeholder-downy-300 border border-downy-200 shadow-inner focus:outline-none focus:ring-2 focus:ring-downy-300 focus:border-downy-400 transition duration-200 ease-in-out"
+            />
+            <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-downy-400 text-base">
+              💌
+            </div>
+          </div>
         </div>
         <div className="flex justify-end">
           <button

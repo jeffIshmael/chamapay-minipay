@@ -7,6 +7,7 @@ import { formatEther, parseEther } from "viem";
 import { sendFarcasterNotification } from "./farcasterNotification";
 import { sendEmail } from "@/app/actions/emailService";
 import { getIndividualBalance } from "./readFunctions";
+import { rewardAdminOnEarnbase } from "./Helpers/Register";
 const cron = require("node-cron");
 const prisma = new PrismaClient();
 
@@ -241,7 +242,8 @@ export async function createChama(
   chamaType: string,
   adminAddress: `0x${string}`,
   blockchainId: number,
-  txHash: string
+  txHash: string,
+  promoCode: string | null
 ) {
   try {
     // First, create the Chama
@@ -263,6 +265,7 @@ export async function createChama(
         blockchainId: blockchainId.toString(),
         round: 1, // Adding default round
         cycle: 1, // Adding default cycle
+        promoCode: promoCode,
         admin: {
           connect: {
             address: adminAddress,
@@ -355,6 +358,33 @@ export async function setAllUnpaid(chamaId: number) {
   });
 }
 
+// function to help reward an admin after member has joined
+async function rewardAdmin(chamaId: number) {
+  const chama = await prisma.chama.findUnique({
+    where: { id: chamaId },
+    select: { adminId: true, promoCode: true },
+  });
+  if (!chama?.promoCode) return;
+  const admin = await prisma.user.findUnique({
+    where: { id: chama.adminId },
+    select: { address: true, fid: true },
+  });
+  const adminAddress = admin?.address;
+  const adminFid = admin?.fid;
+  if (!adminAddress) return;
+
+  //  reward logic with adminAddress
+  const isRewarded = await rewardAdminOnEarnbase(adminAddress);
+  if (isRewarded) {
+    // notify the admin via fc
+    if (adminFid) {
+      const title = "You've earned 0.2 cUSD!";
+      const message = `Someone joined ${chama.name} using your promo code. Claim your reward on Earnbase.`;
+      await sendFarcasterNotification([adminFid], title, message);
+    }
+  }
+}
+
 //function to add member to public chama
 export async function addMemberToPublicChama(
   address: string,
@@ -414,6 +444,8 @@ export async function addMemberToPublicChama(
       });
     }
   }
+  // logic to reward admin
+  await rewardAdmin(chamaId);
 }
 
 //function to set a chama can join
@@ -881,6 +913,8 @@ export async function handleJoinRequest(
         });
       }
     }
+    // reward the chama admin
+    await rewardAdmin(chamaId);
   } else if (action === "reject") {
     // Update request status to rejected
     await prisma.chamaRequest.update({

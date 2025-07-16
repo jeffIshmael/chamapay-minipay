@@ -1,10 +1,11 @@
-export const contractAddress = "0x9Ac9977Ce606089fcABBfb311eE5FCf2Bf789481";
+export const contractAddress = "0xC34087CB2b4BB6f75a134E2583E3bac953ac9C97";
 // 0xBBEAC768e3a3441C75CDb1eE6c3F56Af89695bba
-// 0x9Ac9977Ce606089fcABBfb311eE5FCf2Bf789481 - latest
+// 0x9Ac9977Ce606089fcABBfb311eE5FCf2Bf789481 - b4 beta
 // older - 0x367266EAfb2DD67A844648f86CD1F880AE100e09
+// 0xC34087CB2b4BB6f75a134E2583E3bac953ac9C97 - during beta
 export const cUSDContractAddress = "0x765DE816845861e75A25fCA122bb6898B8B1282a";
 
-export const contractAbi = [
+export const contractAbi =  [
   {
     "inputs": [],
     "stateMutability": "nonpayable",
@@ -589,6 +590,25 @@ export const contractAbi = [
       {
         "internalType": "bool",
         "name": "isPublic",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_chamaId",
+        "type": "uint256"
+      }
+    ],
+    "name": "checkAllMembersContributed",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
         "type": "bool"
       }
     ],

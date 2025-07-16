@@ -224,6 +224,19 @@ contract ChamaPay is Ownable,ReentrancyGuard {
         return true;
     }
 
+    // read function to show that all members contributed
+    function checkAllMembersContributed(uint _chamaId) public view returns (bool) {
+        Chama storage chama = chamas[_chamaId];
+        
+        for (uint i = 0; i < chama.members.length; i++) {
+            uint membersBalance = chama.balances[chama.members[i]] + chama.lockedAmounts[chama.members[i]];
+            if (membersBalance < chama.amount) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     //function to process payout
     function processPayout(address _receiver, uint _amount) internal nonReentrant {
         require(cUSDToken.balanceOf(address(this)) >= _amount, "Contract does not have enough cUSD");
