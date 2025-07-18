@@ -77,12 +77,15 @@ interface User {
 }
 
 export async function checkChamaStarted() {
-  const now = new Date(); // already in UTC by default
+  const now = new Date();
   console.log(`⏰ Checking chamas at ${now.toISOString()}`);
 
+  let chamas = [];
+
   try {
-    await prisma.$transaction(async (tx) => {
-      const chamas = await tx.chama.findMany({
+    // Step 1: Fetch chamas inside a transaction
+    chamas = await prisma.$transaction((tx) =>
+      tx.chama.findMany({
         where: {
           started: false,
           startDate: { lte: now },
@@ -92,88 +95,83 @@ export async function checkChamaStarted() {
             include: { user: true },
           },
         },
+      })
+    );
+
+    console.log(`🔍 Found ${chamas.length} chamas to process.`);
+  } catch (err) {
+    console.error("🔥 Error fetching chamas:", err);
+    await sendEmail("🔥 Failed fetching chamas", JSON.stringify(err));
+    return;
+  }
+
+  // Step 2: Process each chama one by one
+  for (const chama of chamas) {
+    try {
+      if (!chama.members.length) {
+        console.warn(`⚠️ Chama '${chama.name}' (${chama.id}) has no members.`);
+        continue;
+      }
+
+      // Shuffle
+      const payoutOrder = [...chama.members];
+      for (let i = payoutOrder.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [payoutOrder[i], payoutOrder[j]] = [payoutOrder[j], payoutOrder[i]];
+      }
+
+      const addressArray = payoutOrder.map(
+        (m) => m.user.address as `0x${string}`
+      );
+
+      // Step 3: Call blockchain
+      const setOrderTxHash = await setBcPayoutOrder(
+        BigInt(Number(chama.blockchainId)),
+        addressArray
+      );
+
+      if (!setOrderTxHash || setOrderTxHash instanceof Error) {
+        const errorMsg = `❌ Failed to set payout order for Chama '${chama.name}' (ID: ${chama.id})`;
+        console.error(errorMsg, setOrderTxHash);
+        await sendEmail(errorMsg, JSON.stringify(setOrderTxHash));
+        continue;
+      }
+
+      // Step 4: Update database outside the original transaction
+      await prisma.chama.update({
+        where: { id: chama.id },
+        data: {
+          started: true,
+          payOutOrder: JSON.stringify(payoutOrder),
+        },
       });
 
-      console.log(`🔍 Found ${chamas.length} chamas to process.`);
+      // Step 5: Notify members
+      const firstRecipient = payoutOrder[0]?.user?.name || "Member";
+      const payDateStr = utcToEAT(chama.payDate);
 
-      for (const chama of chamas) {
-        try {
-          if (!chama.members.length) {
-            console.warn(
-              `⚠️ Chama '${chama.name}' (${chama.id}) has no members.`
-            );
-            continue;
-          }
+      const message =
+        `🚀 ${chama.name}, ${chama.type} chama has started!\n\n` +
+        `🥇 First payout: ${firstRecipient} on ${payDateStr} (EAT / GMT+3)`;
 
-          // Shuffle members
-          const payoutOrder = [...chama.members];
-          for (let i = payoutOrder.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [payoutOrder[i], payoutOrder[j]] = [payoutOrder[j], payoutOrder[i]];
-          }
+      await sendNotificationToAllMembers(chama.id, message);
+      await sendFarcasterNotificationToAllMembers(
+        chama.id,
+        message.split("\n")[0],
+        message.split("\n")[1]
+      );
 
-          const addressArray = payoutOrder.map(
-            (m) => m.user.address as `0x${string}`
-          );
-
-          // Call blockchain to set payout order
-          const setOrderTxHash = await setBcPayoutOrder(
-            BigInt(Number(chama.blockchainId)),
-            addressArray
-          );
-
-          if (!setOrderTxHash || setOrderTxHash instanceof Error) {
-            const errorMsg = `❌ Failed to set payout order for Chama '${chama.name}' (ID: ${chama.id})`;
-            console.error(errorMsg, setOrderTxHash);
-            await sendEmail(errorMsg, JSON.stringify(setOrderTxHash));
-            continue; // skip updating DB if on-chain failed
-          }
-
-          // Update database with started status and payout order
-          await tx.chama.update({
-            where: { id: chama.id },
-            data: {
-              started: true,
-              payOutOrder: JSON.stringify(payoutOrder),
-            },
-          });
-
-          const firstRecipient = payoutOrder[0]?.user?.name || "Member";
-          const payDateStr = utcToEAT(chama.payDate);
-
-          // Send notifications
-          const message =
-            `🚀 ${chama.name}, ${chama.type} chama has started!\n\n` +
-            `🥇 First payout: ${firstRecipient} on ${payDateStr} (EAT / GMT+3)`;
-
-          await sendNotificationToAllMembers(chama.id, message);
-          await sendFarcasterNotificationToAllMembers(
-            chama.id,
-            message.split("\n")[0],
-            message.split("\n")[1]
-          );
-
-          console.log(
-            `✅ Chama '${chama.name}' (${chama.id}) marked as started.`
-          );
-        } catch (innerError) {
-          console.error(
-            `⚠️ Error processing Chama '${chama.name}' (${chama.id}):`,
-            innerError
-          );
-          await sendEmail(
-            `Error in checkChamaStarted for chama '${chama.name}' (${chama.id})`,
-            JSON.stringify(innerError)
-          );
-        }
-      }
-    });
-  } catch (error) {
-    console.error("🔥 Critical error in checkChamaStarted:", error);
-    await sendEmail(
-      "🔥 Critical error in checkChamaStarted",
-      JSON.stringify(error)
-    );
+      console.log(`✅ Chama '${chama.name}' (${chama.id}) marked as started.`);
+    } catch (innerError) {
+      console.error(
+        `⚠️ Error processing Chama '${chama.name}' (${chama.id}):`,
+        innerError
+      );
+      await sendEmail(
+        `Error in checkChamaStarted for chama '${chama.name}' (${chama.id})`,
+        JSON.stringify(innerError)
+      );
+    }
   }
 }
 
