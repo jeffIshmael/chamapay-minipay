@@ -5963,6 +5963,7 @@ framer-motion@^12.9.2:
     "@neynar/nodejs-sdk" "^2.40.0"
     "@openzeppelin/defender-relay-client" "^1.54.6"
     "@openzeppelin/defender-sdk" "^1.15.0"
+    "@permissionless/wagmi" "^0.1.4"
     "@prisma/client" "^5.19.1"
     "@rainbow-me/rainbowkit" "^2.1.6"
     "@tailwindcss/forms" "^0.5.7"
@@ -8067,10 +8068,10 @@ ox@^0.4.4:
     abitype "^1.0.6"
     eventemitter3 "5.0.1"
 
-ox@0.6.7:
-  version "0.6.7"
-  resolved "https://registry.npmjs.org/ox/-/ox-0.6.7.tgz"
-  integrity sha512-17Gk/eFsFRAZ80p5eKqv89a57uXjd3NgIf1CaXojATPBuujVc/fQSVhBeAU9JCRB+k7J50WQAyWTxK19T9GgbA==
+ox@^0.6.7, ox@0.6.9:
+  version "0.6.9"
+  resolved "https://registry.npmjs.org/ox/-/ox-0.6.9.tgz"
+  integrity sha512-wi5ShvzE4eOcTwQVsIPdFr+8ycyX+5le/96iAJutaZAvCes1J0+RvpEPg5QDPDiaR0XQQAvZVl7AwqQcINuUug==
   dependencies:
     "@adraffy/ens-normalize" "^1.10.1"
     "@noble/curves" "^1.6.0"
@@ -8080,10 +8081,10 @@ ox@0.6.7:
     abitype "^1.0.6"
     eventemitter3 "5.0.1"
 
-ox@0.6.9:
-  version "0.6.9"
-  resolved "https://registry.npmjs.org/ox/-/ox-0.6.9.tgz"
-  integrity sha512-wi5ShvzE4eOcTwQVsIPdFr+8ycyX+5le/96iAJutaZAvCes1J0+RvpEPg5QDPDiaR0XQQAvZVl7AwqQcINuUug==
+ox@0.6.7:
+  version "0.6.7"
+  resolved "https://registry.npmjs.org/ox/-/ox-0.6.7.tgz"
+  integrity sha512-17Gk/eFsFRAZ80p5eKqv89a57uXjd3NgIf1CaXojATPBuujVc/fQSVhBeAU9JCRB+k7J50WQAyWTxK19T9GgbA==
   dependencies:
     "@adraffy/ens-normalize" "^1.10.1"
     "@noble/curves" "^1.6.0"
@@ -8248,6 +8249,11 @@ performance-now@^2.1.0:
   version "2.1.0"
   resolved "https://registry.npmjs.org/performance-now/-/performance-now-2.1.0.tgz"
   integrity sha512-7EAHlyLHI56VEIdK57uwHdHKIaAGbnXPiw0yWbarQZOKaKpvUIgW0jWRVLiatnM+XXlSwsanIBH/hzGMJulMow==
+
+permissionless@^0.2.52:
+  version "0.2.52"
+  resolved "https://registry.npmjs.org/permissionless/-/permissionless-0.2.52.tgz"
+  integrity sha512-Al6isaG4Q4rWfn8wjDRQqO1BxmG1gNtfnJe6ftOgpp5hkIxbQZLdH+Ez0ONM2GyGvSIQZH3Wxoo50JuOusqV6g==
 
 picocolors@^1.0.0, picocolors@^1.1.0:
   version "1.1.1"
@@ -10629,7 +10635,7 @@ vary@^1:
   resolved "https://registry.npmjs.org/vary/-/vary-1.1.2.tgz"
   integrity sha512-BNGbWLfd0eUPabhkXUVm0j8uuvREyTh5ovRa/dyow/BqAbZJyC+5fU+IzQOzmAKzYqYRAISoRhdQr3eIZ/PXqg==
 
-viem@^2.1.1, viem@^2.21.44, viem@^2.21.55, viem@^2.29.4, viem@>=2.23.11, viem@2.x:
+viem@^2.1.1, viem@^2.21.44, viem@^2.21.55, viem@^2.28.1, viem@^2.29.4, viem@>=2.23.11, viem@2.x:
   version "2.29.4"
   resolved "https://registry.npmjs.org/viem/-/viem-2.29.4.tgz"
   integrity sha512-Dhyae+w1LKKpYVXypGjBnZ3WU5EHl/Uip5RtVwVRYSVxD5VvHzqKzIfbFU1KP4vnnh3++ZNgLjBY/kVT/tPrrg==

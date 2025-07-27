@@ -377,6 +377,8 @@ const ChamaDetails = ({ params }: { params: { slug: string } }) => {
       const pinataData = await res.json();
       const ipfsHash = pinataData.IpfsHash;
 
+      console.log(`The IpfsHash: ${ipfsHash}`);
+
       const embeds: [string, string] = [
         `https://gateway.pinata.cloud/ipfs/${ipfsHash}`,
         `https://chamapay-minipay.vercel.app/Chama/${chama.slug}`,
