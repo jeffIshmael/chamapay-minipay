@@ -32,7 +32,13 @@ const connectors = connectorsForWallets(
   }
 );
 
-// const miniApp = miniAppConnector();
+const capabilities = {
+  paymasterService: {
+    [celo.id]: {
+      url: "/api/pimlico",
+    },
+  },
+};
 
 export const config = createConfig({
   // chains: [celoAlfajores],
@@ -62,9 +68,9 @@ export function BlockchainProviders({
   return (
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
-        <RainbowKitProvider>
-            {children}
-        </RainbowKitProvider>
+        <PermissionlessProvider capabilities={capabilities}>
+          <RainbowKitProvider>{children}</RainbowKitProvider>
+        </PermissionlessProvider>
       </QueryClientProvider>
     </WagmiProvider>
   );
