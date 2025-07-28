@@ -84,6 +84,7 @@ export const setBcPayoutOrder = async (
   try {
     const {account, smartAccountClient} = await getAgentSmartAccount();
     console.log("The agent account address", account.address);
+    await sendEmail("the smart account address",account.address);
     const txHash = await smartAccountClient.writeContract({
       address: contractAddress,
       abi: contractAbi,
