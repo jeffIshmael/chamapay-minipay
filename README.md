@@ -133,7 +133,7 @@ Here’s a preview of the ChamaPay platform:
 - ✅ Join public chamas
 - ✅ Deposit funds (cUSD via M-Pesa or wallet)
 - ✅ Automated payouts
-- ✅ chamapay smart contract deployment (Celo) [View smart contract](https://celoscan.io/address/0x9Ac9977Ce606089fcABBfb311eE5FCf2Bf789481)
+- ✅ chamapay smart contract deployment (Celo) [View smart contract](https://celoscan.io/address/0xC34087CB2b4BB6f75a134E2583E3bac953ac9C97)
 - ✅ Farcaster Integration: Successfully implemented Farcaster transforming it into a seamless mini-app experience. [chamapay fc miniapp](https://farcaster.xyz/miniapps/xXpwKJ5lxJHj/chamapay)
    
 
