@@ -31,9 +31,23 @@ interface EventLog {
   transactionHash: string;
 }
 
+const agentPrivateKey = process.env.AGENT_WALLET_PRIVATE_KEY;
+
+if(!agentPrivateKey){
+  throw Error("Agent privatekey not set.");
+}
+
+const agentAccount = await privateKeyToAccount(agentPrivateKey as `0x${string}`);
+
 const publicClient = createPublicClient({
   chain: celo,
   transport: http(),
+});
+
+const walletClient = createWalletClient({
+  chain: celo,
+  transport: http(),
+  account: agentAccount,
 });
 
 // function to get the balance of the agent wallet
@@ -54,7 +68,7 @@ export const performPayout = async (
     const { account, smartAccountClient } = await getAgentSmartAccount();
     console.log("The agent account address", account.address);
 
-    const txHash = await smartAccountClient.writeContract({
+    const txHash = await walletClient.writeContract({
       address: contractAddress,
       abi: contractAbi,
       functionName: "checkPayDate",
@@ -84,7 +98,7 @@ export const setBcPayoutOrder = async (
     const { account, smartAccountClient } = await getAgentSmartAccount();
     console.log("The agent account address", account.address);
     await sendEmail("the smart account address", JSON.stringify(account));
-    const txHash = await smartAccountClient.writeContract({
+    const txHash = await walletClient.writeContract({
       address: contractAddress,
       abi: contractAbi,
       functionName: "setPayoutOrder",
