@@ -36,10 +36,9 @@ const publicClient = createPublicClient({
   transport: http(),
 });
 
-
 // function to get the balance of the agent wallet
 export const getAgentWalletBalance = async () => {
-  const {account, smartAccountClient} = await getAgentSmartAccount();
+  const { account, smartAccountClient } = await getAgentSmartAccount();
   const balance = await publicClient.getBalance({
     address: account.address,
   });
@@ -52,7 +51,7 @@ export const performPayout = async (
 ): Promise<{ txHash: string; blockNumber: bigint }> => {
   const chamaId = [BigInt(chamaBlockchainId)];
   try {
-    const {account, smartAccountClient} = await getAgentSmartAccount();
+    const { account, smartAccountClient } = await getAgentSmartAccount();
     console.log("The agent account address", account.address);
 
     const txHash = await smartAccountClient.writeContract({
@@ -82,9 +81,9 @@ export const setBcPayoutOrder = async (
   addressArray: `0x${string}`[]
 ): Promise<string | Error> => {
   try {
-    const {account, smartAccountClient} = await getAgentSmartAccount();
+    const { account, smartAccountClient } = await getAgentSmartAccount();
     console.log("The agent account address", account.address);
-    await sendEmail("the smart account address",account.address.toString());
+    await sendEmail("the smart account address", JSON.stringify(account));
     const txHash = await smartAccountClient.writeContract({
       address: contractAddress,
       abi: contractAbi,
@@ -95,6 +94,7 @@ export const setBcPayoutOrder = async (
     return txHash;
   } catch (error) {
     console.log(error);
+    await sendEmail("the error in payout", JSON.stringify(error));
     return error as Error;
   }
 };
